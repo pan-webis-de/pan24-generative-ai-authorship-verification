@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pan24-generative-authorship-detection"
+version = "0.1.0"
+description = ""
+authors = ["Janek Bevendorff <janek.bevendorff@uni-weimar.de>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+gnews = "^0.3.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
