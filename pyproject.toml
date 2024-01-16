@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 gnews = "^0.3.6"
+click = "^8.1.7"
 
 
 [build-system]
