@@ -30,7 +30,7 @@ def main():
 @click.option('-n', '--num-results', type=int, help='Maximum number of results to download', default=200)
 @click.option('--sleep-time', type=int, default=10, help='Sleep time between requests')
 def list_news(start_date, end_date, topic_file, output, language, country, num_results, sleep_time):
-    output = os.path.join(output, 'lists')
+    output = os.path.join(output, 'article-lists')
     os.makedirs(output, exist_ok=True)
 
     with click.progressbar(topic_file.readlines(), label='Downloading news for topics') as progress:
@@ -54,11 +54,11 @@ def list_news(start_date, end_date, topic_file, output, language, country, num_r
             time.sleep(sleep_time)
 
 
-@main.command(help='Download posts from news lists')
+@main.command(help='Download news articles from article lists')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
-def scrape_posts(input_dir, output):
-    output = os.path.join(output, 'posts')
+def scrape_articles(input_dir, output):
+    output = os.path.join(output, 'articles')
     os.makedirs(output, exist_ok=True)
 
     newspaper_cfg = newspaper.Config()
@@ -71,7 +71,7 @@ def scrape_posts(input_dir, output):
     }
     browser_ua_re = re.compile(r'(?:(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net)')
 
-    with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news posts') as progress:
+    with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
         for news_list in progress:
             d = os.path.join(output, os.path.basename(news_list[:-6]))
             os.makedirs(d, exist_ok=True)
@@ -105,15 +105,15 @@ def scrape_posts(input_dir, output):
                 lzma.open(out_name_txt, 'wt').write(text)
 
 
-@main.command(help='Filter downloaded posts')
+@main.command(help='Filter downloaded articles')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
 @click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
-def filter_posts(input_dir, output, min_length):
-    output = os.path.join(output, 'posts-filtered')
+def filter_articles(input_dir, output, min_length):
+    output = os.path.join(output, 'articles-filtered')
     os.makedirs(output, exist_ok=True)
 
-    with click.progressbar(os.listdir(input_dir), label='Filtering posts') as bar:
+    with click.progressbar(os.listdir(input_dir), label='Filtering articles') as bar:
         for d in bar:
             if not os.path.isdir(os.path.join(input_dir, d)) or not d.startswith('news-'):
                 continue
