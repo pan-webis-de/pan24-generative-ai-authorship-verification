@@ -79,7 +79,7 @@ def scrape_posts(input_dir, output):
             for i, news_item in enumerate(open(news_list, 'r')):
                 art_id = f'art-{i:03d}'
                 out_name_html = os.path.join(d, f'{art_id}.html.xz')
-                out_name_txt = os.path.join(d, f'{art_id}.txt')
+                out_name_txt = os.path.join(d, f'{art_id}.txt.xz')
                 if os.path.exists(out_name_html) and os.path.exists(out_name_txt):
                     continue
 
@@ -101,8 +101,36 @@ def scrape_posts(input_dir, output):
                     continue
 
                 text = '\n\n'.join((article.title, article.text))
-                lzma.open(out_name_html, 'w').write(article.html)
-                open(out_name_txt, 'w').write(text)
+                lzma.open(out_name_html, 'wt').write(article.html)
+                lzma.open(out_name_txt, 'wt').write(text)
+
+
+@main.command(help='Filter downloaded posts')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
+def filter_posts(input_dir, output, min_length):
+    output = os.path.join(output, 'posts-filtered')
+    os.makedirs(output, exist_ok=True)
+
+    with click.progressbar(os.listdir(input_dir), label='Filtering posts') as bar:
+        for d in bar:
+            if not os.path.isdir(os.path.join(input_dir, d)) or not d.startswith('news-'):
+                continue
+
+            out = os.path.join(output, d)
+            os.makedirs(out, exist_ok=True)
+
+            for f in glob.glob(os.path.join(input_dir, d, 'art-*.txt.xz')):
+                lines = lzma.open(f, 'rt').readlines()
+                while len(lines) > 2 and lines[0] == lines[2] and lines[1] == '\n':
+                    # Delete duplicate title lines at the beginning
+                    lines = lines[2:]
+
+                text = ''.join(lines).strip()
+                if len(text) < min_length:
+                    continue
+                open(os.path.join(out, os.path.basename(f)[:-3]), 'wt').write(text)
 
 
 if __name__ == "__main__":
