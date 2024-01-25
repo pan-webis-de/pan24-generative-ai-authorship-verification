@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import re
 import time
 
 import click
@@ -67,6 +68,7 @@ def scrape_posts(input_dir, output):
         'Accept-Encoding': 'gzip, deflate',
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
     }
+    browser_ua_re = re.compile(r'(?:(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net)')
 
     with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news posts') as progress:
         for news_list in progress:
@@ -89,12 +91,12 @@ def scrape_posts(input_dir, output):
                 # We cannot do both in one go, since Google displays cookie banners for browsers, but
                 # some news pages block scrapers / non-browsers.
                 try:
-                    cfg = newspaper_cfg_browser if 'reuters.com' in article_url else newspaper_cfg
+                    cfg = newspaper_cfg_browser if browser_ua_re.search(article_url) else newspaper_cfg
                     article = newspaper.Article(url=article_url or news_item['url'], config=cfg, language='en')
                     article.download()
                     article.parse()
                 except newspaper.article.ArticleException:
-                    logger.error('Failed to download %s/%s (URL: %s)', d,  art_id, article_url)
+                    logger.error('Failed to download %s/%s (URL: %s)', os.path.basename(d),  art_id, article_url)
                     continue
 
                 text = '\n\n'.join((article.title, article.text))
