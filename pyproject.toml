@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 gnews = "^0.3.6"
 click = "^8.1.7"
+newspaper3k = "^0.2.8"
 
 
 [build-system]
