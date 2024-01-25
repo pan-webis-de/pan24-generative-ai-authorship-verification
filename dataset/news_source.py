@@ -71,6 +71,8 @@ def scrape_articles(input_dir, output):
     }
     browser_ua_re = re.compile(r'(?:(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net)')
 
+    urls_scraped = set()
+
     with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
         for news_list in progress:
             d = os.path.join(output, os.path.basename(news_list[:-6]))
@@ -87,6 +89,9 @@ def scrape_articles(input_dir, output):
 
                 # First, retrieve target URL with a non-browser User-Agent.
                 article_url = requests.head(news_item['url']).headers.get('Location')
+                if article_url in urls_scraped:
+                    continue
+                urls_scraped.add(article_url)
 
                 # Second, scrape the article itself with a browser User-Agent.
                 # We cannot do both in one go, since Google displays cookie banners for browsers, but
