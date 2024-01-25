@@ -1,6 +1,7 @@
 import glob
 import json
 import logging
+import lzma
 import os
 import re
 import time
@@ -77,7 +78,7 @@ def scrape_posts(input_dir, output):
 
             for i, news_item in enumerate(open(news_list, 'r')):
                 art_id = f'art-{i:03d}'
-                out_name_html = os.path.join(d, f'{art_id}.html')
+                out_name_html = os.path.join(d, f'{art_id}.html.xz')
                 out_name_txt = os.path.join(d, f'{art_id}.txt')
                 if os.path.exists(out_name_html) and os.path.exists(out_name_txt):
                     continue
@@ -100,7 +101,7 @@ def scrape_posts(input_dir, output):
                     continue
 
                 text = '\n\n'.join((article.title, article.text))
-                open(out_name_html, 'w').write(article.html)
+                lzma.open(out_name_html, 'w').write(article.html)
                 open(out_name_txt, 'w').write(text)
 
 
