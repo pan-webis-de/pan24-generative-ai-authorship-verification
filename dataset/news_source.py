@@ -28,7 +28,7 @@ def main():
 @click.option('-l', '--language', help='News language', default='en')
 @click.option('-c', '--country', help='News country', default='US')
 @click.option('-n', '--num-results', type=int, help='Maximum number of results to download', default=200)
-@click.option('--sleep-time', type=int, default=10, help='Sleep time between requests')
+@click.option('--sleep-time', type=int, default=5, help='Sleep time between requests')
 def list_news(start_date, end_date, topic_file, output, language, country, num_results, sleep_time):
     output = os.path.join(output, 'article-lists')
     os.makedirs(output, exist_ok=True)
@@ -48,6 +48,9 @@ def list_news(start_date, end_date, topic_file, output, language, country, num_r
             topic = ''.join(filter(str.isalnum, topic))
             with open(os.path.join(output, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
                 for n in news:
+                    # Resolve Google News proxy URLs
+                    n['url'] = requests.head(n['url']).headers.get('Location') or n['url']
+
                     json.dump(n, f, ensure_ascii=False)
                     f.write('\n')
 
@@ -70,7 +73,6 @@ def scrape_articles(input_dir, output):
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
     }
     browser_ua_re = re.compile(r'(?:(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net)')
-
     urls_scraped = set()
 
     with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
@@ -87,22 +89,18 @@ def scrape_articles(input_dir, output):
 
                 news_item = json.loads(news_item)
 
-                # First, retrieve target URL with a non-browser User-Agent.
-                article_url = requests.head(news_item['url']).headers.get('Location')
-                if article_url in urls_scraped:
+                # Shouldn't happen, but filter duplicate URLs, just in case
+                if news_item['url'] in urls_scraped:
                     continue
-                urls_scraped.add(article_url)
+                urls_scraped.add(news_item['url'])
 
-                # Second, scrape the article itself with a browser User-Agent.
-                # We cannot do both in one go, since Google displays cookie banners for browsers, but
-                # some news pages block scrapers / non-browsers.
                 try:
-                    cfg = newspaper_cfg_browser if browser_ua_re.search(article_url) else newspaper_cfg
-                    article = newspaper.Article(url=article_url or news_item['url'], config=cfg, language='en')
+                    cfg = newspaper_cfg_browser if browser_ua_re.search(news_item['url']) else newspaper_cfg
+                    article = newspaper.Article(url=news_item['url'], config=cfg, language='en')
                     article.download()
                     article.parse()
                 except newspaper.article.ArticleException:
-                    logger.error('Failed to download %s/%s (URL: %s)', os.path.basename(d),  art_id, article_url)
+                    logger.error('Failed to download %s/%s (URL: %s)', os.path.basename(d),  art_id, news_item['url'])
                     continue
 
                 text = '\n\n'.join((article.title, article.text))
