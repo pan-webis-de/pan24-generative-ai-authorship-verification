@@ -10,6 +10,7 @@ python = "^3.11"
 gnews = "^0.3.6"
 click = "^8.1.7"
 newspaper3k = "^0.2.8"
+betterproto = {extras = ["compiler"], version = "^1.2.5"}
 
 
 [build-system]

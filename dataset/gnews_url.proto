@@ -1,0 +1,9 @@
+// Reverse-engineered Protobuf schema for decoding Google News article URLs
+
+syntax = "proto3";
+
+message GNewsURL {
+    int64 tag = 1;
+    string url = 4;
+    string amp_url = 26;
+}

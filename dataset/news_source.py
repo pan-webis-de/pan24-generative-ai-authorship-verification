@@ -1,3 +1,4 @@
+from base64 import urlsafe_b64decode
 import glob
 import json
 import logging
@@ -8,8 +9,9 @@ import time
 
 import click
 import gnews
+from gnews_url import GNewsURL
 import newspaper
-import requests
+import seaborn as sns
 
 
 logger = logging.getLogger(__name__)
@@ -48,8 +50,10 @@ def list_news(start_date, end_date, topic_file, output, language, country, num_r
             topic = ''.join(filter(str.isalnum, topic))
             with open(os.path.join(output, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
                 for n in news:
-                    # Resolve Google News proxy URLs
-                    n['url'] = requests.head(n['url']).headers.get('Location') or n['url']
+                    # Decode Google News URLs
+                    n['url'] = n['url'][len('https://news.google.com/rss/articles/'):].split('?', 1)[0]
+                    n['url'] = urlsafe_b64decode(n['url'] + '==')
+                    n['url'] = GNewsURL().parse(n['url']).url
 
                     json.dump(n, f, ensure_ascii=False)
                     f.write('\n')
@@ -72,7 +76,7 @@ def scrape_articles(input_dir, output):
         'Accept-Encoding': 'gzip, deflate',
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
     }
-    browser_ua_re = re.compile(r'(?:(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net)')
+    browser_ua_re = re.compile(r'(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net')
     urls_scraped = set()
 
     with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
@@ -91,6 +95,7 @@ def scrape_articles(input_dir, output):
 
                 # Shouldn't happen, but filter duplicate URLs, just in case
                 if news_item['url'] in urls_scraped:
+                    logger.debug('Skipped duplicate URL: %s', news_item['url'])
                     continue
                 urls_scraped.add(news_item['url'])
 
