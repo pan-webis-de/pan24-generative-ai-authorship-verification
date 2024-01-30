@@ -10,7 +10,10 @@ import time
 import click
 import gnews
 from gnews_url import GNewsURL
+from matplotlib import pyplot as plt
 import newspaper
+import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -139,6 +142,25 @@ def filter_articles(input_dir, output, min_length):
                 if len(text) < min_length:
                     continue
                 open(os.path.join(out, os.path.basename(f)[:-3]), 'wt').write(text)
+
+
+@main.command(help='Plot text length distribution')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+def plot_length_dist(input_dir):
+    ws_re = re.compile(r'\s+')
+    tokens = []
+
+    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Counting tokens') as bar:
+        for f in bar:
+            tokens.append(len(ws_re.sub(open(f, 'r').read().strip(), ' ')))
+
+    tokens = pd.DataFrame(tokens, columns=['Characters'])
+
+    tokens_log = np.log(tokens)
+    print(f'μ = {tokens_log.mean().iloc[0]:.2f}, σ = {tokens_log.std().iloc[0]:.2f} (log-normal)')
+
+    sns.histplot(data=tokens, x='Characters', kde=True, log_scale=True)
+    plt.show()
 
 
 if __name__ == "__main__":

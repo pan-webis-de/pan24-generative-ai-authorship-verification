@@ -11,6 +11,10 @@ gnews = "^0.3.6"
 click = "^8.1.7"
 newspaper3k = "^0.2.8"
 betterproto = {extras = ["compiler"], version = "^1.2.5"}
+seaborn = "^0.13.2"
+pyarrow = "^15.0.0"
+pandas = "^2.2.0"
+numpy = "^1.26.3"
 
 
 [build-system]
