@@ -67,7 +67,7 @@ def _summarize_article(article: str, client: OpenAI, assistant: Assistant):
     return response.strip()
 
 
-def _map_from_to_file(fnames, *args, fn, skip_existing=True, **kwargs):
+def _map_from_to_file(fnames, *args, fn, skip_existing=True, max_chars=None, **kwargs):
     """
     Call ``fn`` on tuples of input and output filenames, reading input from one file and writing to another.
     """
@@ -77,7 +77,7 @@ def _map_from_to_file(fnames, *args, fn, skip_existing=True, **kwargs):
         return
     os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
-    result = fn(open(file_in, 'r').read(), *args, **kwargs)
+    result = fn(open(file_in, 'r').read()[:max_chars], *args, **kwargs)
     if not result:
         return
     open(file_out, 'w').write(result)
@@ -91,7 +91,9 @@ def _map_from_to_file(fnames, *args, fn, skip_existing=True, **kwargs):
 @click.option('-n', '--assistant-name', default='news-article-summarizer', show_default=True)
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
 @click.option('-p', '--parallelism', default=10, show_default=True)
-def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, parallelism):
+@click.option('-c', '--max-chars', help='Maximum article length to send to OpenAI API in characters',
+              default=8192, show_default=True)
+def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, parallelism, max_chars):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
 
@@ -114,7 +116,7 @@ def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, p
     in_files = glob.glob(os.path.join(input_dir, '*', 'art-*.txt'))
     in_out_files = ((f, os.path.join(output_dir, 'article-summaries', os.path.basename(os.path.dirname(f)),
                                      os.path.splitext(os.path.basename(f))[0] + '.json')) for f in in_files)
-    fn = partial(_map_from_to_file, fn=_summarize_article, client=client, assistant=assistant)
+    fn = partial(_map_from_to_file, fn=_summarize_article, max_chars=max_chars, client=client, assistant=assistant)
 
     with pool.ThreadPool(processes=parallelism) as p:
         with click.progressbar(p.imap(fn, in_out_files), label='Generating summaries', length=len(in_files)) as bar:
