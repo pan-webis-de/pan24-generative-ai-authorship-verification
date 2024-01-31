@@ -15,6 +15,8 @@ seaborn = "^0.13.2"
 pyarrow = "^15.0.0"
 pandas = "^2.2.0"
 numpy = "^1.26.3"
+transformers = {extras = ["torch"], version = "^4.37.2"}
+openai = "^1.10.0"
 
 
 [build-system]

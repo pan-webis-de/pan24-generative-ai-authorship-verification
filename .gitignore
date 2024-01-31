@@ -159,3 +159,5 @@ cython_debug/
 # Data
 data/
 
+# API key
+openai.key

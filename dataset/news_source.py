@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,14 +28,14 @@ def main():
 @click.argument('start_date', metavar='START_DATE', type=click.DateTime(formats=['%Y-%m-%d']))
 @click.argument('end_date', metavar='END_DATE', type=click.DateTime(formats=['%Y-%m-%d']))
 @click.argument('topic_file', type=click.File('r'))
-@click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
 @click.option('-l', '--language', help='News language', default='en')
 @click.option('-c', '--country', help='News country', default='US')
 @click.option('-n', '--num-results', type=int, help='Maximum number of results to download', default=200)
 @click.option('--sleep-time', type=int, default=5, help='Sleep time between requests')
-def list_news(start_date, end_date, topic_file, output, language, country, num_results, sleep_time):
-    output = os.path.join(output, 'article-lists')
-    os.makedirs(output, exist_ok=True)
+def list_news(start_date, end_date, topic_file, output_dir, language, country, num_results, sleep_time):
+    output_dir = os.path.join(output_dir, 'article-lists')
+    os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(topic_file.readlines(), label='Downloading news for topics') as progress:
         for topic in progress:
@@ -51,7 +50,7 @@ def list_news(start_date, end_date, topic_file, output, language, country, num_r
             d1_s = start_date.strftime('%Y-%m-%d')
             d2_s = end_date.strftime('%Y-%m-%d')
             topic = ''.join(filter(str.isalnum, topic))
-            with open(os.path.join(output, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
+            with open(os.path.join(output_dir, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
                 for n in news:
                     # Decode Google News URLs
                     n['url'] = n['url'][len('https://news.google.com/rss/articles/'):].split('?', 1)[0]
@@ -66,10 +65,10 @@ def list_news(start_date, end_date, topic_file, output, language, country, num_r
 
 @main.command(help='Download news articles from article lists')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
-def scrape_articles(input_dir, output):
-    output = os.path.join(output, 'articles')
-    os.makedirs(output, exist_ok=True)
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+def scrape_articles(input_dir, output_dir):
+    output_dir = os.path.join(output_dir, 'articles')
+    os.makedirs(output_dir, exist_ok=True)
 
     newspaper_cfg = newspaper.Config()
     newspaper_cfg_browser = newspaper.Config()
@@ -84,7 +83,7 @@ def scrape_articles(input_dir, output):
 
     with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
         for news_list in progress:
-            d = os.path.join(output, os.path.basename(news_list[:-6]))
+            d = os.path.join(output_dir, os.path.basename(news_list[:-6]))
             os.makedirs(d, exist_ok=True)
 
             for i, news_item in enumerate(open(news_list, 'r')):
@@ -118,18 +117,18 @@ def scrape_articles(input_dir, output):
 
 @main.command(help='Filter downloaded articles')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
 @click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
-def filter_articles(input_dir, output, min_length):
-    output = os.path.join(output, 'articles-filtered')
-    os.makedirs(output, exist_ok=True)
+def filter_articles(input_dir, output_dir, min_length):
+    output_dir = os.path.join(output_dir, 'articles-filtered')
+    os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(os.listdir(input_dir), label='Filtering articles') as bar:
         for d in bar:
             if not os.path.isdir(os.path.join(input_dir, d)) or not d.startswith('news-'):
                 continue
 
-            out = os.path.join(output, d)
+            out = os.path.join(output_dir, d)
             os.makedirs(out, exist_ok=True)
 
             for f in glob.glob(os.path.join(input_dir, d, 'art-*.txt.xz')):
