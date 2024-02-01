@@ -109,7 +109,7 @@ def list_news(start_date, end_date, topic_file, output_dir, language, country, n
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
 def scrape_articles(input_dir, output_dir):
-    output_dir = os.path.join(output_dir, 'articles')
+    output_dir = os.path.join(output_dir, 'articles-raw')
     os.makedirs(output_dir, exist_ok=True)
 
     newspaper_cfg = newspaper.Config()
@@ -315,13 +315,35 @@ def validate_llm_json(input_dir):
     sys.exit(1)
 
 
-@main.command(name='Combine source article lists and texts with LLM summaries to JSONL files')
+@main.command(help='Combine article lists and texts with LLM summaries')
 @click.argument('article_list_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
-@click.argument('summary_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory')
-def combine_source_data(article_list_dir, article_text_dir, summary_dir, output_dir):
-    pass
+@click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+def combine_source_data(article_list_dir, article_text_dir, article_summary_dir, output_dir):
+    output_dir = os.path.join(output_dir, 'articles')
+    os.makedirs(output_dir, exist_ok=True)
+
+    with click.progressbar(glob.glob(os.path.join(article_list_dir, '*.jsonl')), label='Combining source files') as bar:
+        for topic_file in bar:
+            topic = os.path.splitext(os.path.basename(topic_file))[0]
+            with open(os.path.join(output_dir, topic + '.jsonl'), 'w') as out:
+                for i, l in enumerate(open(topic_file)):
+                    art_id = f'art-{i:03d}'
+                    article_text = os.path.join(article_text_dir, topic, art_id + '.txt')
+                    article_summary = os.path.join(article_summary_dir, topic, art_id + '.json')
+                    if not os.path.isfile(article_text) or not os.path.isfile(article_summary):
+                        logger.debug('Skipping article %s/%s (no text or summary)', topic, art_id)
+                        continue
+
+                    article_data = {
+                        'id': art_id,
+                        'text': open(article_text, 'r').read().strip(),
+                        'summary': json.load(open(article_summary, 'r')),
+                        'gnews_meta': json.loads(l)
+                    }
+                    json.dump(article_data, out, ensure_ascii=False)
+                    out.write('\n')
 
 
 if __name__ == "__main__":

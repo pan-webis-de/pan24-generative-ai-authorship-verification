@@ -1,4 +1,5 @@
 import logging
+import os
 
 import click
 import torch
@@ -19,7 +20,7 @@ def main():
 
 @main.command(help='Generate articles using the OpenAI API')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-n', '--assistant-name', default='news-article-synthesizer', show_default=True)
@@ -31,7 +32,7 @@ def openai(input_dir, output_dir, api_key, assistant_name, model_name, paralleli
 
 @main.command(help='Generate texts with GPT-2-XL')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
 def gpt2_xl(input_dir, output_dir):
     # generator = pipeline('text-generation', model='gpt2-xl', device=GPU_DEVICE)
     # generator = pipeline('text-generation', model='openai-community/gpt2-xl', device=GPU_DEVICE)
