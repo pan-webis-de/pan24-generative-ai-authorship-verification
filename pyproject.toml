@@ -18,6 +18,9 @@ numpy = "^1.26.3"
 transformers = {extras = ["torch"], version = "^4.37.2"}
 openai = "^1.10.0"
 jsonschema = "^4.21.1"
+markdown = "^3.5.2"
+resiliparse = "^0.14.5"
+backoff = "^2.2.1"
 
 
 [build-system]

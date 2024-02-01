@@ -10,6 +10,7 @@ import re
 import sys
 import time
 
+import backoff
 import click
 import jsonschema
 import gnews
@@ -17,7 +18,7 @@ from gnews_url import GNewsURL
 from matplotlib import pyplot as plt
 import newspaper
 import numpy as np
-from openai import NotFoundError, OpenAI
+from openai import NotFoundError, OpenAI, OpenAIError
 from openai.types.beta import Assistant
 import pandas as pd
 import seaborn as sns
@@ -204,6 +205,7 @@ def plot_length_dist(input_dir):
     plt.show()
 
 
+@backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
 def _summarize_article(article: str, client: OpenAI, assistant: Assistant):
     thread = client.beta.threads.create()
     client.beta.threads.messages.create(thread_id=thread.id, role='user', content=article)

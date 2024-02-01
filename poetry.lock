@@ -85,6 +85,18 @@ tests-mypy = ["mypy (>=1.6)", "pytest-mypy-plugins"]
 tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "pytest (>=4.3.0)", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "backoff"
+version = "2.2.1"
+description = "Function decoration for backoff and retry"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
+    {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
+]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.9.3"
 description = "Screen-scraping library"
@@ -169,6 +181,99 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.7.4)", "aiohttp (>=3.7.4,!=3.9.0)"]
 jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "brotli"
+version = "1.1.0"
+description = "Python bindings for the Brotli compression library"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Brotli-1.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e1140c64812cb9b06c922e77f1c26a75ec5e3f0fb2bf92cc8c58720dec276752"},
+    {file = "Brotli-1.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c8fd5270e906eef71d4a8d19b7c6a43760c6abcfcc10c9101d14eb2357418de9"},
+    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1ae56aca0402a0f9a3431cddda62ad71666ca9d4dc3a10a142b9dce2e3c0cda3"},
+    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:43ce1b9935bfa1ede40028054d7f48b5469cd02733a365eec8a329ffd342915d"},
+    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7c4855522edb2e6ae7fdb58e07c3ba9111e7621a8956f481c68d5d979c93032e"},
+    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:38025d9f30cf4634f8309c6874ef871b841eb3c347e90b0851f63d1ded5212da"},
+    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:e6a904cb26bfefc2f0a6f240bdf5233be78cd2488900a2f846f3c3ac8489ab80"},
+    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:a37b8f0391212d29b3a91a799c8e4a2855e0576911cdfb2515487e30e322253d"},
+    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_ppc64le.whl", hash = "sha256:e84799f09591700a4154154cab9787452925578841a94321d5ee8fb9a9a328f0"},
+    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:f66b5337fa213f1da0d9000bc8dc0cb5b896b726eefd9c6046f699b169c41b9e"},
+    {file = "Brotli-1.1.0-cp310-cp310-win32.whl", hash = "sha256:be36e3d172dc816333f33520154d708a2657ea63762ec16b62ece02ab5e4daf2"},
+    {file = "Brotli-1.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:0c6244521dda65ea562d5a69b9a26120769b7a9fb3db2fe9545935ed6735b128"},
+    {file = "Brotli-1.1.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:a3daabb76a78f829cafc365531c972016e4aa8d5b4bf60660ad8ecee19df7ccc"},
+    {file = "Brotli-1.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c8146669223164fc87a7e3de9f81e9423c67a79d6b3447994dfb9c95da16e2d6"},
+    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:30924eb4c57903d5a7526b08ef4a584acc22ab1ffa085faceb521521d2de32dd"},
+    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ceb64bbc6eac5a140ca649003756940f8d6a7c444a68af170b3187623b43bebf"},
+    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a469274ad18dc0e4d316eefa616d1d0c2ff9da369af19fa6f3daa4f09671fd61"},
+    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:524f35912131cc2cabb00edfd8d573b07f2d9f21fa824bd3fb19725a9cf06327"},
+    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:5b3cc074004d968722f51e550b41a27be656ec48f8afaeeb45ebf65b561481dd"},
+    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:19c116e796420b0cee3da1ccec3b764ed2952ccfcc298b55a10e5610ad7885f9"},
+    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_ppc64le.whl", hash = "sha256:510b5b1bfbe20e1a7b3baf5fed9e9451873559a976c1a78eebaa3b86c57b4265"},
+    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:a1fd8a29719ccce974d523580987b7f8229aeace506952fa9ce1d53a033873c8"},
+    {file = "Brotli-1.1.0-cp311-cp311-win32.whl", hash = "sha256:39da8adedf6942d76dc3e46653e52df937a3c4d6d18fdc94a7c29d263b1f5b50"},
+    {file = "Brotli-1.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:aac0411d20e345dc0920bdec5548e438e999ff68d77564d5e9463a7ca9d3e7b1"},
+    {file = "Brotli-1.1.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:316cc9b17edf613ac76b1f1f305d2a748f1b976b033b049a6ecdfd5612c70409"},
+    {file = "Brotli-1.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:caf9ee9a5775f3111642d33b86237b05808dafcd6268faa492250e9b78046eb2"},
+    {file = "Brotli-1.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:70051525001750221daa10907c77830bc889cb6d865cc0b813d9db7fefc21451"},
+    {file = "Brotli-1.1.0-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:7f4bf76817c14aa98cc6697ac02f3972cb8c3da93e9ef16b9c66573a68014f91"},
+    {file = "Brotli-1.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d0c5516f0aed654134a2fc936325cc2e642f8a0e096d075209672eb321cff408"},
+    {file = "Brotli-1.1.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6c3020404e0b5eefd7c9485ccf8393cfb75ec38ce75586e046573c9dc29967a0"},
+    {file = "Brotli-1.1.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:4ed11165dd45ce798d99a136808a794a748d5dc38511303239d4e2363c0695dc"},
+    {file = "Brotli-1.1.0-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:4093c631e96fdd49e0377a9c167bfd75b6d0bad2ace734c6eb20b348bc3ea180"},
+    {file = "Brotli-1.1.0-cp312-cp312-musllinux_1_1_ppc64le.whl", hash = "sha256:7e4c4629ddad63006efa0ef968c8e4751c5868ff0b1c5c40f76524e894c50248"},
+    {file = "Brotli-1.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:861bf317735688269936f755fa136a99d1ed526883859f86e41a5d43c61d8966"},
+    {file = "Brotli-1.1.0-cp312-cp312-win32.whl", hash = "sha256:5f4d5ea15c9382135076d2fb28dde923352fe02951e66935a9efaac8f10e81b0"},
+    {file = "Brotli-1.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:906bc3a79de8c4ae5b86d3d75a8b77e44404b0f4261714306e3ad248d8ab0951"},
+    {file = "Brotli-1.1.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:a090ca607cbb6a34b0391776f0cb48062081f5f60ddcce5d11838e67a01928d1"},
+    {file = "Brotli-1.1.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2de9d02f5bda03d27ede52e8cfe7b865b066fa49258cbab568720aa5be80a47d"},
+    {file = "Brotli-1.1.0-cp36-cp36m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:2333e30a5e00fe0fe55903c8832e08ee9c3b1382aacf4db26664a16528d51b4b"},
+    {file = "Brotli-1.1.0-cp36-cp36m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:4d4a848d1837973bf0f4b5e54e3bec977d99be36a7895c61abb659301b02c112"},
+    {file = "Brotli-1.1.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:fdc3ff3bfccdc6b9cc7c342c03aa2400683f0cb891d46e94b64a197910dc4064"},
+    {file = "Brotli-1.1.0-cp36-cp36m-musllinux_1_1_aarch64.whl", hash = "sha256:5eeb539606f18a0b232d4ba45adccde4125592f3f636a6182b4a8a436548b914"},
+    {file = "Brotli-1.1.0-cp36-cp36m-musllinux_1_1_i686.whl", hash = "sha256:fd5f17ff8f14003595ab414e45fce13d073e0762394f957182e69035c9f3d7c2"},
+    {file = "Brotli-1.1.0-cp36-cp36m-musllinux_1_1_ppc64le.whl", hash = "sha256:069a121ac97412d1fe506da790b3e69f52254b9df4eb665cd42460c837193354"},
+    {file = "Brotli-1.1.0-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:e93dfc1a1165e385cc8239fab7c036fb2cd8093728cbd85097b284d7b99249a2"},
+    {file = "Brotli-1.1.0-cp36-cp36m-win32.whl", hash = "sha256:a599669fd7c47233438a56936988a2478685e74854088ef5293802123b5b2460"},
+    {file = "Brotli-1.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:d143fd47fad1db3d7c27a1b1d66162e855b5d50a89666af46e1679c496e8e579"},
+    {file = "Brotli-1.1.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:11d00ed0a83fa22d29bc6b64ef636c4552ebafcef57154b4ddd132f5638fbd1c"},
+    {file = "Brotli-1.1.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f733d788519c7e3e71f0855c96618720f5d3d60c3cb829d8bbb722dddce37985"},
+    {file = "Brotli-1.1.0-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:929811df5462e182b13920da56c6e0284af407d1de637d8e536c5cd00a7daf60"},
+    {file = "Brotli-1.1.0-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:0b63b949ff929fbc2d6d3ce0e924c9b93c9785d877a21a1b678877ffbbc4423a"},
+    {file = "Brotli-1.1.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d192f0f30804e55db0d0e0a35d83a9fead0e9a359a9ed0285dbacea60cc10a84"},
+    {file = "Brotli-1.1.0-cp37-cp37m-musllinux_1_1_aarch64.whl", hash = "sha256:f296c40e23065d0d6650c4aefe7470d2a25fffda489bcc3eb66083f3ac9f6643"},
+    {file = "Brotli-1.1.0-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:919e32f147ae93a09fe064d77d5ebf4e35502a8df75c29fb05788528e330fe74"},
+    {file = "Brotli-1.1.0-cp37-cp37m-musllinux_1_1_ppc64le.whl", hash = "sha256:23032ae55523cc7bccb4f6a0bf368cd25ad9bcdcc1990b64a647e7bbcce9cb5b"},
+    {file = "Brotli-1.1.0-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:224e57f6eac61cc449f498cc5f0e1725ba2071a3d4f48d5d9dffba42db196438"},
+    {file = "Brotli-1.1.0-cp37-cp37m-win32.whl", hash = "sha256:587ca6d3cef6e4e868102672d3bd9dc9698c309ba56d41c2b9c85bbb903cdb95"},
+    {file = "Brotli-1.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:2954c1c23f81c2eaf0b0717d9380bd348578a94161a65b3a2afc62c86467dd68"},
+    {file = "Brotli-1.1.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:efa8b278894b14d6da122a72fefcebc28445f2d3f880ac59d46c90f4c13be9a3"},
+    {file = "Brotli-1.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:03d20af184290887bdea3f0f78c4f737d126c74dc2f3ccadf07e54ceca3bf208"},
+    {file = "Brotli-1.1.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6172447e1b368dcbc458925e5ddaf9113477b0ed542df258d84fa28fc45ceea7"},
+    {file = "Brotli-1.1.0-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a743e5a28af5f70f9c080380a5f908d4d21d40e8f0e0c8901604d15cfa9ba751"},
+    {file = "Brotli-1.1.0-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:0541e747cce78e24ea12d69176f6a7ddb690e62c425e01d31cc065e69ce55b48"},
+    {file = "Brotli-1.1.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:cdbc1fc1bc0bff1cef838eafe581b55bfbffaed4ed0318b724d0b71d4d377619"},
+    {file = "Brotli-1.1.0-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:890b5a14ce214389b2cc36ce82f3093f96f4cc730c1cffdbefff77a7c71f2a97"},
+    {file = "Brotli-1.1.0-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:1ab4fbee0b2d9098c74f3057b2bc055a8bd92ccf02f65944a241b4349229185a"},
+    {file = "Brotli-1.1.0-cp38-cp38-musllinux_1_1_ppc64le.whl", hash = "sha256:141bd4d93984070e097521ed07e2575b46f817d08f9fa42b16b9b5f27b5ac088"},
+    {file = "Brotli-1.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:fce1473f3ccc4187f75b4690cfc922628aed4d3dd013d047f95a9b3919a86596"},
+    {file = "Brotli-1.1.0-cp38-cp38-win32.whl", hash = "sha256:db85ecf4e609a48f4b29055f1e144231b90edc90af7481aa731ba2d059226b1b"},
+    {file = "Brotli-1.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:3d7954194c36e304e1523f55d7042c59dc53ec20dd4e9ea9d151f1b62b4415c0"},
+    {file = "Brotli-1.1.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:5fb2ce4b8045c78ebbc7b8f3c15062e435d47e7393cc57c25115cfd49883747a"},
+    {file = "Brotli-1.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:7905193081db9bfa73b1219140b3d315831cbff0d8941f22da695832f0dd188f"},
+    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a77def80806c421b4b0af06f45d65a136e7ac0bdca3c09d9e2ea4e515367c7e9"},
+    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:8dadd1314583ec0bf2d1379f7008ad627cd6336625d6679cf2f8e67081b83acf"},
+    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:901032ff242d479a0efa956d853d16875d42157f98951c0230f69e69f9c09bac"},
+    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:22fc2a8549ffe699bfba2256ab2ed0421a7b8fadff114a3d201794e45a9ff578"},
+    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:ae15b066e5ad21366600ebec29a7ccbc86812ed267e4b28e860b8ca16a2bc474"},
+    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:949f3b7c29912693cee0afcf09acd6ebc04c57af949d9bf77d6101ebb61e388c"},
+    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_ppc64le.whl", hash = "sha256:89f4988c7203739d48c6f806f1e87a1d96e0806d44f0fba61dba81392c9e474d"},
+    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:de6551e370ef19f8de1807d0a9aa2cdfdce2e85ce88b122fe9f6b2b076837e59"},
+    {file = "Brotli-1.1.0-cp39-cp39-win32.whl", hash = "sha256:f0d8a7a6b5983c2496e364b969f0e526647a06b075d034f3297dc66f3b360c64"},
+    {file = "Brotli-1.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:cdad5b9014d83ca68c25d2e9444e28e967ef16e80f6b436918c700c117a85467"},
+    {file = "Brotli-1.1.0.tar.gz", hash = "sha256:81de08ac11bcb85841e440c13611c00b67d3bf82698314928d0b676362546724"},
+]
 
 [[package]]
 name = "bs4"
@@ -357,6 +462,45 @@ files = [
 [package.extras]
 dnssec = ["ecdsa (>=0.13)", "pycryptodome"]
 idna = ["idna (>=2.1)"]
+
+[[package]]
+name = "fastwarc"
+version = "0.14.5"
+description = "A high-performance WARC parsing library for Python written in C++/Cython."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "FastWARC-0.14.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:85fd740c41a51d862dc0f3815b2c89bfac87e1bb86b32cac4867b5d1767a4ef5"},
+    {file = "FastWARC-0.14.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d38e74942b6e067aa489b7aaa396731976da5f2a0738f5de3918787d26318655"},
+    {file = "FastWARC-0.14.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:26e70e314f8e041a5260d38523ebd0f1f3ef1c4dfe57ace889819070fd28fc9b"},
+    {file = "FastWARC-0.14.5-cp310-cp310-win_amd64.whl", hash = "sha256:c5e5340ae18d9e0e6b155b1165c33a231a9f9905c40f684b14ba75baf7aca0d5"},
+    {file = "FastWARC-0.14.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:e4cfc0e6a34f8747e67fe5687bd0f0ab751e4d4f5185ab489eb2de524489af72"},
+    {file = "FastWARC-0.14.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:644143eed2ecdd9b1086dcc44e8fa96c59f4968aaa498cfe588c8c6d9e06810c"},
+    {file = "FastWARC-0.14.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8835b3865c6306508cd20ad7280e230eb5e72718a2b50ada4bb2326a9ce14be5"},
+    {file = "FastWARC-0.14.5-cp311-cp311-win_amd64.whl", hash = "sha256:e0fc1c4fb321a78b47288dfb512e833f0c7eeb074d9602a88ca957c07c557c4a"},
+    {file = "FastWARC-0.14.5-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:fcc2ee93f8c4956277fb092147d3ca87595482e0e4048527dcaf762ce9d6e860"},
+    {file = "FastWARC-0.14.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b0dc8ddacb1d0c40ce5f72aad6feb4e6af3e046f8c8cccf97eddf40bfc77a878"},
+    {file = "FastWARC-0.14.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5202f8fd8d1a8e74c345b2cadb969fa7a97124269b797f0f79db674afacc48b9"},
+    {file = "FastWARC-0.14.5-cp312-cp312-win_amd64.whl", hash = "sha256:870fed8d74ccff2d6c3470700730827677ec082644b4204051bc107885d45306"},
+    {file = "FastWARC-0.14.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9baf3b5dc6e125a8410d87d3cd46ceffb93502b24b1d61722e773f939f9741b2"},
+    {file = "FastWARC-0.14.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:72543000553ba1eb3c9b072b20db642ebd5a2cb82867524e0299c1801e5f3e84"},
+    {file = "FastWARC-0.14.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6abda166d6c527dbdaf911a7d6ad0ebc934b9e20433bf18c13ce1ec1c22145fb"},
+    {file = "FastWARC-0.14.5-cp38-cp38-win_amd64.whl", hash = "sha256:3a9d7bc2d0fd709dad3006f46b5548041d04a577dbd61885fdf63aa97f1129bf"},
+    {file = "FastWARC-0.14.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:7f51923b2c453f7ce9b841b3f198259e5e6989d301b2566b69a4b0f950cbefc0"},
+    {file = "FastWARC-0.14.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2921f6653ec205dc21037c6f00cf1d5e3818470006c58d5465382326ab3bf088"},
+    {file = "FastWARC-0.14.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:93dec1475e0e47eca99d87e4f7fc4836554d75ebb66fc5e96e93ae95c12fe7e1"},
+    {file = "FastWARC-0.14.5-cp39-cp39-win_amd64.whl", hash = "sha256:efc129dbe1c46b5ff0060a8127f067ea901d1b856c29c57994121d7cb03fefa2"},
+    {file = "FastWARC-0.14.5.tar.gz", hash = "sha256:451860d5e8cd560987f6e7f3c5c41c13e924231b39da35e6259e87e0dbb39184"},
+]
+
+[package.dependencies]
+brotli = "*"
+click = "*"
+tqdm = "*"
+
+[package.extras]
+test = ["lz4", "pytest (>=7.2.2)", "pytest-cov (>=4.0.0)"]
 
 [[package]]
 name = "feedfinder2"
@@ -976,6 +1120,22 @@ cssselect = ["cssselect (>=0.7)"]
 html5 = ["html5lib"]
 htmlsoup = ["BeautifulSoup4"]
 source = ["Cython (>=3.0.7)"]
+
+[[package]]
+name = "markdown"
+version = "3.5.2"
+description = "Python implementation of John Gruber's Markdown."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "Markdown-3.5.2-py3-none-any.whl", hash = "sha256:d43323865d89fc0cb9b20c75fc8ad313af307cc087e84b657d9eec768eddeadd"},
+    {file = "Markdown-3.5.2.tar.gz", hash = "sha256:e1ac7b3dc550ee80e602e71c1d168002f062e49f1b11e26a36264dafd4df2ef8"},
+]
+
+[package.extras]
+docs = ["mdx-gh-links (>=0.2)", "mkdocs (>=1.5)", "mkdocs-gen-files", "mkdocs-literate-nav", "mkdocs-nature (>=0.6)", "mkdocs-section-index", "mkdocstrings[python]"]
+testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "markupsafe"
@@ -2317,6 +2477,47 @@ requests = ">=1.0.0"
 six = "*"
 
 [[package]]
+name = "resiliparse"
+version = "0.14.5"
+description = "A collection of robust and fast processing tools for parsing and analyzing (not only) web archive data."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "Resiliparse-0.14.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:79af75ee7640f1f2872f8957be2bac175ef2b7c2d0659c8ff11a6b5428e8e82e"},
+    {file = "Resiliparse-0.14.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c9293ad34c452daaaf15f4a7f63ca4ba004b35b2982d3ffee4d34480300d734a"},
+    {file = "Resiliparse-0.14.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1c8b481a5164d9c9a9e3f2be874f168385e78599ae0e6d5ee335d431430a62b6"},
+    {file = "Resiliparse-0.14.5-cp310-cp310-win_amd64.whl", hash = "sha256:9b7027e0044a5853d455e6584d46449a73f8bbee38661af84364bdc7553b40de"},
+    {file = "Resiliparse-0.14.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a7defb81c322c81d389b7e3f7c93e90591584be5c35f7babf3a890afed02028a"},
+    {file = "Resiliparse-0.14.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d0c424262a115c9d621767d52c256f6525545a902a5cb3b5b654a3d636c21dc6"},
+    {file = "Resiliparse-0.14.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3076754e60d83cd243eb6c42ceaf6a7a691873bde9b49a91ac1cfe2fcf9716be"},
+    {file = "Resiliparse-0.14.5-cp311-cp311-win_amd64.whl", hash = "sha256:ad3ad8eab310b27d7af833b6017dbb1405770e591e13cc0ca0ec0907f9b45366"},
+    {file = "Resiliparse-0.14.5-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:c9c5f0a082d78c0e9c651b087ccf58a7cf0d6470ce0ade4a20853284b1b63381"},
+    {file = "Resiliparse-0.14.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:734d52acffcfa3fd63590e5905e55727d4415fe8b518acc5685703b6ee66caa2"},
+    {file = "Resiliparse-0.14.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:08d716e681e56d91e8e6cbd2dd2de41d052fd203452a38dbd085195c01187d40"},
+    {file = "Resiliparse-0.14.5-cp312-cp312-win_amd64.whl", hash = "sha256:12c31bb67bdef61eadccedbf656f7665505edf5d8e5b573ae9f2d9bb364b06cb"},
+    {file = "Resiliparse-0.14.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f05c02b7cc99402eed3f79e50b6bfe84962680f93b5fba7a37d62ed4f99915dd"},
+    {file = "Resiliparse-0.14.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:39daf9001bc9a9adf5bab7b9d58d8bc2f74b30c4577579394e7d6b562e7ce11a"},
+    {file = "Resiliparse-0.14.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ba7b19413ed689a828ef26dcfb85d0db62e15abe166f0b5816bb11bb8a3cced"},
+    {file = "Resiliparse-0.14.5-cp38-cp38-win_amd64.whl", hash = "sha256:c9931423ef6d1a5549e880637b276d44ef6ed21f09402d53e60cdd8759c08175"},
+    {file = "Resiliparse-0.14.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:37fcbe40afc593c9a2f4fb393d7832fc03c7d2441f3aa72f1cfd5b21db027f1e"},
+    {file = "Resiliparse-0.14.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:593c7c3d025f4166d8a7084ee9cb5ccaa84f84ea58bab9fc194f39d87d444f17"},
+    {file = "Resiliparse-0.14.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:195118b337b0f1e2082a972d28e2dd4e2ee64d41cb7c82c1834b8dcc2324ae5b"},
+    {file = "Resiliparse-0.14.5-cp39-cp39-win_amd64.whl", hash = "sha256:3fc54cb4e56b90e32cf8e0672337d9ead58419d35680184443bd2fbe7c4b5743"},
+    {file = "Resiliparse-0.14.5.tar.gz", hash = "sha256:201233f0d127b60b510d7347ef67682cc6f76f6e8402161925eb0f43b7d1a9c2"},
+]
+
+[package.dependencies]
+fastwarc = "0.14.5"
+
+[package.extras]
+all = ["resiliparse[beam,cli]"]
+beam = ["apache-beam[aws] (>=2.37.0)", "boto3 (>=1.9)", "elasticsearch (>=7.0.0)"]
+cli = ["click", "joblib", "tqdm"]
+cli-benchmark = ["beautifulsoup4", "langid", "selectolax"]
+test = ["pytest (>=7.2.2)", "pytest-cov (>=4.0.0)"]
+
+[[package]]
 name = "rpds-py"
 version = "0.17.1"
 description = "Python bindings to Rust's persistent data structures (rpds)"
@@ -3032,4 +3233,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "bffcf5ca5e9fd2d7ea30602919807372b161ff0c92367509b84525cd6d01362f"
+content-hash = "b44f20ceeb7decf153d3f5ee5a550770319022b4a50f1ea13a0d43d7bf73a414"
