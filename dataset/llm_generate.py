@@ -1,12 +1,15 @@
 import glob
+import json
 from functools import partial
 import logging
 from multiprocessing import pool
 import os
+import sys
 import time
 
 import click
-from openai import OpenAI
+import jsonschema
+from openai import NotFoundError, OpenAI
 from openai.types.beta import Assistant
 import torch
 from transformers import pipeline, set_seed
@@ -45,6 +48,22 @@ Answer in structured JSON format (without Markdown formatting) like so:
 }
 '''
 
+SUMMARY_JSON_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'key_points': {'type': 'array', 'items': {'type': 'string'}},
+        'spokespersons': {'type': 'array', 'items': {'type': 'string'}},
+        'article_type': {
+            'type': 'string',
+            'enum': ['breaking news', 'press release', 'government agency statement', 'financial news',
+                     'opinion piece', 'fact check', 'celebrity news', 'general reporting', 'speech transcript']},
+        'dateline': {'type': 'string'},
+        'audience': {'type': 'string', 'enum': ['general public', 'professionals', 'children']},
+        'stance': {'type': 'string', 'enum': ['left-leaning', 'right-leaning', 'neutral']},
+    },
+    'required': ['key_points', 'spokespersons', 'article_type', 'dateline', 'audience', 'stance']
+}
+
 
 def _summarize_article(article: str, client: OpenAI, assistant: Assistant):
     thread = client.beta.threads.create()
@@ -63,7 +82,10 @@ def _summarize_article(article: str, client: OpenAI, assistant: Assistant):
     if response.startswith('```json'):
         response = response.strip('`')[len('json'):]
 
-    client.beta.threads.delete(thread_id=thread.id)
+    try:
+        client.beta.threads.delete(thread_id=thread.id)
+    except NotFoundError:
+        pass
     return response.strip()
 
 
@@ -121,6 +143,37 @@ def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, p
     with pool.ThreadPool(processes=parallelism) as p:
         with click.progressbar(p.imap(fn, in_out_files), label='Generating summaries', length=len(in_files)) as bar:
             list(bar)
+
+
+@main.command(help='Validate LLM-generated JSON files')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+def validate_llm_json(input_dir):
+    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.json')), label='Validating JSON files') as bar:
+        syntax_errors = []
+        validation_errors = []
+        for fname in bar:
+            try:
+                jsonschema.validate(instance=json.load(open(fname, 'r')), schema=SUMMARY_JSON_SCHEMA)
+            except json.JSONDecodeError as e:
+                syntax_errors.append((e.msg, fname))
+            except jsonschema.ValidationError as e:
+                validation_errors.append((e.message, fname))
+
+    if not syntax_errors and not validation_errors:
+        click.echo('No errors.', err=True)
+        sys.exit(0)
+
+    if syntax_errors:
+        click.echo('Not well-formed:', err=True)
+        for e, f in sorted(syntax_errors, key=lambda x: x[1]):
+            click.echo(f'  {f}: {e}', err=True)
+
+    if validation_errors:
+        click.echo('Validation errors:', err=True)
+        for e, f in sorted(validation_errors, key=lambda x: x[1]):
+            click.echo(f'  {f}: {e}', err=True)
+
+    sys.exit(1)
 
 
 @main.command(help='Generate texts with GPT-2-XL')
