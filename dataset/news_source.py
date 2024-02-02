@@ -211,7 +211,7 @@ def plot_length_dist(input_dir, log):
         y_pdf *= x_pdf / (scale * np.exp((s**2) / 2))        # Correct for x bin shift
         y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
         ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
-        print(f'loc = {scale:.2f}, μ = {np.log(np.clip(loc, 1, None)):.2f}, σ = {s:.2f} (log-normal)')
+        print(f'loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
     else:
         mean, std = norm.fit(tokens)
         x_pdf = np.linspace(*ax.get_xlim(), 100)
@@ -334,6 +334,30 @@ def validate_llm_json(input_dir):
             click.echo(f'  {f}: {e}', err=True)
 
     sys.exit(1)
+
+
+@main.command(help='Truncate text character lengths according to a specific log-normal distribution')
+@click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-m', '--scale', type=float, default=2800.0, show_default=True, help='Distribution scale')
+@click.option('-l', '--loc', type=float, default=100.0, show_default=True, help='Distribution left location')
+@click.option('-s', '--sigma', type=float, default=.2, show_default=True, help='Distribution standard deviation')
+@click.option('-x', '--hard-max', type=int, default=5000, show_default=True, help='Hard maximum number of characters')
+def truncate_len(input_dir, output_dir, scale, loc, sigma, hard_max):
+    output_dir = os.path.join(output_dir, 'articles-len-truncated')
+
+    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths') as bar:
+        for f in bar:
+            out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
+            os.makedirs(out, exist_ok=True)
+            out = os.path.join(out, os.path.basename(f))
+
+            t = open(f, 'r').read()
+            r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
+            while len(t) > hard_max or len(t) > r:
+                t = t[:t.rfind('\n\n')]
+
+            open(out, 'w').write(t)
 
 
 @main.command(help='Combine article lists and texts with LLM summaries')
