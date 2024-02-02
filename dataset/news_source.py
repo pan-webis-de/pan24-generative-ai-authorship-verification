@@ -72,13 +72,13 @@ def main():
 @click.argument('start_date', metavar='START_DATE', type=click.DateTime(formats=['%Y-%m-%d']))
 @click.argument('end_date', metavar='END_DATE', type=click.DateTime(formats=['%Y-%m-%d']))
 @click.argument('topic_file', type=click.File('r'))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'article-lists'), show_default=True)
 @click.option('-l', '--language', help='News language', default='en')
 @click.option('-c', '--country', help='News country', default='US')
 @click.option('-n', '--num-results', type=int, help='Maximum number of results to download', default=200)
 @click.option('--sleep-time', type=int, default=5, help='Sleep time between requests')
 def list_news(start_date, end_date, topic_file, output_dir, language, country, num_results, sleep_time):
-    output_dir = os.path.join(output_dir, 'article-lists')
     os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(topic_file.readlines(), label='Downloading news for topics') as progress:
@@ -109,9 +109,9 @@ def list_news(start_date, end_date, topic_file, output_dir, language, country, n
 
 @main.command(help='Download news articles from article lists')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-raw'), show_default=True)
 def scrape_articles(input_dir, output_dir):
-    output_dir = os.path.join(output_dir, 'articles-raw')
     os.makedirs(output_dir, exist_ok=True)
 
     newspaper_cfg = newspaper.Config()
@@ -161,10 +161,10 @@ def scrape_articles(input_dir, output_dir):
 
 @main.command(help='Filter downloaded articles')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-filtered'), show_default=True)
 @click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
 def filter_articles(input_dir, output_dir, min_length):
-    output_dir = os.path.join(output_dir, 'articles-filtered')
     os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(os.listdir(input_dir), label='Filtering articles') as bar:
@@ -267,7 +267,8 @@ def _map_from_to_file(fnames, *args, fn, skip_existing=True, max_chars=None, **k
 
 @main.command(help='Generate news article summaries using OpenAI API')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'article-summaries'), show_default=True)
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-n', '--assistant-name', default='news-article-summarizer', show_default=True)
@@ -296,7 +297,7 @@ def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, p
 
     # List input files and map to (in-dir/art-*.txt, out-dir/art-*.json) tuples
     in_files = glob.glob(os.path.join(input_dir, '*', 'art-*.txt'))
-    in_out_files = ((f, os.path.join(output_dir, 'article-summaries', os.path.basename(os.path.dirname(f)),
+    in_out_files = ((f, os.path.join(output_dir, os.path.basename(os.path.dirname(f)),
                                      os.path.splitext(os.path.basename(f))[0] + '.json')) for f in in_files)
     fn = partial(_map_from_to_file, fn=_summarize_article, max_chars=max_chars, client=client, assistant=assistant)
 
@@ -338,14 +339,13 @@ def validate_llm_json(input_dir):
 
 @main.command(help='Truncate text character lengths according to a specific log-normal distribution')
 @click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-truncated'), show_default=True)
 @click.option('-m', '--scale', type=float, default=2800.0, show_default=True, help='Distribution scale')
 @click.option('-l', '--loc', type=float, default=100.0, show_default=True, help='Distribution left location')
 @click.option('-s', '--sigma', type=float, default=.2, show_default=True, help='Distribution standard deviation')
 @click.option('-x', '--hard-max', type=int, default=5000, show_default=True, help='Hard maximum number of characters')
-def truncate_len(input_dir, output_dir, scale, loc, sigma, hard_max):
-    output_dir = os.path.join(output_dir, 'articles-len-truncated')
-
+def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
     with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths') as bar:
         for f in bar:
             out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
@@ -364,9 +364,9 @@ def truncate_len(input_dir, output_dir, scale, loc, sigma, hard_max):
 @click.argument('article_list_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles'), show_default=True)
 def combine_source_data(article_list_dir, article_text_dir, article_summary_dir, output_dir):
-    output_dir = os.path.join(output_dir, 'articles')
     os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(glob.glob(os.path.join(article_list_dir, '*.jsonl')), label='Combining source files') as bar:
