@@ -164,7 +164,7 @@ def scrape_articles(input_dir, output_dir):
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-filtered'), show_default=True)
 @click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
-def filter_articles(input_dir, output_dir, min_length):
+def filter(input_dir, output_dir, min_length):
     os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(os.listdir(input_dir), label='Filtering articles') as bar:
@@ -189,8 +189,8 @@ def filter_articles(input_dir, output_dir, min_length):
 
 @main.command(help='Plot text length distribution')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-l', '--log', is_flag=True, help='Fit a log-normal distribution')
-def plot_length_dist(input_dir, log):
+@click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
+def plot_length_dist(input_dir, no_log):
     ws_re = re.compile(r'\s+')
     tokens = []
 
@@ -201,10 +201,17 @@ def plot_length_dist(input_dir, log):
                 tokens.append(l)
 
     tokens = pd.DataFrame(tokens, columns=['Characters'])
-    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=log, label='Density')
+    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=not no_log, label='Density')
 
     # Overlay (log-)normal distribution
-    if log:
+    if no_log:
+        mean, std = norm.fit(tokens)
+        x_pdf = np.linspace(*ax.get_xlim(), 100)
+        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
+        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
+        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
+        print(f'μ = {mean:.2f}, σ = {std:.2f}')
+    else:
         s, loc, scale = lognorm.fit(tokens)
         x_pdf = np.logspace(*np.log10(np.clip(ax.get_xlim(), 1, None)), 100, base=10)
         y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
@@ -212,13 +219,6 @@ def plot_length_dist(input_dir, log):
         y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
         ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
         print(f'loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
-    else:
-        mean, std = norm.fit(tokens)
-        x_pdf = np.linspace(*ax.get_xlim(), 100)
-        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
-        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
-        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
-        print(f'μ = {mean:.2f}, σ = {std:.2f}')
 
     plt.legend()
     plt.show()
@@ -276,7 +276,7 @@ def _map_from_to_file(fnames, *args, fn, skip_existing=True, max_chars=None, **k
 @click.option('-p', '--parallelism', default=10, show_default=True)
 @click.option('-c', '--max-chars', help='Maximum article length to send to OpenAI API in characters',
               default=8192, show_default=True)
-def summarize_news(input_dir, output_dir, api_key, assistant_name, model_name, parallelism, max_chars):
+def summarize(input_dir, output_dir, api_key, assistant_name, model_name, parallelism, max_chars):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
 
@@ -366,7 +366,7 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 @click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles'), show_default=True)
-def combine_source_data(article_list_dir, article_text_dir, article_summary_dir, output_dir):
+def combine(article_list_dir, article_text_dir, article_summary_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     with click.progressbar(glob.glob(os.path.join(article_list_dir, '*.jsonl')), label='Combining source files') as bar:
