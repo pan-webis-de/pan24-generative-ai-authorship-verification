@@ -7,6 +7,7 @@ import lzma
 from multiprocessing import pool
 import os
 import re
+import string
 import sys
 import time
 
@@ -341,10 +342,10 @@ def validate_llm_json(input_dir):
 @click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-truncated'), show_default=True)
-@click.option('-m', '--scale', type=float, default=2800.0, show_default=True, help='Distribution scale')
-@click.option('-l', '--loc', type=float, default=100.0, show_default=True, help='Distribution left location')
-@click.option('-s', '--sigma', type=float, default=.2, show_default=True, help='Distribution standard deviation')
-@click.option('-x', '--hard-max', type=int, default=5000, show_default=True, help='Hard maximum number of characters')
+@click.option('-m', '--scale', type=float, default=3300.0, show_default=True, help='Distribution scale')
+@click.option('-l', '--loc', type=float, default=0.0, show_default=True, help='Distribution left location')
+@click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
+@click.option('-x', '--hard-max', type=int, default=8000, show_default=True, help='Hard maximum number of characters')
 def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
     with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths') as bar:
         for f in bar:
@@ -354,7 +355,11 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 
             t = open(f, 'r').read()
             r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
-            while len(t) > hard_max or len(t) > r:
+            while len(t) > hard_max or len(t) > r + 200:
+                t = t[:t.rfind('\n\n')]
+
+            # Strip one more line if last character isn't punctuation
+            if t[-1] not in string.punctuation and len(t[t.rfind('\n'):]) < 70:
                 t = t[:t.rfind('\n\n')]
 
             open(out, 'w').write(t)
