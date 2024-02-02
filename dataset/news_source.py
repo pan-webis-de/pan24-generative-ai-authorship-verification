@@ -21,6 +21,7 @@ import numpy as np
 from openai import NotFoundError, OpenAI, OpenAIError
 from openai.types.beta import Assistant
 import pandas as pd
+from scipy.stats import lognorm, norm
 import seaborn as sns
 
 logger = logging.getLogger(__name__)
@@ -188,20 +189,38 @@ def filter_articles(input_dir, output_dir, min_length):
 
 @main.command(help='Plot text length distribution')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-def plot_length_dist(input_dir):
+@click.option('-l', '--log', is_flag=True, help='Fit a log-normal distribution')
+def plot_length_dist(input_dir, log):
     ws_re = re.compile(r'\s+')
     tokens = []
 
     with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Counting tokens') as bar:
         for f in bar:
-            tokens.append(len(ws_re.sub(open(f, 'r').read().strip(), ' ')))
+            l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
+            if l > 1000:
+                tokens.append(l)
 
     tokens = pd.DataFrame(tokens, columns=['Characters'])
+    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=log, label='Density')
 
-    tokens_log = np.log(tokens)
-    print(f'μ = {tokens_log.mean().iloc[0]:.2f}, σ = {tokens_log.std().iloc[0]:.2f} (log-normal)')
+    # Overlay (log-)normal distribution
+    if log:
+        s, loc, scale = lognorm.fit(tokens)
+        x_pdf = np.logspace(*np.log10(np.clip(ax.get_xlim(), 1, None)), 100, base=10)
+        y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
+        y_pdf *= x_pdf / (scale * np.exp((s**2) / 2))        # Correct for x bin shift
+        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
+        ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
+        print(f'loc = {scale:.2f}, μ = {np.log(np.clip(loc, 1, None)):.2f}, σ = {s:.2f} (log-normal)')
+    else:
+        mean, std = norm.fit(tokens)
+        x_pdf = np.linspace(*ax.get_xlim(), 100)
+        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
+        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
+        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
+        print(f'μ = {mean:.2f}, σ = {std:.2f}')
 
-    sns.histplot(data=tokens, x='Characters', kde=True, log_scale=True)
+    plt.legend()
     plt.show()
 
 

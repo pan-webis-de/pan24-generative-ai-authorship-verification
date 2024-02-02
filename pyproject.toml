@@ -21,6 +21,7 @@ jsonschema = "^4.21.1"
 markdown = "^3.5.2"
 resiliparse = "^0.14.5"
 backoff = "^2.2.1"
+scipy = "^1.12.0"
 
 
 [build-system]
