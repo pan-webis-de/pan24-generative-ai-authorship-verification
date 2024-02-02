@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Janek Bevendorff <janek.bevendorff@uni-weimar.de>"]
 readme = "README.md"
+packages = [
+    { include = "dataset" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -23,6 +26,9 @@ resiliparse = "^0.14.5"
 backoff = "^2.2.1"
 scipy = "^1.12.0"
 
+[tool.poetry.scripts]
+news-source = 'dataset.news_source:main'
+llm-generate = 'dataset.llm_generate:main'
 
 [build-system]
 requires = ["poetry-core"]

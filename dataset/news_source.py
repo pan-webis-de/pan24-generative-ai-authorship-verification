@@ -15,7 +15,6 @@ import backoff
 import click
 import jsonschema
 import gnews
-from gnews_url import GNewsURL
 from matplotlib import pyplot as plt
 import newspaper
 import numpy as np
@@ -24,6 +23,8 @@ from openai.types.beta import Assistant
 import pandas as pd
 from scipy.stats import lognorm, norm
 import seaborn as sns
+
+from dataset.gnews_url import GNewsURL
 
 logger = logging.getLogger(__name__)
 
