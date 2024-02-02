@@ -1,3 +1,4 @@
+import re
 from functools import partial
 import glob
 import json
@@ -67,6 +68,9 @@ def _generate_instruction_prompt(article_data):
     if summary['article_type'] != 'speech transcript' and summary['dateline']:
         prompt += f'\nStart the article body with the dateline "{summary["dateline"]} – ".'
 
+    n_words = round(int(len(re.split(r'\s+', article_data['text']))), -1)
+    prompt += f'\nYour article should be about {n_words} words long.'
+
     return prompt
 
 
@@ -110,7 +114,8 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
 
 @main.command(help='Generate articles using the OpenAI API')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-llm'), show_default=True)
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
@@ -119,7 +124,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
 
-    output_dir = os.path.join(output_dir, f'articles-llm-{model_name}')
+    output_dir = os.path.join(output_dir, model_name)
     os.makedirs(output_dir, exist_ok=True)
 
     client = OpenAI(api_key=open(api_key).read().strip() if api_key else os.environ.get('OPENAI_API_KEY'))
