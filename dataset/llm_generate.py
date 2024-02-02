@@ -68,8 +68,9 @@ def _generate_instruction_prompt(article_data):
     if summary['article_type'] != 'speech transcript' and summary['dateline']:
         prompt += f'\nStart the article body with the dateline "{summary["dateline"]} – ".'
 
-    n_words = round(int(len(re.split(r'\s+', article_data['text']))), -1)
-    prompt += f'\nYour article should be about {n_words} words long.'
+    n_paragraphs = article_data['text'].count('\n\n')
+    n_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
+    prompt += f'\nYour article should be about {n_paragraphs} paragraphs long (at least {n_words} words).'
 
     return prompt
 
