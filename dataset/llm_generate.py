@@ -157,7 +157,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, max_new_tokens
     generated_ids = model.generate(model_inputs, max_new_tokens=max_new_tokens, do_sample=True)
     response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
     response = re.sub(r'^(?:Title|Headline):\s', '', response, flags=re.I, count=1)
-    response = re.sub(r'^[\[(]?Paragraph(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
+    response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
     return html2text.extract_plain_text(markdown.markdown(response))
 
 
