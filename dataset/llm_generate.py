@@ -12,7 +12,7 @@ import markdown
 from openai import OpenAI, OpenAIError
 from resiliparse.extract import html2text
 import torch
-from transformers import set_seed
+from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ set_seed(42)
 @click.group()
 def main():
     global GPU_DEVICE
-    GPU_DEVICE = torch.cuda.current_device() if torch.cuda.is_available() else -1
+    GPU_DEVICE = 'cuda' if torch.cuda.is_available() else -1
 
 
 def _generate_instruction_prompt(article_data):
@@ -110,7 +110,18 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
     result = fn(record, *args, **kwargs)
     if not result:
         return
-    open(out_file, 'w').write(result)
+    try:
+        print('OUT', out_file)
+        open(out_file, 'w').write(result)
+    except Exception as e:
+        print(e)
+
+
+def _generate_articles(input_dir, gen_fn, parallelism):
+    jsonl_it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
+    with pool.ThreadPool(processes=parallelism) as p:
+        with click.progressbar(p.imap(gen_fn, jsonl_it), label='Generating articles') as bar:
+            list(bar)
 
 
 @main.command(help='Generate articles using the OpenAI API')
@@ -130,22 +141,66 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 
     client = OpenAI(api_key=open(api_key).read().strip() if api_key else os.environ.get('OPENAI_API_KEY'))
 
-    fn = partial(_map_records_to_files, fn=_openai_gen_article,
-                 out_dir=output_dir, client=client, model_name=model_name)
-    jsonl_it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
+    fn = partial(
+        _map_records_to_files,
+        fn=_openai_gen_article,
+        client=client,
+        model_name=model_name)
+    _generate_articles(input_dir, fn, parallelism)
 
-    with pool.ThreadPool(processes=parallelism) as p:
-        with click.progressbar(p.imap(fn, jsonl_it), label='Generating articles') as bar:
-            list(bar)
+
+def _huggingface_chat_gen_article(article_data, model, tokenizer, max_new_tokens):
+    messages = [
+        {'role': 'user', 'content': _generate_instruction_prompt(article_data)},
+    ]
+    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt',).to(GPU_DEVICE)
+    generated_ids = model.generate(model_inputs, max_new_tokens=max_new_tokens, do_sample=True)
+    response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
+    response = re.sub(r'^(?:Title|Headline):\s', '', response, flags=re.I, count=1)
+    response = re.sub(r'^[\[(]?Paragraph(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
+    return html2text.extract_plain_text(markdown.markdown(response))
 
 
-@main.command(help='Generate texts with GPT-2-XL')
+@main.command(help='Generate texts using a Huggingface chat model')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory', default='data')
-def gpt2_xl(input_dir, output_dir):
-    # generator = pipeline('text-generation', model='gpt2-xl', device=GPU_DEVICE)
-    # generator = pipeline('text-generation', model='openai-community/gpt2-xl', device=GPU_DEVICE)
-    pass
+@click.argument('model_name')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-llm'))
+@click.option('-m', '--max-new-tokens', type=int, default=1000, show_default=True, help='Maximum new tokens')
+@click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
+@click.option('-q', '--quantization', type=click.Choice(['4', '8']))
+@click.option('-p', '--parallelism', default=1, show_default=True)
+def huggingface_chat(input_dir, model_name, output_dir, max_new_tokens, better_transformer, quantization, parallelism):
+    try:
+        if quantization == '4':
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
+            model_name_out = model_name + '-4bit'
+        elif quantization == '8':
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, load_in_8bit=True, bnb_8bit_compute_dtype=torch.float16)
+            model_name_out = model_name + '-4bit'
+        else:
+            model = AutoModelForCausalLM.from_pretrained(model_name)
+            model.to(GPU_DEVICE)
+            model_name_out = model_name
+
+        if better_transformer:
+            model = model.to_bettertransformer()
+
+    except Exception as e:
+        raise click.UsageError('Failed to load model: ' + str(e))
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
+    fn = partial(
+        _map_records_to_files,
+        fn=_huggingface_chat_gen_article,
+        out_dir=output_dir,
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=max_new_tokens)
+    _generate_articles(input_dir, fn, parallelism)
 
 
 if __name__ == "__main__":
