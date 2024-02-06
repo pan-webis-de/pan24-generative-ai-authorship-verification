@@ -1,4 +1,5 @@
 import re
+import string
 from functools import partial
 import glob
 import json
@@ -12,13 +13,15 @@ import markdown
 from openai import OpenAI, OpenAIError
 from resiliparse.extract import html2text
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
+import transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 logger = logging.getLogger(__name__)
 
 GPU_DEVICE = -1
 
-set_seed(42)
+transformers.set_seed(42)
+transformers.logging.set_verbosity_error()
 
 
 @click.group()
@@ -71,6 +74,7 @@ def _generate_instruction_prompt(article_data):
     n_paragraphs = article_data['text'].count('\n\n')
     n_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
     prompt += f'\nYour article should be about {n_paragraphs} paragraphs long (at least {n_words} words).'
+    prompt += ' Do not comment on what you do. Do not speak to or address the user.'
 
     return prompt
 
@@ -83,7 +87,7 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str):
             {'role': 'system', 'content': _generate_instruction_prompt(article_data)}
         ]
     )
-    return html2text.extract_plain_text(markdown.markdown(response.choices[0].message.content))
+    return html2text.extract_plain_text(markdown.markdown(response.choices[0].message.content)).strip()
 
 
 def _iter_jsonl_files(in_files):
@@ -110,11 +114,7 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
     result = fn(record, *args, **kwargs)
     if not result:
         return
-    try:
-        print('OUT', out_file)
-        open(out_file, 'w').write(result)
-    except Exception as e:
-        print(e)
+    open(out_file, 'w').write(result)
 
 
 def _generate_articles(input_dir, gen_fn, parallelism):
@@ -149,28 +149,67 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     _generate_articles(input_dir, fn, parallelism)
 
 
-def _huggingface_chat_gen_article(article_data, model, tokenizer, max_new_tokens):
+def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
     messages = [
-        {'role': 'user', 'content': _generate_instruction_prompt(article_data)},
+        {'role': 'user', 'content': ''},
+        {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
     ]
-    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt',).to(GPU_DEVICE)
-    generated_ids = model.generate(model_inputs, max_new_tokens=max_new_tokens, do_sample=True)
-    response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
-    response = re.sub(r'^(?:Title|Headline):\s', '', response, flags=re.I, count=1)
-    response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
-    return html2text.extract_plain_text(markdown.markdown(response))
+    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt').to(GPU_DEVICE)
+
+    for _ in range(5):
+        generated_ids = model.generate(
+            model_inputs,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.eos_token_id,
+            **kwargs)
+        response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
+
+        # Strip markdown
+        response = html2text.extract_plain_text(markdown.markdown(response)).strip()
+
+        # Remove certain generation quirks
+        response = re.sub(r'^(?:Title|Headline|Paragraph(?: \d+)?):\s', '', response, flags=re.M | re.I)
+        response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
+        response = re.sub(r'\n{3,}', '\n\n', response).strip()
+
+        # Retry if response empty
+        if not response:
+            continue
+
+        # Some models tend to stop mid-sentence
+        if response and response[-1] in string.ascii_letters:
+            response = response[:response.rfind('\n\n')]
+
+        return response.rstrip()
+
+    return ''
 
 
 @main.command(help='Generate texts using a Huggingface chat model')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.argument('model_name')
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-llm'))
-@click.option('-m', '--max-new-tokens', type=int, default=1000, show_default=True, help='Maximum new tokens')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False),
+              default=os.path.join('data', 'articles-llm'), show_default=True, help='Output directory')
+@click.option('-m', '--min-length', type=click.IntRange(1), default=650,
+              show_default=True, help='Minimum length in tokens')
+@click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=3600,
+              show_default=True, help='Maximum new tokens')
+@click.option('-s', '--decay-start', type=click.IntRange(1), default=750,
+              show_default=True, help='Length decay penalty start')
+@click.option('-d', '--decay-factor', type=click.FloatRange(1), default=1.001,
+              show_default=True, help='Length decay penalty factor')
+@click.option('-b', '--num-beams', type=click.IntRange(1), default=1,
+              show_default=True, help='Number of search beams')
+@click.option('-k', '--top-k', type=click.IntRange(0), default=100,
+              show_default=True, help='Top-k sampling (0 to disable)')
+@click.option('-t', '--temperature', type=click.FloatRange(0), default=0.6,
+              show_default=True, help='Model temperature')
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-p', '--parallelism', default=1, show_default=True)
-def huggingface_chat(input_dir, model_name, output_dir, max_new_tokens, better_transformer, quantization, parallelism):
+def huggingface_chat(input_dir, model_name, output_dir, better_transformer, quantization, parallelism, top_k,
+                     decay_start, decay_factor, **kwargs):
     try:
         if quantization == '4':
             model = AutoModelForCausalLM.from_pretrained(
@@ -191,7 +230,7 @@ def huggingface_chat(input_dir, model_name, output_dir, max_new_tokens, better_t
     except Exception as e:
         raise click.UsageError('Failed to load model: ' + str(e))
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, padding_side='left')
     output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
     fn = partial(
         _map_records_to_files,
@@ -199,7 +238,9 @@ def huggingface_chat(input_dir, model_name, output_dir, max_new_tokens, better_t
         out_dir=output_dir,
         model=model,
         tokenizer=tokenizer,
-        max_new_tokens=max_new_tokens)
+        top_k=top_k if top_k > 0 else None,
+        exponential_decay_length_penalty=(decay_start, decay_factor),
+        **kwargs)
     _generate_articles(input_dir, fn, parallelism)
 
 

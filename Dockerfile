@@ -3,11 +3,20 @@ FROM nvcr.io/nvidia/cuda:12.3.1-devel-ubuntu22.04
 RUN set -x \
     && apt update \
     && apt install -y python3 python3-pip \
-    && python3 -m pip install --no-cache poetry \
+    && python3 -m pip install --no-cache poetry poetry-plugin-export \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . /opt/pan24-generative-authorship-detection
+RUN set -x && mkdir /opt/pan24-generative-authorship-detection
 WORKDIR /opt/pan24-generative-authorship-detection
 
+# Install dependencies before copying actual source files
+COPY pyproject.toml /opt/pan24-generative-authorship-detection
+COPY poetry.lock /opt/pan24-generative-authorship-detection
 RUN set -x \
-    && POETRY_INSTALLER_MAX_WORKERS=10 poetry --no-cache --no-interaction install
+      && poetry export > requirements.txt \
+      && pip --no-cache install -r requirements.txt \
+      && rm requirements.txt
+
+COPY . /opt/pan24-generative-authorship-detection
+
+RUN set -x && pip --no-cache install --no-deps .
