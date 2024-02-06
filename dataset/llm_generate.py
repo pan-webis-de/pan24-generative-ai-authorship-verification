@@ -205,28 +205,30 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
               show_default=True, help='Top-k sampling (0 to disable)')
 @click.option('-t', '--temperature', type=click.FloatRange(0), default=0.6,
               show_default=True, help='Model temperature')
+@click.option('-f', '--flash-attn', is_flag=True,
+              help='Use flash-attn 2 (must be installed separately)')
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-p', '--parallelism', default=1, show_default=True)
-def huggingface_chat(input_dir, model_name, output_dir, better_transformer, quantization, parallelism, top_k,
-                     decay_start, decay_factor, **kwargs):
-    try:
-        if quantization == '4':
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name, load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
-            model_name_out = model_name + '-4bit'
-        elif quantization == '8':
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name, load_in_8bit=True, bnb_8bit_compute_dtype=torch.float16)
-            model_name_out = model_name + '-4bit'
-        else:
-            model = AutoModelForCausalLM.from_pretrained(model_name)
-            model.to(GPU_DEVICE)
-            model_name_out = model_name
+def huggingface_chat(input_dir, model_name, output_dir, quantization, parallelism, top_k,
+                     decay_start, decay_factor, better_transformer, flash_attn, **kwargs):
 
+    model_name_out = model_name
+    model_args = {}
+    if flash_attn:
+        model_args['attn_implementation'] = 'flash_attention_2'
+        model_args['torch_dtype'] = torch.float16
+    if quantization:
+        model_args[f'load_in_{quantization}bit'] = True
+        model_args[f'bnb_{quantization}bit_compute_dtype'] = torch.float16
+        model_name_out = model_name + f'-{quantization}bit'
+
+    try:
+        model = AutoModelForCausalLM.from_pretrained(model_name, **model_args)
+        if not quantization:
+            model.to(GPU_DEVICE)
         if better_transformer:
             model = model.to_bettertransformer()
-
     except Exception as e:
         raise click.UsageError('Failed to load model: ' + str(e))
 
