@@ -18,16 +18,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 logger = logging.getLogger(__name__)
 
-GPU_DEVICE = -1
-
 transformers.set_seed(42)
 transformers.logging.set_verbosity_error()
 
 
 @click.group()
 def main():
-    global GPU_DEVICE
-    GPU_DEVICE = 'cuda' if torch.cuda.is_available() else -1
+    pass
 
 
 def _generate_instruction_prompt(article_data):
@@ -154,7 +151,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
         {'role': 'user', 'content': ''},
         {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
     ]
-    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt').to(GPU_DEVICE)
+    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt')
 
     for _ in range(5):
         generated_ids = model.generate(
@@ -224,9 +221,7 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, parallelis
         model_name_out = model_name + f'-{quantization}bit'
 
     try:
-        model = AutoModelForCausalLM.from_pretrained(model_name, **model_args)
-        if not quantization:
-            model.to(GPU_DEVICE)
+        model = AutoModelForCausalLM.from_pretrained(model_name, device_map='auto', **model_args)
         if better_transformer:
             model = model.to_bettertransformer()
     except Exception as e:
