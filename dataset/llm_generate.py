@@ -151,7 +151,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
         {'role': 'user', 'content': ''},
         {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
     ]
-    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt')
+    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt').to(model.device)
 
     for _ in range(5):
         generated_ids = model.generate(
@@ -214,7 +214,7 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, parallelis
     model_args = {}
     if flash_attn:
         model_args['attn_implementation'] = 'flash_attention_2'
-        model_args['torch_dtype'] = torch.float16
+        model_args['torch_dtype'] = torch.bfloat16
     if quantization:
         model_args[f'load_in_{quantization}bit'] = True
         model_args[f'bnb_{quantization}bit_compute_dtype'] = torch.float16
