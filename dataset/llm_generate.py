@@ -98,18 +98,18 @@ def _iter_jsonl_files(in_files):
             yield f, json.loads(l)
 
 
-def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=True, **kwargs):
+def _map_records_to_files(topic_and_record, *args, fn, out_dir, skip_existing=True, out_file_suffix='.txt', **kwargs):
     """
-    Take a tuple of ``(input file name, parsed JSON record)``, apply ``fn`` on the JSON and write its output to
-    individual text files based on the record's ID under ``out_dir``.
+    Take a tuple of ``(topic name, parsed JSON record)``, apply ``fn`` on the JSON and write its output to
+    individual text files based on the record's topic and ID under ``out_dir``.
     """
 
-    file_in, record = fname_and_record
-
-    out_dir = os.path.join(out_dir, os.path.splitext(os.path.basename(file_in))[0])
+    topic, record = topic_and_record
+    out_dir = os.path.join(out_dir, topic)
     os.makedirs(out_dir, exist_ok=True)
 
-    out_file = os.path.join(out_dir, record['id'] + '.txt')
+    out_file = os.path.join(out_dir, record['id'] + out_file_suffix)
+
     if skip_existing and os.path.isfile(out_file):
         return
 
@@ -127,14 +127,29 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
 
 # noinspection PyStatementEffect
 def _generate_articles(input_dir, gen_fn, parallelism=1):
-    jsonl_it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
+    it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
+    it = ((os.path.splitext(os.path.basename(f))[0], a) for f, a in it)
 
     if parallelism == 1:
-        [_ for _ in tqdm(map(gen_fn, jsonl_it), desc='Generating articles', unit='article')]
+        [_ for _ in tqdm(map(gen_fn, it), desc='Generating articles', unit='article')]
         return
 
     with pool.ThreadPool(processes=parallelism) as p:
-        [_ for _ in tqdm(p.imap(gen_fn, jsonl_it), desc='Generating articles', unit='article')]
+        [_ for _ in tqdm(p.imap(gen_fn, it), desc='Generating articles', unit='article')]
+
+
+# noinspection PyStatementEffect
+def _generate_missing_article_headlines(input_dir, gen_fn):
+    article_it = glob.iglob(os.path.join(input_dir, '*', 'art-*.txt'))
+
+    for f in tqdm(article_it, desc='Checking and generating headlines', unit='article'):
+        article = open(f, 'r').read()
+        first_line = article.split('\n', 1)[0]
+        if len(first_line) < 25 or len(first_line) > 160 or first_line[-1] == '.':
+            gen_fn((os.path.basename(os.path.dirname(f)), {
+                'id': os.path.splitext(os.path.basename(f))[0],
+                'text': article
+            }))
 
 
 @main.command(help='Generate articles using the OpenAI API')
@@ -163,18 +178,27 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=5)
-def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
-    messages = [
-        {'role': 'user', 'content': ''},
-        {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
-    ]
+def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
+    if headline_only:
+        messages = [
+            {'role': 'user', 'content': article_data['text']},
+            {
+                'role': 'assistant',
+                'content': 'This input text is a news article. Respond with a single fitting headline for it.'
+            },
+        ]
+    else:
+        messages = [
+            {'role': 'user', 'content': ''},
+            {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
+        ]
     model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt').to(model.device)
 
     for _ in range(5):
         generated_ids = model.generate(
             model_inputs,
             do_sample=True,
-            eos_token_id=tokenizer.eos_token_id,
+            eos_token_id=tokenizer.encode('\n') if headline_only else tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
             **kwargs)
         response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
@@ -183,7 +207,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
         response = html2text.extract_plain_text(markdown.markdown(response)).strip()
 
         # Remove certain generation quirks
-        response = re.sub(r'^(?:Title|Headline|Paragraph(?: \d+)?):\s', '', response, flags=re.M | re.I)
+        response = re.sub(r'^(?:Title|Headline|Paragraph)(?: \d+)?:\s', '', response, flags=re.M | re.I)
         response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
         response = re.sub(r'\n{3,}', '\n\n', response).strip()
 
@@ -192,7 +216,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
             continue
 
         # Some models tend to stop mid-sentence
-        if response and response[-1] in string.ascii_letters:
+        if response and not headline_only and response[-1] in string.ascii_letters:
             response = response[:response.rfind('\n\n')]
 
         return response.rstrip()
@@ -223,8 +247,9 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
               help='Use flash-attn 2 (must be installed separately)')
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
+@click.option('-h', '--headlines-only', is_flag=True, help='Run on previous output and generate missing headlines')
 def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
-                     decay_start, decay_factor, better_transformer, flash_attn, **kwargs):
+                     decay_start, decay_factor, better_transformer, flash_attn, headlines_only, **kwargs):
 
     model_name_out = model_name
     model_args = {}
@@ -245,15 +270,26 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, padding_side='left')
     output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
-    fn = partial(
-        _map_records_to_files,
-        fn=_huggingface_chat_gen_article,
-        out_dir=output_dir,
+
+    kwargs.update(dict(
         model=model,
         tokenizer=tokenizer,
         top_k=top_k if top_k > 0 else None,
-        exponential_decay_length_penalty=(decay_start, decay_factor),
-        **kwargs)
+        exponential_decay_length_penalty=(decay_start, decay_factor)
+    ))
+
+    if headlines_only:
+        del kwargs['min_length']
+        kwargs['exponential_decay_length_penalty'] = (12, 1.01)
+        kwargs['max_new_tokens'] = 60
+
+    fn = partial(_map_records_to_files, fn=_huggingface_chat_gen_article, out_dir=output_dir, **kwargs)
+
+    if headlines_only:
+        click.echo('Trying to detect and generate missing headlines...', err=True)
+        _generate_missing_article_headlines(input_dir, partial(fn, headline_only=True, out_file_suffix='-headline.txt'))
+        return
+
     _generate_articles(input_dir, fn)
 
 
