@@ -108,9 +108,15 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
     if skip_existing and os.path.isfile(out_file):
         return
 
-    result = fn(record, *args, **kwargs)
+    try:
+        result = fn(record, *args, **kwargs)
+    except Exception as e:
+        logger.error('Failed to generate article: %s', str(e))
+        return
+
     if not result:
         return
+
     open(out_file, 'w').write(result)
 
 
@@ -146,6 +152,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     _generate_articles(input_dir, fn, parallelism)
 
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=5)
 def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
     messages = [
         {'role': 'user', 'content': ''},
