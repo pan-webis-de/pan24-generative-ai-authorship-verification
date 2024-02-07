@@ -13,8 +13,12 @@ import markdown
 from openai import OpenAI, OpenAIError
 from resiliparse.extract import html2text
 import torch
+try:
+    from optimum.nvidia import AutoModelForCausalLM
+except ModuleNotFoundError:
+    from transformers import AutoModelForCausalLM
 import transformers
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer
 
 logger = logging.getLogger(__name__)
 

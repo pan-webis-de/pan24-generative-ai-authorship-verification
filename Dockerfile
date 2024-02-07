@@ -1,3 +1,4 @@
+#FROM huggingface/optimum-nvidia
 FROM nvcr.io/nvidia/cuda:12.3.1-devel-ubuntu22.04
 
 RUN set -x \
@@ -16,6 +17,11 @@ RUN set -x \
       && poetry export > requirements.txt \
       && pip --no-cache install -r requirements.txt \
       && rm requirements.txt
+
+#RUN set -x \
+#      && poetry export --without-hashes | sed 's/==.*//' | sed '/transformers\|nvidia\|torch/d' > requirements.txt \
+#      && pip --no-cache install -r requirements.txt \
+#      && rm requirements.txt
 
 # Install flash-attn separately, as it cannot be installed with build isolation and thus Poetry right now
 RUN set -x \
