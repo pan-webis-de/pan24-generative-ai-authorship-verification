@@ -241,7 +241,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
               show_default=True, help='Number of search beams')
 @click.option('-k', '--top-k', type=click.IntRange(0), default=100,
               show_default=True, help='Top-k sampling (0 to disable)')
-@click.option('-t', '--temperature', type=click.FloatRange(0), default=0.6,
+@click.option('-t', '--temperature', type=click.FloatRange(0), default=0.9,
               show_default=True, help='Model temperature')
 @click.option('-f', '--flash-attn', is_flag=True,
               help='Use flash-attn 2 (must be installed separately)')
