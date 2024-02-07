@@ -3721,6 +3721,20 @@ video = ["av (==9.2.0)", "decord (==0.6.0)"]
 vision = ["Pillow (>=10.0.1,<=15.0)"]
 
 [[package]]
+name = "transformers-stream-generator"
+version = "0.0.4"
+description = "This is a text generation method which returns a generator, streaming out each token in real-time during inference, based on Huggingface/Transformers."
+category = "main"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "transformers-stream-generator-0.0.4.tar.gz", hash = "sha256:165ec99798aca106e888c772c8b5f10ba95ab8bd103542bf304b93ed8c300b38"},
+]
+
+[package.dependencies]
+transformers = ">=4.26.1"
+
+[[package]]
 name = "triton"
 version = "2.2.0"
 description = "A language and compiler for custom Deep Learning operations"
@@ -4010,4 +4024,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "b5f8f327b11dd46bb1dc7ca96ffdeb933e3190e77106f0937c857950a4b7b331"
+content-hash = "58dd2c80d3214f3ad6084f6f53be784c945cb85c49325194ed87ec74d0d95404"

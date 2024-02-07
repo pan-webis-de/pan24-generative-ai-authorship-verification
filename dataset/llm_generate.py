@@ -19,12 +19,11 @@ try:
 except ModuleNotFoundError:
     from transformers import AutoModelForCausalLM
 import transformers
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, set_seed
 
 logger = logging.getLogger(__name__)
 
-transformers.set_seed(42)
-transformers.logging.set_verbosity_error()
+set_seed(42)
 
 
 @click.group()
@@ -71,7 +70,7 @@ def _generate_instruction_prompt(article_data):
 
     prompt += '\nThe first line of your text is the headline.'
     if summary['article_type'] != 'speech transcript' and summary['dateline']:
-        prompt += f'\nStart the article body with the dateline "{summary["dateline"]} – ".'
+        prompt += f'\nBelow the headline, start the article body with the dateline "{summary["dateline"]} – ".'
 
     n_paragraphs = article_data['text'].count('\n\n')
     n_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
@@ -131,18 +130,18 @@ def _generate_articles(input_dir, gen_fn, parallelism=1):
     it = ((os.path.splitext(os.path.basename(f))[0], a) for f, a in it)
 
     if parallelism == 1:
-        [_ for _ in tqdm(map(gen_fn, it), desc='Generating articles', unit='article')]
+        [_ for _ in tqdm(map(gen_fn, it), desc='Generating articles', unit='articles')]
         return
 
     with pool.ThreadPool(processes=parallelism) as p:
-        [_ for _ in tqdm(p.imap(gen_fn, it), desc='Generating articles', unit='article')]
+        [_ for _ in tqdm(p.imap(gen_fn, it), desc='Generating articles', unit='articles')]
 
 
 # noinspection PyStatementEffect
 def _generate_missing_article_headlines(input_dir, gen_fn):
     article_it = glob.iglob(os.path.join(input_dir, '*', 'art-*.txt'))
 
-    for f in tqdm(article_it, desc='Checking and generating headlines', unit='article'):
+    for f in tqdm(article_it, desc='Checking and generating headlines', unit='articles'):
         article = open(f, 'r').read()
         first_line = article.split('\n', 1)[0]
         if len(first_line) < 25 or len(first_line) > 160 or first_line[-1] == '.':
@@ -179,46 +178,57 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=5)
 def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
+
+    role = 'user'
     if headline_only:
-        messages = [
-            {'role': 'user', 'content': article_data['text']},
-            {
-                'role': 'assistant',
-                'content': 'This input text is a news article. Respond with a single fitting headline for it.'
-            },
-        ]
+        messages = [{
+            'role': role,
+            'content': 'The following text is a news article or press release. ' +
+                       'Write a fitting headline that summarizes its main point.\n\nArticle: ' + article_data['text']
+            }]
     else:
-        messages = [
-            {'role': 'user', 'content': ''},
-            {'role': 'assistant', 'content': _generate_instruction_prompt(article_data)},
-        ]
-    model_inputs = tokenizer.apply_chat_template(messages, return_tensors='pt').to(model.device)
+        messages = [{'role': role, 'content': _generate_instruction_prompt(article_data)}]
+
+    model_inputs = tokenizer.apply_chat_template(
+        messages, return_tensors='pt', add_generation_prompt=True).to(model.device)
 
     for _ in range(5):
         generated_ids = model.generate(
             model_inputs,
             do_sample=True,
-            eos_token_id=tokenizer.encode('\n') if headline_only else tokenizer.eos_token_id,
-            pad_token_id=tokenizer.eos_token_id,
+            eos_token_id=tokenizer.pad_token_id,
+            pad_token_id=tokenizer.pad_token_id,
             **kwargs)
-        response = tokenizer.batch_decode(generated_ids[:, len(model_inputs[0]):], skip_special_tokens=True)[0]
+        response = tokenizer.decode(generated_ids[0][len(model_inputs[0]):], skip_special_tokens=True)
 
         # Strip markdown
         response = html2text.extract_plain_text(markdown.markdown(response)).strip()
 
         # Remove certain generation quirks
-        response = re.sub(r'^(?:Title|Headline|Paragraph)(?: \d+)?:\s', '', response, flags=re.M | re.I)
-        response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)?[)\]]?:?\n', '', response, flags=re.M | re.I)
+        response = re.sub(r'^[IVX0-9]+\.\s+', '', response, flags=re.M)
+        response = re.sub(
+            r'^(?:Title|Headline|Paragraph|Introduction|Article|Dateline)(?: \d+)?(?::\s+|\n+)', '',
+            response, flags=re.M | re.I)
+        response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)[])]?:?\s+', '', response, flags=re.M | re.I)
         response = re.sub(r'\n{3,}', '\n\n', response).strip()
+
+        if article_data.get('dateline'):
+            response = response.replace('\n' + article_data['dateline'] + '\n\n', '\n' + article_data['dateline'] + ' ')
 
         # Retry if response empty
         if not response:
             continue
 
-        # Some models tend to stop mid-sentence
-        if response and not headline_only and response[-1] in string.ascii_letters:
-            response = response[:response.rfind('\n\n')]
+        if response:
+            # Some models tend to stop mid-sentence
+            if not headline_only and response[-1] in string.ascii_letters:
+                response = response[:response.rfind('\n\n')]
 
+            # Strip quotes around headlines
+            if headline_only:
+                response = re.sub(r'^"(.+)"$', r'\1', response, flags=re.M)
+        print(response + '\n')
+        return ''
         return response.rstrip()
 
     return ''
@@ -229,27 +239,31 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
 @click.argument('model_name')
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False),
               default=os.path.join('data', 'articles-llm'), show_default=True, help='Output directory')
+@click.option('-d', '--device', type=click.Choice(['auto', 'cuda', 'cpu']), default='auto',
+              help='Select device to run model on')
 @click.option('-m', '--min-length', type=click.IntRange(1), default=650,
               show_default=True, help='Minimum length in tokens')
 @click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=3600,
               show_default=True, help='Maximum new tokens')
 @click.option('-s', '--decay-start', type=click.IntRange(1), default=750,
               show_default=True, help='Length decay penalty start')
-@click.option('-d', '--decay-factor', type=click.FloatRange(1), default=1.001,
+@click.option('--decay-factor', type=click.FloatRange(1), default=1.001,
               show_default=True, help='Length decay penalty factor')
-@click.option('-b', '--num-beams', type=click.IntRange(1), default=1,
+@click.option('-b', '--num-beams', type=click.IntRange(1), default=5,
               show_default=True, help='Number of search beams')
 @click.option('-k', '--top-k', type=click.IntRange(0), default=100,
               show_default=True, help='Top-k sampling (0 to disable)')
-@click.option('-t', '--temperature', type=click.FloatRange(0), default=0.9,
+@click.option('-t', '--temperature', type=click.FloatRange(0), default=2,
               show_default=True, help='Model temperature')
 @click.option('-f', '--flash-attn', is_flag=True,
               help='Use flash-attn 2 (must be installed separately)')
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-h', '--headlines-only', is_flag=True, help='Run on previous output and generate missing headlines')
-def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
-                     decay_start, decay_factor, better_transformer, flash_attn, headlines_only, **kwargs):
+@click.option('--trust-remote-code', is_flag=True, help='Trust remote code')
+def huggingface_chat(input_dir, model_name, output_dir, device, quantization, top_k,
+                     decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
+                     trust_remote_code, **kwargs):
 
     model_name_out = model_name
     model_args = {}
@@ -261,15 +275,18 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
         model_args[f'bnb_{quantization}bit_compute_dtype'] = torch.float16
         model_name_out = model_name + f'-{quantization}bit'
 
+    output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
+
     try:
-        model = AutoModelForCausalLM.from_pretrained(model_name, device_map='auto', **model_args)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name, device_map=device, trust_remote_code=trust_remote_code, **model_args)
         if better_transformer:
             model = model.to_bettertransformer()
     except Exception as e:
         raise click.UsageError('Failed to load model: ' + str(e))
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, padding_side='left')
-    output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name, use_cache=False, padding_side='left', trust_remote_code=trust_remote_code)
 
     kwargs.update(dict(
         model=model,
@@ -280,7 +297,7 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
 
     if headlines_only:
         del kwargs['min_length']
-        kwargs['exponential_decay_length_penalty'] = (12, 1.01)
+        del kwargs['exponential_decay_length_penalty']
         kwargs['max_new_tokens'] = 60
 
     fn = partial(_map_records_to_files, fn=_huggingface_chat_gen_article, out_dir=output_dir, **kwargs)

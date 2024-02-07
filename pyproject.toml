@@ -28,6 +28,7 @@ scipy = "^1.12.0"
 bitsandbytes = "^0.42.0"
 optimum = "^1.16.2"
 tqdm = "^4.66.1"
+transformers-stream-generator = "^0.0.4"
 
 [tool.poetry.scripts]
 news-source = 'dataset.news_source:main'
