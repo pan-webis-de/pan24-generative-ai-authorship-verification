@@ -12,6 +12,7 @@ import click
 import markdown
 from openai import OpenAI, OpenAIError
 from resiliparse.extract import html2text
+from tqdm import tqdm
 import torch
 try:
     from optimum.nvidia import AutoModelForCausalLM
@@ -124,17 +125,16 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
     open(out_file, 'w').write(result)
 
 
+# noinspection PyStatementEffect
 def _generate_articles(input_dir, gen_fn, parallelism=1):
     jsonl_it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
 
     if parallelism == 1:
-        with click.progressbar(map(gen_fn, jsonl_it), label='Generating articles') as bar:
-            list(bar)
+        [_ for _ in tqdm(map(gen_fn, jsonl_it), desc='Generating articles', unit='article')]
         return
 
     with pool.ThreadPool(processes=parallelism) as p:
-        with click.progressbar(p.imap(gen_fn, jsonl_it), label='Generating articles') as bar:
-            list(bar)
+        [_ for _ in tqdm(p.imap(gen_fn, jsonl_it), desc='Generating articles', unit='article')]
 
 
 @main.command(help='Generate articles using the OpenAI API')

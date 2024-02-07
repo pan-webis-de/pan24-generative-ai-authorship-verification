@@ -23,6 +23,7 @@ from openai.types.beta import Assistant
 import pandas as pd
 from scipy.stats import lognorm, norm
 import seaborn as sns
+from tqdm import tqdm
 
 from dataset.gnews_url import GNewsURL
 
@@ -83,30 +84,29 @@ def main():
 def list_news(start_date, end_date, topic_file, output_dir, language, country, num_results, sleep_time):
     os.makedirs(output_dir, exist_ok=True)
 
-    with click.progressbar(topic_file.readlines(), label='Downloading news for topics') as progress:
-        for topic in progress:
-            topic = topic.strip()
-            if not topic:
-                continue
+    for topic in tqdm(topic_file.readlines(), desc='Downloading news for topics', unit='topic'):
+        topic = topic.strip()
+        if not topic:
+            continue
 
-            news = gnews.GNews(language=language, country=country,
-                               start_date=start_date, end_date=end_date, max_results=num_results)
-            news = news.get_news(topic)
+        news = gnews.GNews(language=language, country=country,
+                           start_date=start_date, end_date=end_date, max_results=num_results)
+        news = news.get_news(topic)
 
-            d1_s = start_date.strftime('%Y-%m-%d')
-            d2_s = end_date.strftime('%Y-%m-%d')
-            topic = ''.join(filter(str.isalnum, topic))
-            with open(os.path.join(output_dir, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
-                for n in news:
-                    # Decode Google News URLs
-                    n['url'] = n['url'][len('https://news.google.com/rss/articles/'):].split('?', 1)[0]
-                    n['url'] = urlsafe_b64decode(n['url'] + '==')
-                    n['url'] = GNewsURL().parse(n['url']).url
+        d1_s = start_date.strftime('%Y-%m-%d')
+        d2_s = end_date.strftime('%Y-%m-%d')
+        topic = ''.join(filter(str.isalnum, topic))
+        with open(os.path.join(output_dir, f'news-{d1_s}-{d2_s}-{topic}.jsonl'), 'w') as f:
+            for n in news:
+                # Decode Google News URLs
+                n['url'] = n['url'][len('https://news.google.com/rss/articles/'):].split('?', 1)[0]
+                n['url'] = urlsafe_b64decode(n['url'] + '==')
+                n['url'] = GNewsURL().parse(n['url']).url
 
-                    json.dump(n, f, ensure_ascii=False)
-                    f.write('\n')
+                json.dump(n, f, ensure_ascii=False)
+                f.write('\n')
 
-            time.sleep(sleep_time)
+        time.sleep(sleep_time)
 
 
 @main.command(help='Download news articles from article lists')
@@ -127,38 +127,38 @@ def scrape_articles(input_dir, output_dir):
     browser_ua_re = re.compile(r'(?:reuters|washingtonpost|forbes|thehill|newsweek)\.com|abc\.net')
     urls_scraped = set()
 
-    with click.progressbar(glob.glob(os.path.join(input_dir, '*.jsonl')), label='Downloading news articles') as progress:
-        for news_list in progress:
-            d = os.path.join(output_dir, os.path.basename(news_list[:-6]))
-            os.makedirs(d, exist_ok=True)
+    for news_list in tqdm(glob.glob(os.path.join(input_dir, '*.jsonl')),
+                          desc='Downloading news articles', unit='article'):
+        d = os.path.join(output_dir, os.path.basename(news_list[:-6]))
+        os.makedirs(d, exist_ok=True)
 
-            for i, news_item in enumerate(open(news_list, 'r')):
-                art_id = f'art-{i:03d}'
-                out_name_html = os.path.join(d, f'{art_id}.html.xz')
-                out_name_txt = os.path.join(d, f'{art_id}.txt.xz')
-                if os.path.exists(out_name_html) and os.path.exists(out_name_txt):
-                    continue
+        for i, news_item in enumerate(open(news_list, 'r')):
+            art_id = f'art-{i:03d}'
+            out_name_html = os.path.join(d, f'{art_id}.html.xz')
+            out_name_txt = os.path.join(d, f'{art_id}.txt.xz')
+            if os.path.exists(out_name_html) and os.path.exists(out_name_txt):
+                continue
 
-                news_item = json.loads(news_item)
+            news_item = json.loads(news_item)
 
-                # Shouldn't happen, but filter duplicate URLs, just in case
-                if news_item['url'] in urls_scraped:
-                    logger.debug('Skipped duplicate URL: %s', news_item['url'])
-                    continue
-                urls_scraped.add(news_item['url'])
+            # Shouldn't happen, but filter duplicate URLs, just in case
+            if news_item['url'] in urls_scraped:
+                logger.debug('Skipped duplicate URL: %s', news_item['url'])
+                continue
+            urls_scraped.add(news_item['url'])
 
-                try:
-                    cfg = newspaper_cfg_browser if browser_ua_re.search(news_item['url']) else newspaper_cfg
-                    article = newspaper.Article(url=news_item['url'], config=cfg, language='en')
-                    article.download()
-                    article.parse()
-                except newspaper.article.ArticleException:
-                    logger.error('Failed to download %s/%s (URL: %s)', os.path.basename(d),  art_id, news_item['url'])
-                    continue
+            try:
+                cfg = newspaper_cfg_browser if browser_ua_re.search(news_item['url']) else newspaper_cfg
+                article = newspaper.Article(url=news_item['url'], config=cfg, language='en')
+                article.download()
+                article.parse()
+            except newspaper.article.ArticleException:
+                logger.error('Failed to download %s/%s (URL: %s)', os.path.basename(d),  art_id, news_item['url'])
+                continue
 
-                text = '\n\n'.join((article.title, article.text))
-                lzma.open(out_name_html, 'wt').write(article.html)
-                lzma.open(out_name_txt, 'wt').write(text)
+            text = '\n\n'.join((article.title, article.text))
+            lzma.open(out_name_html, 'wt').write(article.html)
+            lzma.open(out_name_txt, 'wt').write(text)
 
 
 @main.command(help='Filter downloaded articles')
@@ -169,24 +169,23 @@ def scrape_articles(input_dir, output_dir):
 def filter(input_dir, output_dir, min_length):
     os.makedirs(output_dir, exist_ok=True)
 
-    with click.progressbar(os.listdir(input_dir), label='Filtering articles') as bar:
-        for d in bar:
-            if not os.path.isdir(os.path.join(input_dir, d)) or not d.startswith('news-'):
+    for d in tqdm(os.listdir(input_dir), desc='Filtering articles', unit='articles'):
+        if not os.path.isdir(os.path.join(input_dir, d)) or not d.startswith('news-'):
+            continue
+
+        out = os.path.join(output_dir, d)
+        os.makedirs(out, exist_ok=True)
+
+        for f in glob.glob(os.path.join(input_dir, d, 'art-*.txt.xz')):
+            lines = lzma.open(f, 'rt').readlines()
+            while len(lines) > 2 and lines[0] == lines[2] and lines[1] == '\n':
+                # Delete duplicate title lines at the beginning
+                lines = lines[2:]
+
+            text = ''.join(lines).strip()
+            if len(text) < min_length:
                 continue
-
-            out = os.path.join(output_dir, d)
-            os.makedirs(out, exist_ok=True)
-
-            for f in glob.glob(os.path.join(input_dir, d, 'art-*.txt.xz')):
-                lines = lzma.open(f, 'rt').readlines()
-                while len(lines) > 2 and lines[0] == lines[2] and lines[1] == '\n':
-                    # Delete duplicate title lines at the beginning
-                    lines = lines[2:]
-
-                text = ''.join(lines).strip()
-                if len(text) < min_length:
-                    continue
-                open(os.path.join(out, os.path.basename(f)[:-3]), 'wt').write(text)
+            open(os.path.join(out, os.path.basename(f)[:-3]), 'wt').write(text)
 
 
 @main.command(help='Plot text length distribution')
@@ -196,11 +195,10 @@ def plot_length_dist(input_dir, no_log):
     ws_re = re.compile(r'\s+')
     tokens = []
 
-    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Counting tokens') as bar:
-        for f in bar:
-            l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
-            if l > 1000:
-                tokens.append(l)
+    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), desc='Counting tokens', unit='tokens'):
+        l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
+        if l > 1000:
+            tokens.append(l)
 
     tokens = pd.DataFrame(tokens, columns=['Characters'])
     ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=not no_log, label='Density')
@@ -304,23 +302,23 @@ def summarize(input_dir, output_dir, api_key, assistant_name, model_name, parall
     fn = partial(_map_from_to_file, fn=_summarize_article, max_chars=max_chars, client=client, assistant=assistant)
 
     with pool.ThreadPool(processes=parallelism) as p:
-        with click.progressbar(p.imap(fn, in_out_files), label='Generating summaries', length=len(in_files)) as bar:
-            list(bar)
+        # noinspection PyStatementEffect
+        [_ for _ in tqdm(p.imap(fn, in_out_files), desc='Generating summaries', unit='summary', length=len(in_files))]
 
 
 @main.command(help='Validate LLM-generated JSON files')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 def validate_llm_json(input_dir):
-    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.json')), label='Validating JSON files') as bar:
-        syntax_errors = []
-        validation_errors = []
-        for fname in bar:
-            try:
-                jsonschema.validate(instance=json.load(open(fname, 'r')), schema=SUMMARY_JSON_SCHEMA)
-            except json.JSONDecodeError as e:
-                syntax_errors.append((e.msg, fname))
-            except jsonschema.ValidationError as e:
-                validation_errors.append((e.message, fname))
+    syntax_errors = []
+    validation_errors = []
+    for fname in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.json')),
+                      label='Validating JSON files', unit='files'):
+        try:
+            jsonschema.validate(instance=json.load(open(fname, 'r')), schema=SUMMARY_JSON_SCHEMA)
+        except json.JSONDecodeError as e:
+            syntax_errors.append((e.msg, fname))
+        except jsonschema.ValidationError as e:
+            validation_errors.append((e.message, fname))
 
     if not syntax_errors and not validation_errors:
         click.echo('No errors.', err=True)
@@ -348,22 +346,21 @@ def validate_llm_json(input_dir):
 @click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
 @click.option('-x', '--hard-max', type=int, default=8000, show_default=True, help='Hard maximum number of characters')
 def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
-    with click.progressbar(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths') as bar:
-        for f in bar:
-            out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
-            os.makedirs(out, exist_ok=True)
-            out = os.path.join(out, os.path.basename(f))
+    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths', unit='texts'):
+        out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
+        os.makedirs(out, exist_ok=True)
+        out = os.path.join(out, os.path.basename(f))
 
-            t = open(f, 'r').read()
-            r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
-            while len(t) > hard_max or len(t) > r + 200:
-                t = t[:t.rfind('\n\n')]
+        t = open(f, 'r').read()
+        r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
+        while len(t) > hard_max or len(t) > r + 200:
+            t = t[:t.rfind('\n\n')]
 
-            # Strip one more line if last character isn't punctuation
-            if t[-1] not in string.punctuation and len(t[t.rfind('\n'):]) < 70:
-                t = t[:t.rfind('\n\n')]
+        # Strip one more line if last character isn't punctuation
+        if t[-1] not in string.punctuation and len(t[t.rfind('\n'):]) < 70:
+            t = t[:t.rfind('\n\n')]
 
-            open(out, 'w').write(t)
+        open(out, 'w').write(t)
 
 
 @main.command(help='Combine article lists and texts with LLM summaries')
@@ -375,26 +372,26 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 def combine(article_list_dir, article_text_dir, article_summary_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    with click.progressbar(glob.glob(os.path.join(article_list_dir, '*.jsonl')), label='Combining source files') as bar:
-        for topic_file in bar:
-            topic = os.path.splitext(os.path.basename(topic_file))[0]
-            with open(os.path.join(output_dir, topic + '.jsonl'), 'w') as out:
-                for i, l in enumerate(open(topic_file)):
-                    art_id = f'art-{i:03d}'
-                    article_text = os.path.join(article_text_dir, topic, art_id + '.txt')
-                    article_summary = os.path.join(article_summary_dir, topic, art_id + '.json')
-                    if not os.path.isfile(article_text) or not os.path.isfile(article_summary):
-                        logger.debug('Skipping article %s/%s (no text or summary)', topic, art_id)
-                        continue
+    for topic_file in tqdm(glob.glob(os.path.join(article_list_dir, '*.jsonl')),
+                           desc='Combining source files', unit='files'):
+        topic = os.path.splitext(os.path.basename(topic_file))[0]
+        with open(os.path.join(output_dir, topic + '.jsonl'), 'w') as out:
+            for i, l in enumerate(open(topic_file)):
+                art_id = f'art-{i:03d}'
+                article_text = os.path.join(article_text_dir, topic, art_id + '.txt')
+                article_summary = os.path.join(article_summary_dir, topic, art_id + '.json')
+                if not os.path.isfile(article_text) or not os.path.isfile(article_summary):
+                    logger.debug('Skipping article %s/%s (no text or summary)', topic, art_id)
+                    continue
 
-                    article_data = {
-                        'id': art_id,
-                        'text': open(article_text, 'r').read().strip(),
-                        'summary': json.load(open(article_summary, 'r')),
-                        'gnews_meta': json.loads(l)
-                    }
-                    json.dump(article_data, out, ensure_ascii=False)
-                    out.write('\n')
+                article_data = {
+                    'id': art_id,
+                    'text': open(article_text, 'r').read().strip(),
+                    'summary': json.load(open(article_summary, 'r')),
+                    'gnews_meta': json.loads(l)
+                }
+                json.dump(article_data, out, ensure_ascii=False)
+                out.write('\n')
 
 
 if __name__ == "__main__":
