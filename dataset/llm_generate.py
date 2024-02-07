@@ -224,11 +224,11 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
             if not headline_only and response[-1] in string.ascii_letters:
                 response = response[:response.rfind('\n\n')]
 
-            # Strip quotes around headlines
+            # Take only first line and strip quotes around headlines
             if headline_only:
+                response = response.split('\n', 1)[0]
                 response = re.sub(r'^"(.+)"$', r'\1', response, flags=re.M)
-        print(response + '\n')
-        return ''
+
         return response.rstrip()
 
     return ''
