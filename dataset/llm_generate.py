@@ -124,8 +124,14 @@ def _map_records_to_files(fname_and_record, *args, fn, out_dir, skip_existing=Tr
     open(out_file, 'w').write(result)
 
 
-def _generate_articles(input_dir, gen_fn, parallelism):
+def _generate_articles(input_dir, gen_fn, parallelism=1):
     jsonl_it = _iter_jsonl_files(glob.glob(os.path.join(input_dir, '*.jsonl')))
+
+    if parallelism == 1:
+        with click.progressbar(map(gen_fn, jsonl_it), label='Generating articles') as bar:
+            list(bar)
+        return
+
     with pool.ThreadPool(processes=parallelism) as p:
         with click.progressbar(p.imap(gen_fn, jsonl_it), label='Generating articles') as bar:
             list(bar)
@@ -217,8 +223,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, **kwargs):
               help='Use flash-attn 2 (must be installed separately)')
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
-@click.option('-p', '--parallelism', default=1, show_default=True)
-def huggingface_chat(input_dir, model_name, output_dir, quantization, parallelism, top_k,
+def huggingface_chat(input_dir, model_name, output_dir, quantization, top_k,
                      decay_start, decay_factor, better_transformer, flash_attn, **kwargs):
 
     model_name_out = model_name
@@ -249,7 +254,7 @@ def huggingface_chat(input_dir, model_name, output_dir, quantization, parallelis
         top_k=top_k if top_k > 0 else None,
         exponential_decay_length_penalty=(decay_start, decay_factor),
         **kwargs)
-    _generate_articles(input_dir, fn, parallelism)
+    _generate_articles(input_dir, fn)
 
 
 if __name__ == "__main__":
