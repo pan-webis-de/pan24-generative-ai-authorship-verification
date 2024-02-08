@@ -176,7 +176,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     _generate_articles(input_dir, fn, parallelism)
 
 
-@backoff.on_exception(backoff.expo, Exception, max_tries=5)
+@backoff.on_exception(backoff.constant, Exception, max_tries=5)
 def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
 
     role = 'user'
