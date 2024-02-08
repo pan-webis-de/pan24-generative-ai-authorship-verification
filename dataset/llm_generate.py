@@ -68,7 +68,7 @@ def _generate_instruction_prompt(article_data):
         if summary['audience'] in ['professionals', 'children']:
             prompt += f'\nYour target audience are {summary["audience"]}.'
 
-    prompt += '\nThe first line of your text is the headline.'
+    prompt += '\nStart with a short and fitting headline for your article.'
     if summary['article_type'] != 'speech transcript' and summary['dateline']:
         prompt += f'\nBelow the headline, start the article body with the dateline "{summary["dateline"]} – ".'
 
@@ -116,6 +116,7 @@ def _map_records_to_files(topic_and_record, *args, fn, out_dir, skip_existing=Tr
         result = fn(record, *args, **kwargs)
     except Exception as e:
         logger.error('Failed to generate article: %s', str(e))
+        logger.exception(e)
         return
 
     if not result:
@@ -176,7 +177,6 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     _generate_articles(input_dir, fn, parallelism)
 
 
-@backoff.on_exception(backoff.constant, Exception, max_tries=5)
 def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
     if headline_only:
         prompt = ('The following text is a news article or press release. ' +
@@ -185,22 +185,24 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
     else:
         prompt = _generate_instruction_prompt(article_data)
 
-    role = 'system'
-    if model.config.model_type == 'mistral':
-        role = 'user'
+    role = 'user'
+    if model.config.model_type in ['llama']:
+        role = 'system'
     messages = [{'role': role, 'content': prompt}]
     if role == 'system':
         messages.append({'role': 'user', 'content': ''})
 
     model_inputs = tokenizer.apply_chat_template(
         messages, return_tensors='pt', add_generation_prompt=True).to(model.device)
-    for _ in range(5):
+
+    for _ in range(1):
         generated_ids = model.generate(
             model_inputs,
             do_sample=True,
-            eos_token_id=tokenizer.pad_token_id,
-            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.eos_token_id,
             **kwargs)
+
         response = tokenizer.decode(generated_ids[0][len(model_inputs[0]):], skip_special_tokens=True)
 
         # Strip markdown
@@ -244,11 +246,11 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
               default=os.path.join('data', 'articles-llm'), show_default=True, help='Output directory')
 @click.option('-d', '--device', type=click.Choice(['auto', 'cuda', 'cpu']), default='auto',
               help='Select device to run model on')
-@click.option('-m', '--min-length', type=click.IntRange(1), default=650,
+@click.option('-m', '--min-length', type=click.IntRange(1), default=400,
               show_default=True, help='Minimum length in tokens')
 @click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=3600,
               show_default=True, help='Maximum new tokens')
-@click.option('-s', '--decay-start', type=click.IntRange(1), default=750,
+@click.option('-s', '--decay-start', type=click.IntRange(1), default=600,
               show_default=True, help='Length decay penalty start')
 @click.option('--decay-factor', type=click.FloatRange(1), default=1.001,
               show_default=True, help='Length decay penalty factor')
@@ -269,13 +271,16 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
                      trust_remote_code, **kwargs):
 
     model_name_out = model_name
-    model_args = {}
+    model_args = {
+        'torch_dtype': torch.bfloat16
+    }
     if flash_attn:
-        model_args['attn_implementation'] = 'flash_attention_2'
-        model_args['torch_dtype'] = torch.bfloat16
+        model_args.update({'attn_implementation': 'flash_attention_2'})
     if quantization:
-        model_args[f'load_in_{quantization}bit'] = True
-        model_args[f'bnb_{quantization}bit_compute_dtype'] = torch.float16
+        model_args.update({
+            f'load_in_{quantization}bit': True,
+            f'bnb_{quantization}bit_compute_dtype': torch.bfloat16
+        })
         model_name_out = model_name + f'-{quantization}bit'
 
     model_name_out = model_name_out.replace('\\', '/').rstrip('/')
