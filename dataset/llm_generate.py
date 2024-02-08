@@ -210,6 +210,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
             r'^(?:Title|Headline|Paragraph|Introduction|Article|Dateline)(?: \d+)?(?::\s+|\n+)', '',
             response, flags=re.M | re.I)
         response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)[])]?:?\s+', '', response, flags=re.M | re.I)
+        response = re.sub(r'^FOR IMMEDIATE RELEASE:?\n\n', '', response)
         response = re.sub(r'\n{3,}', '\n\n', response).strip()
 
         if article_data.get('dateline'):
@@ -275,7 +276,10 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
         model_args[f'bnb_{quantization}bit_compute_dtype'] = torch.float16
         model_name_out = model_name + f'-{quantization}bit'
 
-    output_dir = os.path.join(output_dir, model_name_out.lower().replace('/', '-'))
+    model_name_out = model_name_out.replace('\\', '/').rstrip('/')
+    if '/' in model_name_out:
+        model_name_out = '-'.join(model_name_out.split('/')[-2:])
+    output_dir = os.path.join(output_dir, model_name_out.lower())
 
     try:
         model = AutoModelForCausalLM.from_pretrained(
