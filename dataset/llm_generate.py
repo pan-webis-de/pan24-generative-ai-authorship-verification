@@ -195,7 +195,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
     model_inputs = tokenizer.apply_chat_template(
         messages, return_tensors='pt', add_generation_prompt=True).to(model.device)
 
-    for _ in range(1):
+    for _ in range(3):
         generated_ids = model.generate(
             model_inputs,
             do_sample=True,
@@ -224,15 +224,16 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
         if not response:
             continue
 
-        if response:
-            # Some models tend to stop mid-sentence
-            if not headline_only and response[-1] in string.ascii_letters:
-                response = response[:response.rfind('\n\n')]
+        if headline_only:
+            response = response.split('\n', 1)[0]       # Take only first line
+        elif response[-1] in string.ascii_letters:
+            response = response[:response.rfind('\n\n')]            # Some models tend to stop mid-sentence
 
-            # Take only first line and strip quotes around headlines
-            if headline_only:
-                response = response.split('\n', 1)[0]
-                response = re.sub(r'^"(.+)"$', r'\1', response, flags=re.M)
+        # Strip quotes around headlines
+        response = response.split('\n', 1)
+        if len(response) == 2:
+            response[0] = re.sub(r'^"(.+)"$', r'\1', response[0], flags=re.M)
+            response = '\n'.join(response)
 
         return response.rstrip()
 
