@@ -130,18 +130,18 @@ def _generate_articles(input_dir, gen_fn, parallelism=1):
     it = ((os.path.splitext(os.path.basename(f))[0], a) for f, a in it)
 
     if parallelism == 1:
-        [_ for _ in tqdm(map(gen_fn, it), desc='Generating articles', unit='articles')]
+        [_ for _ in tqdm(map(gen_fn, it), desc='Generating articles', unit=' articles')]
         return
 
     with pool.ThreadPool(processes=parallelism) as p:
-        [_ for _ in tqdm(p.imap(gen_fn, it), desc='Generating articles', unit='articles')]
+        [_ for _ in tqdm(p.imap(gen_fn, it), desc='Generating articles', unit=' articles')]
 
 
 # noinspection PyStatementEffect
 def _generate_missing_article_headlines(input_dir, gen_fn):
     article_it = glob.iglob(os.path.join(input_dir, '*', 'art-*.txt'))
 
-    for f in tqdm(article_it, desc='Checking and generating headlines', unit='articles'):
+    for f in tqdm(article_it, desc='Checking and generating headlines', unit=' articles'):
         article = open(f, 'r').read()
         first_line = article.split('\n', 1)[0]
         if len(first_line) < 25 or len(first_line) > 160 or first_line[-1] == '.':
@@ -178,20 +178,22 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 
 @backoff.on_exception(backoff.constant, Exception, max_tries=5)
 def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
-
-    role = 'user'
     if headline_only:
-        messages = [{
-            'role': role,
-            'content': 'The following text is a news article or press release. ' +
-                       'Write a fitting headline that summarizes its main point.\n\nArticle: ' + article_data['text']
-            }]
+        prompt = ('The following text is a news article or press release. ' +
+                  'Write a short and fitting headline that summarizes the main point.\n\n' +
+                  'Article: ' + article_data['text'])
     else:
-        messages = [{'role': role, 'content': _generate_instruction_prompt(article_data)}]
+        prompt = _generate_instruction_prompt(article_data)
+
+    role = 'system'
+    if model.config.model_type == 'mistral':
+        role = 'user'
+    messages = [{'role': role, 'content': prompt}]
+    if role == 'system':
+        messages.append({'role': 'user', 'content': ''})
 
     model_inputs = tokenizer.apply_chat_template(
         messages, return_tensors='pt', add_generation_prompt=True).to(model.device)
-
     for _ in range(5):
         generated_ids = model.generate(
             model_inputs,
