@@ -172,6 +172,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     fn = partial(
         _map_records_to_files,
         fn=_openai_gen_article,
+        out_dir=output_dir,
         client=client,
         model_name=model_name)
     _generate_articles(input_dir, fn, parallelism)
