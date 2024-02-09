@@ -41,6 +41,25 @@ def _generate_instruction_prompt(article_data, template_name):
     return template.render(article_data=article_data, target_paragraphs=target_paragraphs, target_words=target_words)
 
 
+def _apply_chat_template(tokenizer, messages):
+    chat_template = tokenizer.chat_template
+
+    if not chat_template and ('gpt2' in tokenizer.name_or_path or 'alpaca' in tokenizer.name_or_path):
+        chat_template = (
+            'Below is an instruction that describes a task. '
+            'Write a response that appropriately completes the request.\n\n'
+            '### Instruction:\n'
+            '{% for message in messages -%}\n'
+            '{{ message["content"]  }}\n'
+            '{% endfor %}\n'
+            '{% if add_generation_prompt %}\n'
+            '### Response:\n'
+            '{% endif %}')
+
+    return tokenizer.apply_chat_template(
+        messages, chat_template=chat_template, return_tensors='pt', add_generation_prompt=True)
+
+
 def _iter_jsonl_files(in_files):
     for f in in_files:
         for l in open(f, 'r'):
@@ -148,8 +167,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_templat
     if role == 'system':
         messages.append({'role': 'user', 'content': ''})
 
-    model_inputs = tokenizer.apply_chat_template(
-        messages, return_tensors='pt', add_generation_prompt=True).to(model.device)
+    model_inputs = _apply_chat_template(tokenizer, messages).to(model.device)
 
     for _ in range(3):
         generated_ids = model.generate(
