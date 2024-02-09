@@ -119,6 +119,12 @@ def _clean_text_quirks(text, article_data):
     if article_data.get('dateline'):
         text = text.replace('\n' + article_data['dateline'] + ' –\n\n', '\n' + article_data['dateline'] + ' – ')
 
+    # Strip quotes around headlines
+    text = text.split('\n', 1)
+    if len(text) == 2:
+        text[0] = re.sub(r'^"(.+)"$', r'\1', text[0], flags=re.M)
+    text = '\n'.join(text)
+
     return text.strip()
 
 
@@ -167,12 +173,6 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_templat
             response = response.split('\n', 1)[0]       # Take only first line
         elif response[-1] in string.ascii_letters:
             response = response[:response.rfind('\n\n')]            # Some models tend to stop mid-sentence
-
-        # Strip quotes around headlines
-        response = response.split('\n', 1)
-        if len(response) == 2:
-            response[0] = re.sub(r'^"(.+)"$', r'\1', response[0], flags=re.M)
-            response = '\n'.join(response)
 
         return response.rstrip()
 
