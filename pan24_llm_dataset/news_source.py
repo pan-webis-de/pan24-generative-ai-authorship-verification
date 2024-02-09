@@ -368,7 +368,7 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 @click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-final'), show_default=True)
+              default=os.path.join('data', 'articles-jsonl-combined'), show_default=True)
 def combine(article_list_dir, article_text_dir, article_summary_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
