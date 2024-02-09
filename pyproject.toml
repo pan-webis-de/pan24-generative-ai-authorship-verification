@@ -34,6 +34,7 @@ jinja2 = "^3.1.3"
 [tool.poetry.scripts]
 news-source = 'pan24_llm_dataset.news_source:main'
 llm-generate = 'pan24_llm_dataset.llm_generate:main'
+dataset-sample = 'pan24_llm_dataset.dataset_sample:main'
 
 [build-system]
 requires = ["poetry-core"]
