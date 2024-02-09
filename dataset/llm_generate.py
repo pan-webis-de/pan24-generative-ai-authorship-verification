@@ -18,17 +18,11 @@ try:
     from optimum.nvidia import AutoModelForCausalLM
 except ModuleNotFoundError:
     from transformers import AutoModelForCausalLM
-import transformers
 from transformers import AutoTokenizer, set_seed
 
 logger = logging.getLogger(__name__)
 
 set_seed(42)
-
-
-@click.group()
-def main():
-    pass
 
 
 def _generate_instruction_prompt(article_data):
@@ -78,17 +72,6 @@ def _generate_instruction_prompt(article_data):
     prompt += ' Do not comment on what you do. Do not speak to or address the user.'
 
     return prompt
-
-
-@backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
-def _openai_gen_article(article_data, client: OpenAI, model_name: str):
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[
-            {'role': 'system', 'content': _generate_instruction_prompt(article_data)}
-        ]
-    )
-    return html2text.extract_plain_text(markdown.markdown(response.choices[0].message.content)).strip()
 
 
 def _iter_jsonl_files(in_files):
@@ -152,30 +135,35 @@ def _generate_missing_article_headlines(input_dir, gen_fn):
             }))
 
 
-@main.command(help='Generate articles using the OpenAI API')
-@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-llm'), show_default=True)
-@click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
-              help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
-@click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
-@click.option('-p', '--parallelism', default=10, show_default=True)
-def openai(input_dir, output_dir, api_key, model_name, parallelism):
-    if not api_key and not os.environ.get('OPENAI_API_KEY'):
-        raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
+def _clean_text_quirks(text, article_data):
+    """Clean up some common LLM text quirks."""
 
-    output_dir = os.path.join(output_dir, model_name)
-    os.makedirs(output_dir, exist_ok=True)
+    # Remove certain generation quirks
+    text = re.sub(r'^[IVX0-9]+\.\s+', '', text, flags=re.M)
+    text = re.sub(
+        r'^(?:(?:Sub)?Title|(?:Sub)?Headline|Paragraph|Introduction|Article(?: Title)?|Dateline)(?: \d+)?(?::\s+|\n+)',
+        '',
+        text, flags=re.M | re.I)
+    text = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)[])]?:?\s+', '', text, flags=re.M | re.I)
+    text = re.sub(r'^FOR IMMEDIATE RELEASE:?\n\n', '', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
 
-    client = OpenAI(api_key=open(api_key).read().strip() if api_key else os.environ.get('OPENAI_API_KEY'))
+    if article_data.get('dateline'):
+        text = text.replace('\n' + article_data['dateline'] + '\n\n', '\n' + article_data['dateline'] + ' ')
 
-    fn = partial(
-        _map_records_to_files,
-        fn=_openai_gen_article,
-        out_dir=output_dir,
-        client=client,
-        model_name=model_name)
-    _generate_articles(input_dir, fn, parallelism)
+    return text.strip()
+
+
+@backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
+def _openai_gen_article(article_data, client: OpenAI, model_name: str):
+    response = client.chat.completions.create(
+        model=model_name,
+        messages=[
+            {'role': 'system', 'content': _generate_instruction_prompt(article_data)}
+        ]
+    )
+    response = html2text.extract_plain_text(markdown.markdown(response.choices[0].message.content)).strip()
+    return _clean_text_quirks(response, article_data)
 
 
 def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
@@ -208,18 +196,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
 
         # Strip markdown
         response = html2text.extract_plain_text(markdown.markdown(response)).strip()
-
-        # Remove certain generation quirks
-        response = re.sub(r'^[IVX0-9]+\.\s+', '', response, flags=re.M)
-        response = re.sub(
-            r'^(?:Title|Headline|Paragraph|Introduction|Article|Dateline)(?: \d+)?(?::\s+|\n+)', '',
-            response, flags=re.M | re.I)
-        response = re.sub(r'^[\[(]?(?:Paragraph|Headline)(?: \d+)[])]?:?\s+', '', response, flags=re.M | re.I)
-        response = re.sub(r'^FOR IMMEDIATE RELEASE:?\n\n', '', response)
-        response = re.sub(r'\n{3,}', '\n\n', response).strip()
-
-        if article_data.get('dateline'):
-            response = response.replace('\n' + article_data['dateline'] + '\n\n', '\n' + article_data['dateline'] + ' ')
+        response = _clean_text_quirks(response, article_data)
 
         # Retry if response empty
         if not response:
@@ -239,6 +216,37 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=
         return response.rstrip()
 
     return ''
+
+
+@click.group()
+def main():
+    pass
+
+
+@main.command(help='Generate articles using the OpenAI API')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-llm'), show_default=True)
+@click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
+              help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
+@click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
+@click.option('-p', '--parallelism', default=10, show_default=True)
+def openai(input_dir, output_dir, api_key, model_name, parallelism):
+    if not api_key and not os.environ.get('OPENAI_API_KEY'):
+        raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
+
+    output_dir = os.path.join(output_dir, model_name)
+    os.makedirs(output_dir, exist_ok=True)
+
+    client = OpenAI(api_key=open(api_key).read().strip() if api_key else os.environ.get('OPENAI_API_KEY'))
+
+    fn = partial(
+        _map_records_to_files,
+        fn=_openai_gen_article,
+        out_dir=output_dir,
+        client=client,
+        model_name=model_name)
+    _generate_articles(input_dir, fn, parallelism)
 
 
 @main.command(help='Generate texts using a Huggingface chat model')
