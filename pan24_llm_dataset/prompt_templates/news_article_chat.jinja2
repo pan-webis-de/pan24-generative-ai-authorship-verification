@@ -3,11 +3,11 @@
 
 {%- set article_type = summary['article_type'] -%}
 {%- if article_type == 'general reporting' -%}
-    {%- set art_type = 'a news article' -%}
-{%- elif art_type == 'opinion piece' -%}
-    {%- set art_type = 'an ' + art_type -%}
+    {%- set article_type = 'a news article' -%}
+{%- elif article_type == 'opinion piece' -%}
+    {%- set article_type = 'an ' + article_type -%}
 {%- else -%}
-    {%- set art_type = 'a ' + art_type + ' article' -%}
+    {%- set article_type = 'a ' + article_type + ' article' -%}
 {%- endif -%}
 
 {%- if summary['article_type'] in ['press release', 'government agency statement'] -%}
@@ -22,7 +22,7 @@ The following key points must be addressed in the speech.
 
 {%- else -%}
 
-You are a {{ publisher }} journalist writing {{ art_type }}.
+You are a {{ publisher }} journalist writing {{ article_type }}.
 In your article, cover the following key points:
 
 {%- endif %}
