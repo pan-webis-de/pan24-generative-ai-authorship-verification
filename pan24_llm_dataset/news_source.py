@@ -25,7 +25,7 @@ from scipy.stats import lognorm, norm
 import seaborn as sns
 from tqdm import tqdm
 
-from dataset.gnews_url import GNewsURL
+from pan24_llm_dataset.gnews_url import GNewsURL
 
 logger = logging.getLogger(__name__)
 

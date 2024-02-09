@@ -5,7 +5,7 @@ description = ""
 authors = ["Janek Bevendorff <janek.bevendorff@uni-weimar.de>"]
 readme = "README.md"
 packages = [
-    { include = "dataset" }
+    { include = "pan24_llm_dataset" }
 ]
 
 [tool.poetry.dependencies]
@@ -32,8 +32,8 @@ transformers-stream-generator = "^0.0.4"
 jinja2 = "^3.1.3"
 
 [tool.poetry.scripts]
-news-source = 'dataset.news_source:main'
-llm-generate = 'dataset.llm_generate:main'
+news-source = 'pan24_llm_dataset.news_source:main'
+llm-generate = 'pan24_llm_dataset.llm_generate:main'
 
 [build-system]
 requires = ["poetry-core"]

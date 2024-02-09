@@ -35,7 +35,7 @@ def _generate_instruction_prompt(article_data, template_name):
     target_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
 
     env = jinja2.Environment(
-        loader=jinja2.PackageLoader('dataset', 'prompt_templates')
+        loader=jinja2.PackageLoader('pan24_llm_dataset', 'prompt_templates')
     )
     template = env.get_template(template_name)
     return template.render(article_data=article_data, target_paragraphs=target_paragraphs, target_words=target_words)
