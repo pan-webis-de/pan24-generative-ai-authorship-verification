@@ -63,7 +63,7 @@ def _generate_instruction_prompt(article_data):
 
     if summary['article_type'] != 'speech transcript':
         if summary['spokespersons']:
-            prompt += f'\nWithin the text, quote the following persons directly:\n- ' + \
+            prompt += f'\nIncorporate direct quotes from the following persons into the text:\n- ' + \
                       '\n- '.join(summary['spokespersons']) + '\n'
         if summary['audience'] in ['professionals', 'children']:
             prompt += f'\nYour target audience are {summary["audience"]}.'

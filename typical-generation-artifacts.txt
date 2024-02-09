@@ -1,18 +1,40 @@
-I., II., III., ...
+Structural:
+
+I., II., III., ... (roman numerals before paragraphs)
+1. (before every heading)
+Paragraphs: [list of numbered paragraphs]
+Quotes: [list of quotes]
+Break after dateline ( –\n\n)
+
+Text fragments:
+
+sorry,
+I cannot
+I will try
+I'll try
+I'll give
+here's the article
+here's your article
 journalist Lucas
 factual errors
 spelling and grammar
 work of fiction
 ai generated
-here's the article
 your article
 reporting by
-[your name]
+\[your name
 meta description:
-headline:
-paragraph 1:
-[paragraph 1]
+introduction:
+(article )?(sub)?title:
+(sub)?headline:
+dateline:
 article:
+summary:
 long text:
-[End of article]
+paragraph \d+:
+\[paragraph \d+\]
+\[End of article\]
 FOR IMMEDIATE RELEASE
+Here are 10 paragraphs
+\d+ words
+\d+ paragraphs
