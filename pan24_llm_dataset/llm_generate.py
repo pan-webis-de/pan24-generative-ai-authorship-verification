@@ -126,7 +126,7 @@ def _clean_text_quirks(text, article_data):
 
     # Remove certain generation quirks
     text = re.sub(r'^[a-z-]+>\s*', '', text)   # Cut-off special tokens at the beginning
-    text = re.sub(r'^[IVX0-9]+\.\s+', '', text, flags=re.M)
+    text = re.sub(r'^ *[IVX0-9]+\.\s+', '', text, flags=re.M)
     text = re.sub(
         r'^(?:(?:Sub)?Title|(?:Sub)?Headline|Paragraph|Introduction|Article(?: Title)?|Dateline)(?: \d+)?(?::\s+|\n+)',
         '',

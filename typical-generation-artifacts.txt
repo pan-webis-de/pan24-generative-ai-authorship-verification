@@ -10,10 +10,12 @@ Text fragments:
 
 ^[a-z-]+>\s*
 sorry,
+\bsure,
 I cannot
 I will try
 I'll try
 I'll give
+\shere's a
 here's the article
 here's your article
 journalist Lucas
@@ -32,6 +34,8 @@ dateline:
 article:
 summary:
 long text:
+video:
+key points?:
 paragraph \d+:
 \[paragraph \d+\]
 \[End of article\]
