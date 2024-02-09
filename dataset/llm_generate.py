@@ -9,6 +9,7 @@ import os
 
 import backoff
 import click
+import jinja2
 import markdown
 from openai import OpenAI, OpenAIError
 from resiliparse.extract import html2text
@@ -25,53 +26,19 @@ logger = logging.getLogger(__name__)
 set_seed(42)
 
 
-def _generate_instruction_prompt(article_data):
+def _generate_instruction_prompt(article_data, template_name):
     """
     Generate an instruction prompt for generating an article from the given source article data.
     """
-    publisher = article_data.get('gnews_meta', {}).get('publisher', {}).get('title', '').replace('The ', '')
-    summary = article_data['summary']
-    if summary['article_type'] in ['press release', 'government agency statement']:
-        personality = f'You are a {publisher} spokesperson writing a {summary["article_type"]}.'
-        base_instruction = f'Write a press release covering the following key points:'
-    elif summary['article_type'] == 'speech transcript':
-        personality = 'You write a speech for a public figure.'
-        base_instruction = 'The following key points must be addressed in the speech. ' + \
-                           'Write the speech from the perspective of the person mentioned in the key points.'
-    else:
-        art_type = summary['article_type']
-        if art_type == 'general reporting':
-            art_type = 'a news article'
-        elif art_type == 'opinion piece':
-            art_type = f'an {art_type}'
-        else:
-            art_type = f'a {art_type} article'
-        personality = f'You are a {publisher} journalist writing {art_type}. '
-        base_instruction = 'In your article, cover the following key points:'
 
-    key_points = '\n- ' + '\n- '.join(summary['key_points']) + '\n'
-    prompt = '\n'.join((personality, base_instruction, key_points))
+    target_paragraphs = article_data['text'].count('\n\n')
+    target_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
 
-    if summary["stance"] != 'neutral':
-        prompt += f'\nWrite the text from a {summary["stance"]} perspective.'
-
-    if summary['article_type'] != 'speech transcript':
-        if summary['spokespersons']:
-            prompt += f'\nIncorporate direct quotes from the following persons into the text:\n- ' + \
-                      '\n- '.join(summary['spokespersons']) + '\n'
-        if summary['audience'] in ['professionals', 'children']:
-            prompt += f'\nYour target audience are {summary["audience"]}.'
-
-    prompt += '\nStart with a short and fitting headline for your article.'
-    if summary['article_type'] != 'speech transcript' and summary['dateline']:
-        prompt += f'\nBelow the headline, start the article body with the dateline "{summary["dateline"]} – ".'
-
-    n_paragraphs = article_data['text'].count('\n\n')
-    n_words = round(int(len(re.split(r'\s+', article_data['text']))) + 9, -1)
-    prompt += f'\nYour article should be about {n_paragraphs} paragraphs long (at least {n_words} words).'
-    prompt += ' Do not comment on what you do. Do not speak to or address the user.'
-
-    return prompt
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader('dataset', 'prompt_templates')
+    )
+    template = env.get_template(template_name)
+    return template.render(article_data=article_data, target_paragraphs=target_paragraphs, target_words=target_words)
 
 
 def _iter_jsonl_files(in_files):
@@ -155,29 +122,22 @@ def _clean_text_quirks(text, article_data):
 
 
 @backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
-def _openai_gen_article(article_data, client: OpenAI, model_name: str):
+def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_template: str):
     response = client.chat.completions.create(
         model=model_name,
         messages=[
-            {'role': 'system', 'content': _generate_instruction_prompt(article_data)}
+            {'role': 'system', 'content': _generate_instruction_prompt(article_data, prompt_template)}
         ]
     )
     response = html2text.extract_plain_text(markdown.markdown(response.choices[0].message.content)).strip()
     return _clean_text_quirks(response, article_data)
 
 
-def _huggingface_chat_gen_article(article_data, model, tokenizer, headline_only=False, **kwargs):
-    if headline_only:
-        prompt = ('The following text is a news article or press release. ' +
-                  'Write a short and fitting headline that summarizes the main point.\n\n' +
-                  'Article: ' + article_data['text'])
-    else:
-        prompt = _generate_instruction_prompt(article_data)
-
+def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_template, headline_only=False, **kwargs):
     role = 'user'
     if model.config.model_type in ['llama']:
         role = 'system'
-    messages = [{'role': role, 'content': prompt}]
+    messages = [{'role': role, 'content': _generate_instruction_prompt(article_data, prompt_template)}]
     if role == 'system':
         messages.append({'role': 'user', 'content': ''})
 
@@ -243,6 +203,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     fn = partial(
         _map_records_to_files,
         fn=_openai_gen_article,
+        prompt_template='news_article_chat.jinja2',
         out_dir=output_dir,
         client=client,
         model_name=model_name)
@@ -316,12 +277,16 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
         exponential_decay_length_penalty=(decay_start, decay_factor)
     ))
 
+    prompt_template = 'news_article_chat.jinja2'
+
     if headlines_only:
         del kwargs['min_length']
         del kwargs['exponential_decay_length_penalty']
         kwargs['max_new_tokens'] = 60
+        prompt_template = 'headline_chat.jinja2'
 
-    fn = partial(_map_records_to_files, fn=_huggingface_chat_gen_article, out_dir=output_dir, **kwargs)
+    fn = partial(_map_records_to_files, fn=_huggingface_chat_gen_article,
+                 prompt_template=prompt_template, out_dir=output_dir, **kwargs)
 
     if headlines_only:
         click.echo('Trying to detect and generate missing headlines...', err=True)
