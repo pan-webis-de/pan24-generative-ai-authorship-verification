@@ -255,10 +255,11 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-h', '--headlines-only', is_flag=True, help='Run on previous output and generate missing headlines')
+@click.option('--short-prompt', is_flag=True, help='Shorten the input prompt')
 @click.option('--trust-remote-code', is_flag=True, help='Trust remote code')
 def huggingface_chat(input_dir, model_name, output_dir, device, quantization, top_k,
                      decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
-                     trust_remote_code, **kwargs):
+                     trust_remote_code, short_prompt, **kwargs):
 
     model_name_out = model_name
     model_args = {
@@ -296,7 +297,7 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
         exponential_decay_length_penalty=(decay_start, decay_factor)
     ))
 
-    prompt_template = 'news_article_chat.jinja2'
+    prompt_template = 'news_article_chat.jinja2' if not short_prompt else 'news_article_short_chat.jinja2'
 
     if headlines_only:
         del kwargs['min_length']

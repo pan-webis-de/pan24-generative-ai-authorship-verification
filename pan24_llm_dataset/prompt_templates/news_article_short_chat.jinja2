@@ -1,0 +1,33 @@
+{%- set publisher = article_data.get('gnews_meta', {}).get('publisher', {}).get('title', '').replace('The ', '') -%}
+{%- set summary = article_data['summary'] -%}
+
+{%- set article_type = summary['article_type'] -%}
+{%- if article_type == 'general reporting' -%}
+    {%- set article_type = 'a news article' -%}
+{%- elif article_type == 'opinion piece' -%}
+    {%- set article_type = 'an ' + article_type -%}
+{%- else -%}
+    {%- set article_type = 'a ' + article_type + ' article' -%}
+{%- endif -%}
+
+{%- if summary['article_type'] in ['press release', 'government agency statement'] -%}
+
+You are a {{ publisher }} spokesperson writing a {{ summary['article_type'] }}.
+Write a press release covering the following key points:
+
+{%- elif summary['article_type'] == 'speech transcript' -%}
+
+You write a speech for a public figure. Write the speech from the perspective of the person mentioned in the key points.
+The following key points must be addressed in the speech.
+
+{%- else -%}
+
+You are a {{ publisher }} journalist writing {{ article_type }}.
+In your article, cover the following key points:
+
+{%- endif %}
+
+{% for kp in summary['key_points'][:5] -%}
+- {{ kp }}
+{% endfor %}
+Start with a short and fitting headline for your article.
