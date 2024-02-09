@@ -8,6 +8,7 @@ Break after dateline ( –\n\n)
 
 Text fragments:
 
+^[a-z-]+>\s*
 sorry,
 I cannot
 I will try

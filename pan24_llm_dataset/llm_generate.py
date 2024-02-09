@@ -106,6 +106,7 @@ def _clean_text_quirks(text, article_data):
     """Clean up some common LLM text quirks."""
 
     # Remove certain generation quirks
+    text = re.sub(r'^[a-z-]+>\s*', '', text)   # Cut-off special tokens at the beginning
     text = re.sub(r'^[IVX0-9]+\.\s+', '', text, flags=re.M)
     text = re.sub(
         r'^(?:(?:Sub)?Title|(?:Sub)?Headline|Paragraph|Introduction|Article(?: Title)?|Dateline)(?: \d+)?(?::\s+|\n+)',
@@ -116,7 +117,7 @@ def _clean_text_quirks(text, article_data):
     text = re.sub(r'\n{3,}', '\n\n', text)
 
     if article_data.get('dateline'):
-        text = text.replace('\n' + article_data['dateline'] + '\n\n', '\n' + article_data['dateline'] + ' ')
+        text = text.replace('\n' + article_data['dateline'] + ' –\n\n', '\n' + article_data['dateline'] + ' – ')
 
     return text.strip()
 
