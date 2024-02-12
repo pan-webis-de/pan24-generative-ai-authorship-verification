@@ -190,7 +190,10 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_templat
         if headline_only:
             response = response.split('\n', 1)[0]       # Take only first line
         elif response[-1] in string.ascii_letters:
-            response = response[:response.rfind('\n\n')]            # Some models tend to stop mid-sentence
+            trim_len = response.rfind('\n\n')
+            if len(response) - trim_len > 500:
+                trim_len = response.rfind('. ') + 1
+            response = response[:trim_len]                          # Some models tend to stop mid-sentence
 
         return response.rstrip()
 
