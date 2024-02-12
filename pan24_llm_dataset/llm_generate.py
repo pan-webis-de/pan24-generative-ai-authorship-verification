@@ -19,7 +19,7 @@ try:
     from optimum.nvidia import AutoModelForCausalLM
 except ModuleNotFoundError:
     from transformers import AutoModelForCausalLM
-from transformers import AutoTokenizer, set_seed
+from transformers import AutoTokenizer, BitsAndBytesConfig, set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +161,7 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_te
 
 def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_template, headline_only=False, **kwargs):
     role = 'user'
-    if model.config.model_type in ['llama']:
+    if model.config.model_type in ['llama', 'qwen2'] or "'system'" in (tokenizer.config.chat_template or ''):
         role = 'system'
     messages = [{'role': role, 'content': _generate_instruction_prompt(article_data, prompt_template)}]
     if role == 'system':
@@ -236,13 +236,13 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
               default=os.path.join('data', 'articles-llm'), show_default=True, help='Output directory')
 @click.option('-d', '--device', type=click.Choice(['auto', 'cuda', 'cpu']), default='auto',
               help='Select device to run model on')
-@click.option('-m', '--min-length', type=click.IntRange(1), default=400,
+@click.option('-m', '--min-length', type=click.IntRange(1), default=370,
               show_default=True, help='Minimum length in tokens')
-@click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=3600,
+@click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=1000,
               show_default=True, help='Maximum new tokens')
 @click.option('-s', '--decay-start', type=click.IntRange(1), default=600,
               show_default=True, help='Length decay penalty start')
-@click.option('--decay-factor', type=click.FloatRange(1), default=1.001,
+@click.option('--decay-factor', type=click.FloatRange(1), default=1.01,
               show_default=True, help='Length decay penalty factor')
 @click.option('-b', '--num-beams', type=click.IntRange(1), default=5,
               show_default=True, help='Number of search beams')
@@ -269,8 +269,10 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
         model_args.update({'attn_implementation': 'flash_attention_2'})
     if quantization:
         model_args.update({
-            f'load_in_{quantization}bit': True,
-            f'bnb_{quantization}bit_compute_dtype': torch.bfloat16
+            'quantization_config': BitsAndBytesConfig(**{
+                f'load_in_{quantization}bit': True,
+                f'bnb_{quantization}bit_compute_dtype': torch.bfloat16
+            })
         })
         model_name_out = model_name + f'-{quantization}bit'
 
