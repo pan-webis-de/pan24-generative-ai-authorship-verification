@@ -56,6 +56,18 @@ def _apply_chat_template(tokenizer, messages):
             '### Response:\n'
             '{% endif %}')
 
+    elif not chat_template and 'falcon' in tokenizer.name_or_path:
+        chat_template = (
+            'You are a helpful assistant. '
+            'Respond with an answer that appropriately completes the task instructions below.\n'
+            '>>QUESTION<<\n'
+            '{% for message in messages -%}\n'
+            '{{ message["content"]  }}\n'
+            '{% endfor %}\n'
+            '{% if add_generation_prompt %}\n'
+            '>>ANSWER<<\n'
+            '{% endif %}')
+
     return tokenizer.apply_chat_template(
         messages, chat_template=chat_template, return_tensors='pt', add_generation_prompt=True)
 
@@ -161,7 +173,7 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_te
 
 def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_template, headline_only=False, **kwargs):
     role = 'user'
-    if model.config.model_type in ['llama', 'qwen2'] or "'system'" in (tokenizer.config.chat_template or ''):
+    if model.config.model_type in ['llama', 'qwen2'] or "'system'" in (tokenizer.chat_template or ''):
         role = 'system'
     messages = [{'role': role, 'content': _generate_instruction_prompt(article_data, prompt_template)}]
     if role == 'system':
