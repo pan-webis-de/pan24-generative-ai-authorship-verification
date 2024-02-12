@@ -9,27 +9,31 @@ Break after dateline ( –\n\n)
 Text fragments:
 
 ^[a-z-]+>\s*
+JavaScript
 sorry,
-\bsure,
+^sure,
+^I'd be happy
+^(I'm|I am| you are) a(n| helpful) assistant
+as an ai language model
+ai generated
 I cannot
 I will try
 I'll try
 I'll give
 \shere's a
+^In this article, I will
 here's the article
 here's your article
-journalist Lucas
 factual errors
 spelling and grammar
 work of fiction
-ai generated
 your article
 reporting by
-\[your name
+header image:
 meta description:
 introduction:
-(article )?(sub)?title:
-(sub)?headline:
+^(article|example )?(sub)?title:
+^(sub)?headline:
 dateline:
 article:
 summary:
@@ -37,9 +41,14 @@ long text:
 video:
 key points?:
 paragraph \d+:
+\[your
+\[email
+\[phone
 \[paragraph \d+\]
 \[End of article\]
 FOR IMMEDIATE RELEASE
 Here are 10 paragraphs
 \d+ words
 \d+ paragraphs
+total word count:
+// (start|begin|end) of output //
