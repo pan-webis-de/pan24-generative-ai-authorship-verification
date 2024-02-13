@@ -6,7 +6,6 @@ import json
 import logging
 from multiprocessing import pool, set_start_method
 import os
-from typing import Union
 
 import backoff
 import click
@@ -166,9 +165,15 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_te
 
 
 @backoff.on_exception(backoff.expo, GoogleAPIError, max_tries=3)
-def _vertexai_gen_article(article_data, model: Union[GenerativeModel, ChatModel, TextGenerationModel],
-                          prompt_template: str, **model_args):
+def _vertexai_gen_article(article_data, model_name: str, prompt_template: str, **model_args):
     prompt = _generate_instruction_prompt(article_data, prompt_template)
+
+    if 'gemini' in model_name:
+        model = GenerativeModel(model_name=model_name)
+    elif model_name.startswith('chat-'):
+        model = ChatModel.from_pretrained(model_name)
+    else:
+        model = TextGenerationModel.from_pretrained(model_name)
 
     citations_censored = False
     sex_censored = False
@@ -312,21 +317,12 @@ def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
     output_dir = os.path.join(output_dir, model_name.replace('@', '-'))
     os.makedirs(output_dir, exist_ok=True)
 
-    if 'gemini' in model_name:
-        model = GenerativeModel(model_name=model_name)
-    elif model_name.startswith('chat-'):
-        model = ChatModel.from_pretrained(model_name)
-    elif model_name.startswith('text-'):
-        model = TextGenerationModel.from_pretrained(model_name)
-    else:
-        raise click.UsageError('Invalid model name.')
-
     fn = partial(
         _map_records_to_files,
         fn=_vertexai_gen_article,
         prompt_template='news_article_chat.jinja2',
         out_dir=output_dir,
-        model=model,
+        model_name=model_name,
         **kwargs)
 
     try:
