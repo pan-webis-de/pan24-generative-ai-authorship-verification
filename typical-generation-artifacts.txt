@@ -3,7 +3,7 @@ Structural:
 I., II., III., ... (roman numerals before paragraphs)
 1. (before every heading)
 Paragraphs: [list of numbered paragraphs]
-Quotes: [list of quotes]
+Quotes( from name)?: [list of quotes]
 Break after dateline ( –\n\n)
 
 Text fragments:
@@ -15,7 +15,7 @@ sorry,
 ^I'd be happy
 ^(I'm|I am| you are) a(n| helpful) assistant
 as an ai language model
-ai generated
+ai[ -]generated
 I cannot
 I will try
 I'll try
@@ -37,6 +37,7 @@ introduction:
 dateline:
 article:
 summary:
+note:
 long text:
 video:
 key points?:
@@ -51,4 +52,4 @@ Here are 10 paragraphs
 \d+ words
 \d+ paragraphs
 total word count:
-// (start|begin|end) of output //
+// (start|begin(ning)?|end) of (the )?output //

@@ -4,7 +4,7 @@ from functools import partial
 import glob
 import json
 import logging
-from multiprocessing import pool
+from multiprocessing import pool, set_start_method
 import os
 from typing import Union
 
@@ -28,7 +28,7 @@ from vertexai.preview.generative_models import FinishReason, GenerativeModel, Ha
 
 
 logger = logging.getLogger(__name__)
-
+set_start_method('spawn')
 set_seed(42)
 
 
