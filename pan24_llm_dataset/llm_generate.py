@@ -6,9 +6,12 @@ import json
 import logging
 from multiprocessing import pool
 import os
+from typing import Union
 
 import backoff
 import click
+from google.api_core.exceptions import GoogleAPIError
+from google.auth.exceptions import GoogleAuthError
 import jinja2
 import markdown
 from openai import OpenAI, OpenAIError
@@ -20,6 +23,9 @@ try:
 except ModuleNotFoundError:
     from transformers import AutoModelForCausalLM
 from transformers import AutoTokenizer, BitsAndBytesConfig, set_seed
+from vertexai.language_models import ChatModel, TextGenerationModel
+from vertexai.preview.generative_models import FinishReason, GenerativeModel, HarmCategory, HarmBlockThreshold
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +50,7 @@ def _generate_instruction_prompt(article_data, template_name):
 def _apply_chat_template(tokenizer, messages):
     chat_template = tokenizer.chat_template
 
-    if not chat_template and ('gpt2' in tokenizer.name_or_path or 'alpaca' in tokenizer.name_or_path):
+    if not chat_template:
         chat_template = (
             'Below is an instruction that describes a task. '
             'Write a response that appropriately completes the request.\n\n'
@@ -54,18 +60,6 @@ def _apply_chat_template(tokenizer, messages):
             '{% endfor %}\n'
             '{% if add_generation_prompt %}\n'
             '### Response:\n'
-            '{% endif %}')
-
-    elif not chat_template and 'falcon' in tokenizer.name_or_path:
-        chat_template = (
-            'You are a helpful assistant. '
-            'Respond with an answer that appropriately completes the task instructions below.\n'
-            '>>QUESTION<<\n'
-            '{% for message in messages -%}\n'
-            '{{ message["content"]  }}\n'
-            '{% endfor %}\n'
-            '{% if add_generation_prompt %}\n'
-            '>>ANSWER<<\n'
             '{% endif %}')
 
     return tokenizer.apply_chat_template(
@@ -171,6 +165,51 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_te
     return _clean_text_quirks(response, article_data)
 
 
+@backoff.on_exception(backoff.expo, GoogleAPIError, max_tries=5)
+def _vertexai_gen_article(article_data, model: Union[GenerativeModel, ChatModel, TextGenerationModel],
+                          prompt_template: str, **model_args):
+    prompt = _generate_instruction_prompt(article_data, prompt_template)
+
+    candidates = []
+    prompt_censored = False
+    for _ in range(2):
+        if isinstance(model, GenerativeModel):
+            response = model.generate_content(
+                prompt,
+                generation_config=model_args,
+                safety_settings={h: HarmBlockThreshold.BLOCK_NONE for h in HarmCategory})
+            candidates = response.candidates
+
+        elif isinstance(model, ChatModel):
+            chat = model.start_chat(context=prompt)
+            candidates = chat.send_message('Assistant response:').candidates
+
+        else:
+            candidates = model.predict(prompt, **model_args).candidates
+
+        if not candidates or (
+                hasattr(candidates[0], 'finish_reason')
+                and candidates[0].finish_reason not in [FinishReason.STOP, FinishReason.MAX_TOKENS]):
+            # Probably hard-coded input or output blocking. Rewrite prompt and try again
+            prompt = prompt.replace('sex', '&&&')
+            prompt += '\nPhrase your response in a non-harmful way suitable for the general public.'
+            prompt_censored = True
+            continue
+        break
+    else:
+        raise GoogleAPIError(f'Generation failed for {article_data["id"]}')
+
+    if hasattr(candidates[0], 'content'):
+        response = candidates[0].content.text
+    else:
+        response = candidates[0].text
+    if prompt_censored:
+        response = response.replace('&&&', 'sex')
+
+    response = html2text.extract_plain_text(markdown.markdown(response)).strip()
+    return _clean_text_quirks(response, article_data)
+
+
 def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_template, headline_only=False, **kwargs):
     role = 'user'
     if model.config.model_type in ['llama', 'qwen2'] or "'system'" in (tokenizer.chat_template or ''):
@@ -244,6 +283,47 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
     _generate_articles(input_dir, fn, parallelism)
 
 
+@main.command(help='Generate articles using the VertexAI API')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-llm'), show_default=True)
+@click.option('-m', '--model-name', default='gemini-pro', show_default=True)
+@click.option('-p', '--parallelism', default=2, show_default=True)
+@click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.3, show_default=True,
+              help='Model temperature')
+@click.option('-x', '--max-output-tokens', type=click.IntRange(0, 1024), default=1024, show_default=True,
+              help='Maximum number of output tokens')
+@click.option('-k', '--top-k', type=click.IntRange(1, 40), default=40, show_default=True,
+              help='Top-k sampling')
+@click.option('--top-p', type=click.FloatRange(0, 1), default=0.95, show_default=True,
+              help='Top-p sampling')
+def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
+    output_dir = os.path.join(output_dir, model_name)
+    os.makedirs(output_dir, exist_ok=True)
+
+    if 'gemini' in model_name:
+        model = GenerativeModel(model_name=model_name)
+    elif model_name.startswith('chat-'):
+        model = ChatModel.from_pretrained(model_name)
+    elif model_name.startswith('text-'):
+        model = TextGenerationModel.from_pretrained(model_name)
+    else:
+        raise click.UsageError('Invalid model name.')
+
+    fn = partial(
+        _map_records_to_files,
+        fn=_vertexai_gen_article,
+        prompt_template='news_article_chat.jinja2',
+        out_dir=output_dir,
+        model=model,
+        **kwargs)
+
+    try:
+        _generate_articles(input_dir, fn, parallelism)
+    except GoogleAuthError as e:
+        raise click.UsageError('Authentication error:\n' + str(e))
+
+
 @main.command(help='Generate texts using a Huggingface chat model')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.argument('model_name')
@@ -255,7 +335,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
               show_default=True, help='Minimum length in tokens')
 @click.option('-x', '--max-new-tokens', type=click.IntRange(1), default=1000,
               show_default=True, help='Maximum new tokens')
-@click.option('-s', '--decay-start', type=click.IntRange(1), default=600,
+@click.option('-s', '--decay-start', type=click.IntRange(1), default=500,
               show_default=True, help='Length decay penalty start')
 @click.option('--decay-factor', type=click.FloatRange(1), default=1.01,
               show_default=True, help='Length decay penalty factor')
