@@ -50,16 +50,25 @@ def _apply_chat_template(tokenizer, messages):
     chat_template = tokenizer.chat_template
 
     if not chat_template:
-        chat_template = (
-            'Below is an instruction that describes a task. '
-            'Write a response that appropriately completes the request.\n\n'
-            '### Instruction:\n'
-            '{% for message in messages -%}\n'
-            '{{ message["content"]  }}\n'
-            '{% endfor %}\n'
-            '{% if add_generation_prompt %}\n'
-            '### Response:\n'
-            '{% endif %}')
+        if 'alpaca' in tokenizer.name_or_path:
+            chat_template = (
+                'Below is an instruction that describes a task. '
+                'Write a response that appropriately completes the request.\n\n'
+                '### Instruction:\n'
+                '{% for message in messages -%}\n'
+                '{{ message["content"]  }}\n'
+                '{% endfor %}\n'
+                '{% if add_generation_prompt %}\n'
+                '### Response:\n'
+                '{% endif %}')
+        else:
+            chat_template = (
+                '{% for message in messages -%}\n'
+                '{{ message["content"]  }}\n'
+                '{% endfor %}\n'
+                '{% if add_generation_prompt %}\n'
+                'Article:\n'
+                '{% endif %}')
 
     return tokenizer.apply_chat_template(
         messages, chat_template=chat_template, return_tensors='pt', add_generation_prompt=True)
