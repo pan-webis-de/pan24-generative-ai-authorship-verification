@@ -9,11 +9,15 @@ Break after dateline ( –\n\n)
 Text fragments:
 
 ^[a-z-]+>\s*
+^ *#+ +
+\] *–
+paragraph \d+
 JavaScript
 sorry,
 ^sure,
 ^I'd be happy
 ^(I'm|I am| you are) a(n| helpful) assistant
+^In this article, I will
 as an ai language model
 ai[ -]generated
 I cannot
@@ -21,16 +25,21 @@ I will try
 I'll try
 I'll give
 \shere's a
-^In this article, I will
-here's the article
-here's your article
+\bhere are some
+\bhere's (your|the) article
+your article
 factual errors
 spelling and grammar
 work of fiction
-your article
 reporting by
 header image:
 meta description:
+direct quote
+additional (resources|details|information|quotes):
+additional (resources|details|information|quotes)( and \w+):?(\s+[•-*] )
+timeline of events:
+additional key points
+key findings
 introduction:
 ^(article|example )?(sub)?title:
 ^(sub)?headline:
@@ -42,14 +51,25 @@ long text:
 video:
 key points?:
 paragraph \d+:
+by:
+media contact
+contact:
+faqs:
+\bsources:
+by \[
 \[your
+\[name
+\[media name
 \[email
 \[phone
+\[website
+\[date
 \[paragraph \d+\]
-\[End of article\]
+\[?End of article\]?
 FOR IMMEDIATE RELEASE
 Here are 10 paragraphs
 \d+ words
 \d+ paragraphs
 total word count:
+please note
 // (start|begin(ning)?|end) of (the )?output //
