@@ -172,7 +172,7 @@ def _vertexai_gen_article(article_data, model: Union[GenerativeModel, ChatModel,
 
     citations_censored = False
     sex_censored = False
-    max_tries = 5
+    max_tries = 4
     for _ in range(max_tries):
         if isinstance(model, GenerativeModel):
             response = model.generate_content(
@@ -274,7 +274,7 @@ def main():
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
-@click.option('-p', '--parallelism', default=10, show_default=True)
+@click.option('-p', '--parallelism', default=5, show_default=True)
 def openai(input_dir, output_dir, api_key, model_name, parallelism):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
@@ -299,7 +299,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-llm'), show_default=True)
 @click.option('-m', '--model-name', default='gemini-pro', show_default=True)
-@click.option('-p', '--parallelism', default=10, show_default=True)
+@click.option('-p', '--parallelism', default=5, show_default=True)
 @click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Model temperature')
 @click.option('-x', '--max-output-tokens', type=click.IntRange(0, 1024), default=1024, show_default=True,
