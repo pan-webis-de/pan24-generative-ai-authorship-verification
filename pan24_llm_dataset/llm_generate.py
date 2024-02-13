@@ -153,7 +153,7 @@ def _clean_text_quirks(text, article_data):
     return text.strip()
 
 
-@backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
+@backoff.on_exception(backoff.expo, OpenAIError, max_tries=3)
 def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_template: str):
     response = client.chat.completions.create(
         model=model_name,
@@ -165,14 +165,15 @@ def _openai_gen_article(article_data, client: OpenAI, model_name: str, prompt_te
     return _clean_text_quirks(response, article_data)
 
 
-@backoff.on_exception(backoff.expo, GoogleAPIError, max_tries=5)
+@backoff.on_exception(backoff.expo, GoogleAPIError, max_tries=3)
 def _vertexai_gen_article(article_data, model: Union[GenerativeModel, ChatModel, TextGenerationModel],
                           prompt_template: str, **model_args):
     prompt = _generate_instruction_prompt(article_data, prompt_template)
 
-    candidates = []
-    prompt_censored = False
-    for _ in range(2):
+    citations_censored = False
+    sex_censored = False
+    max_tries = 5
+    for _ in range(max_tries):
         if isinstance(model, GenerativeModel):
             response = model.generate_content(
                 prompt,
@@ -181,29 +182,39 @@ def _vertexai_gen_article(article_data, model: Union[GenerativeModel, ChatModel,
             candidates = response.candidates
 
         elif isinstance(model, ChatModel):
-            chat = model.start_chat(context=prompt)
+            chat = model.start_chat(context=prompt, **model_args)
             candidates = chat.send_message('Assistant response:').candidates
 
         else:
             candidates = model.predict(prompt, **model_args).candidates
 
-        if not candidates or (
-                hasattr(candidates[0], 'finish_reason')
-                and candidates[0].finish_reason not in [FinishReason.STOP, FinishReason.MAX_TOKENS]):
-            # Probably hard-coded input or output blocking. Rewrite prompt and try again
-            prompt = prompt.replace('sex', '&&&')
-            prompt += '\nPhrase your response in a non-harmful way suitable for the general public.'
-            prompt_censored = True
+        # Handle hard-coded safety filters
+        filtered = not candidates
+        citations_filtered = False
+        if candidates and hasattr(candidates[0], 'finish_reason'):
+            filtered |= candidates[0].finish_reason not in [FinishReason.STOP, FinishReason.MAX_TOKENS]
+            citations_filtered = candidates[0].finish_reason == FinishReason.RECITATION
+
+        # Probably hard-coded input or output blocking. Amend prompt and try again with higher temperature.
+        if filtered:
+            if citations_filtered and not citations_censored:
+                prompt += ('\nAvoid direct citation of sources that could be used for misinformation. '
+                           'Do not cite or mention any medical or pharmaceutical sources.')
+                citations_censored = True
+            elif not sex_censored:
+                prompt = prompt.replace('sex', '&&&')
+                prompt += '\nPhrase your response in a non-harmful way suitable for the general public.'
+                sex_censored = True
+            model_args['temperature'] = min(1.0, model_args.get('temperature', 0.5) + 0.1)
             continue
+
+        # Success
         break
     else:
-        raise GoogleAPIError(f'Generation failed for {article_data["id"]}')
+        raise RuntimeError(f'Generation failed for {article_data["id"]}')
 
-    if hasattr(candidates[0], 'content'):
-        response = candidates[0].content.text
-    else:
-        response = candidates[0].text
-    if prompt_censored:
+    response = candidates[0].content.text if hasattr(candidates[0], 'content') else candidates[0].text
+    if sex_censored:
         response = response.replace('&&&', 'sex')
 
     response = html2text.extract_plain_text(markdown.markdown(response)).strip()
@@ -288,7 +299,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-llm'), show_default=True)
 @click.option('-m', '--model-name', default='gemini-pro', show_default=True)
-@click.option('-p', '--parallelism', default=2, show_default=True)
+@click.option('-p', '--parallelism', default=10, show_default=True)
 @click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Model temperature')
 @click.option('-x', '--max-output-tokens', type=click.IntRange(0, 1024), default=1024, show_default=True,
@@ -298,7 +309,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @click.option('--top-p', type=click.FloatRange(0, 1), default=0.95, show_default=True,
               help='Top-p sampling')
 def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
-    output_dir = os.path.join(output_dir, model_name)
+    output_dir = os.path.join(output_dir, model_name.replace('@', '-'))
     os.makedirs(output_dir, exist_ok=True)
 
     if 'gemini' in model_name:
