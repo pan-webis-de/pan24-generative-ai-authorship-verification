@@ -46,28 +46,38 @@ def _generate_instruction_prompt(article_data, template_name):
     return template.render(article_data=article_data, target_paragraphs=target_paragraphs, target_words=target_words)
 
 
-def _apply_chat_template(tokenizer, messages):
+def _apply_chat_template(tokenizer, model_type, messages):
     chat_template = tokenizer.chat_template
 
     if not chat_template:
-        if 'alpaca' in tokenizer.name_or_path:
+        if 'alpaca' in tokenizer.name_or_path.lower():
             chat_template = (
                 'Below is an instruction that describes a task. '
                 'Write a response that appropriately completes the request.\n\n'
                 '### Instruction:\n'
                 '{% for message in messages -%}\n'
-                '{{ message["content"]  }}\n'
+                '{{ message["content"] }}\n'
                 '{% endfor %}\n'
                 '{% if add_generation_prompt %}\n'
                 '### Response:\n'
                 '{% endif %}')
-        else:
+        elif model_type == 'llama':
             chat_template = (
                 '{% for message in messages -%}\n'
-                '{{ message["content"]  }}\n'
+                '### {{ message["role"].capitalize() }}:\n'
+                '{{ message["content"] }}\n'
                 '{% endfor %}\n'
                 '{% if add_generation_prompt %}\n'
-                'Article:\n'
+                '### Assistant:\n'
+                '{% endif %}')
+        else:
+            chat_template = (
+                'Task description:\n'
+                '{% for message in messages -%}\n'
+                '{{ message["content"] }}\n'
+                '{% endfor %}\n'
+                '{% if add_generation_prompt %}\n'
+                'Response:\n'
                 '{% endif %}')
 
     return tokenizer.apply_chat_template(
@@ -243,7 +253,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_templat
     if role == 'system':
         messages.append({'role': 'user', 'content': ''})
 
-    model_inputs = _apply_chat_template(tokenizer, messages).to(model.device)
+    model_inputs = _apply_chat_template(tokenizer, model.config.model_type, messages).to(model.device)
 
     for _ in range(3):
         generated_ids = model.generate(
