@@ -1,11 +1,12 @@
+from base64 import urlsafe_b64encode
 import glob
 import json
-from hashlib import sha256
 from logging import getLogger
 import os
 import random
 import re
 import unicodedata
+import uuid
 
 import click
 from tqdm import tqdm
@@ -102,9 +103,13 @@ def _write_jsonl(it, ids, suffix, output_dir):
               default=os.path.join('data', 'dataset-final'), show_default=True)
 @click.option('-s', '--seed', type=int, default=42, help='Random seed')
 @click.option('-p', '--test-pairwise', is_flag=True, help='Output test set as pairs')
-@click.option('-h', '--hash-test-ids', is_flag=True, help='Hash test case IDs')
-def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed, test_pairwise, hash_test_ids):
+@click.option('-r', '--scramble-test-ids', is_flag=True, help='Scramble test case IDs')
+def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed, test_pairwise, scramble_test_ids):
     random.seed(seed)
+
+    # Secret for scrambling test case IDs (depends on the set seed!).
+    # This is not cryptographically secure, but should suffice for us!
+    uuid_secret = random.randbytes(24)
 
     machine_txt = [m for m in set(machine_txt) if m != human_txt]
     if not machine_txt:
@@ -135,9 +140,12 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
                 if random.randint(0, 1):
                     t1, t2 = t2, t1
                     l1, l2 = l2, l1
-                case_id = f'{machine_name}/{i}'
+                case_id = '/'.join((machine_name, i))
+                if scramble_test_ids:
+                    case_id = '/'.join((uuid_secret.hex(), case_id))
+                    case_id = urlsafe_b64encode(uuid.uuid5(uuid.NAMESPACE_OID, case_id).bytes).decode().rstrip('=')
                 json.dump({
-                    'id': case_id if not hash_test_ids else sha256(case_id.encode()).hexdigest(),
+                    'id': case_id,
                     'text1': t1,
                     'text2': t2,
                     'is_human': [l1, l2]
