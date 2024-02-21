@@ -7,7 +7,6 @@ import lzma
 from multiprocessing import pool
 import os
 import re
-import string
 import sys
 import time
 
@@ -15,14 +14,9 @@ import backoff
 import click
 import jsonschema
 import gnews
-from matplotlib import pyplot as plt
 import newspaper
-import numpy as np
 from openai import NotFoundError, OpenAI, OpenAIError
 from openai.types.beta import Assistant
-import pandas as pd
-from scipy.stats import lognorm, norm
-import seaborn as sns
 from tqdm import tqdm
 
 from pan24_llm_dataset.gnews_url import GNewsURL
@@ -188,42 +182,6 @@ def filter(input_dir, output_dir, min_length):
             open(os.path.join(out, os.path.basename(f)[:-3]), 'wt').write(text)
 
 
-@main.command(help='Plot text length distribution')
-@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
-@click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
-def plot_length_dist(input_dir, no_log):
-    ws_re = re.compile(r'\s+')
-    tokens = []
-
-    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), desc='Counting tokens', unit='tokens'):
-        l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
-        if l > 1000:
-            tokens.append(l)
-
-    tokens = pd.DataFrame(tokens, columns=['Characters'])
-    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=not no_log, label='Density')
-
-    # Overlay (log-)normal distribution
-    if no_log:
-        mean, std = norm.fit(tokens)
-        x_pdf = np.linspace(*ax.get_xlim(), 100)
-        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
-        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
-        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
-        print(f'μ = {mean:.2f}, σ = {std:.2f}')
-    else:
-        s, loc, scale = lognorm.fit(tokens)
-        x_pdf = np.logspace(*np.log10(np.clip(ax.get_xlim(), 1, None)), 100, base=10)
-        y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
-        y_pdf *= x_pdf / (scale * np.exp((s**2) / 2))        # Correct for x bin shift
-        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
-        ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
-        print(f'loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
-
-    plt.legend()
-    plt.show()
-
-
 @backoff.on_exception(backoff.expo, OpenAIError, max_tries=5)
 def _summarize_article(article: str, client: OpenAI, assistant: Assistant):
     thread = client.beta.threads.create()
@@ -335,32 +293,6 @@ def validate_llm_json(input_dir):
             click.echo(f'  {f}: {e}', err=True)
 
     sys.exit(1)
-
-
-@main.command(help='Truncate text character lengths according to a specific log-normal distribution')
-@click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-truncated'), show_default=True)
-@click.option('-m', '--scale', type=float, default=3300.0, show_default=True, help='Distribution scale')
-@click.option('-l', '--loc', type=float, default=0.0, show_default=True, help='Distribution left location')
-@click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
-@click.option('-x', '--hard-max', type=int, default=8000, show_default=True, help='Hard maximum number of characters')
-def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
-    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths', unit='texts'):
-        out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
-        os.makedirs(out, exist_ok=True)
-        out = os.path.join(out, os.path.basename(f))
-
-        t = open(f, 'r').read()
-        r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
-        while len(t) > hard_max or len(t) > r + 200:
-            t = t[:t.rfind('\n\n')]
-
-        # Strip one more line if last character isn't punctuation
-        if t[-1] not in string.punctuation and len(t[t.rfind('\n'):]) < 70:
-            t = t[:t.rfind('\n\n')]
-
-        open(out, 'w').write(t)
 
 
 @main.command(help='Combine article lists and texts with LLM summaries')

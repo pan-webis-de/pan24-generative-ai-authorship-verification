@@ -5,8 +5,15 @@ from logging import getLogger
 import os
 import random
 import re
+import string
 import unicodedata
 import uuid
+
+from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.stats import lognorm, norm
+import seaborn as sns
 
 import click
 from tqdm import tqdm
@@ -20,7 +27,7 @@ def main():
     pass
 
 
-@main.command(help='Convert text files to JSONL')
+@main.command(help='Convert directories with text files to JSONL files')
 @click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-jsonl'), show_default=True)
@@ -42,6 +49,91 @@ def text2jsonl(article_text_dir, output_dir):
                     }
                     json.dump(article_data, out, ensure_ascii=False)
                     out.write('\n')
+
+
+@main.command(help='Convert JSONL files to directories with text files')
+@click.argument('article_jsonl_dir', type=click.Path(exists=True, file_okay=False), nargs=-1)
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-text'), show_default=True)
+def jsonl2text(article_jsonl_dir, output_dir):
+    for aj in article_jsonl_dir:
+        aj = aj.rstrip(os.path.sep)
+        out_dir_base = os.path.join(output_dir, os.path.basename(aj))
+
+        infiles = sorted(glob.glob(os.path.join(aj, '*.jsonl')))
+        if not infiles:
+            continue
+
+        for infile in tqdm(infiles, desc='Reading source files', unit='files', leave=False):
+            topic = os.path.splitext(os.path.basename(infile))[0]
+            out_dir = os.path.join(out_dir_base, topic)
+            os.makedirs(out_dir, exist_ok=True)
+
+            for l in open(infile, 'r'):
+                j = json.loads(l)
+                open(os.path.join(out_dir, j['id'] + '.txt'), 'w').write(j['text'])
+
+
+@main.command(help='Truncate text character lengths according to a specific log-normal distribution')
+@click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'articles-truncated'), show_default=True)
+@click.option('-m', '--scale', type=float, default=3300.0, show_default=True, help='Distribution scale')
+@click.option('-l', '--loc', type=float, default=0.0, show_default=True, help='Distribution left location')
+@click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
+@click.option('-x', '--hard-max', type=int, default=8000, show_default=True, help='Hard maximum number of characters')
+def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
+    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths', unit='texts'):
+        out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
+        os.makedirs(out, exist_ok=True)
+        out = os.path.join(out, os.path.basename(f))
+
+        t = open(f, 'r').read()
+        r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
+        while len(t) > hard_max or len(t) > r + 200:
+            t = t[:t.rfind('\n\n')]
+
+        # Strip one more line if last character isn't punctuation
+        if t[-1] not in string.punctuation and len(t[t.rfind('\n'):]) < 70:
+            t = t[:t.rfind('\n\n')]
+
+        open(out, 'w').write(t)
+
+
+@main.command(help='Plot text length distribution')
+@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+@click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
+def plot_length_dist(input_dir, no_log):
+    ws_re = re.compile(r'\s+')
+    tokens = []
+
+    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), desc='Counting tokens', unit='tokens'):
+        l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
+        if l > 1000:
+            tokens.append(l)
+
+    tokens = pd.DataFrame(tokens, columns=['Characters'])
+    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=not no_log, label='Density')
+
+    # Overlay (log-)normal distribution
+    if no_log:
+        mean, std = norm.fit(tokens)
+        x_pdf = np.linspace(*ax.get_xlim(), 100)
+        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
+        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
+        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
+        print(f'μ = {mean:.2f}, σ = {std:.2f}')
+    else:
+        s, loc, scale = lognorm.fit(tokens)
+        x_pdf = np.logspace(*np.log10(np.clip(ax.get_xlim(), 1, None)), 100, base=10)
+        y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
+        y_pdf *= x_pdf / (scale * np.exp((s**2) / 2))        # Correct for x bin shift
+        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
+        ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
+        print(f'loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
+
+    plt.legend()
+    plt.show()
 
 
 @main.command(help='Generate train/test splits and save IDs as text files')
