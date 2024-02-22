@@ -28,30 +28,48 @@ def main():
 
 
 @main.command(help='Convert directories with text files to JSONL files')
-@click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False), nargs=-1)
+@click.argument('article_text_dir', type=click.Path(exists=True), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-jsonl'), show_default=True)
-def text2jsonl(article_text_dir, output_dir):
+@click.option('-c', '--combine-topics', is_flag=True, help='Combine all topics into one file')
+def text2jsonl(article_text_dir, output_dir, combine_topics):
     os.makedirs(output_dir, exist_ok=True)
 
-    for at in article_text_dir:
+    article_text_dir = [d for d in article_text_dir if os.path.isdir(d)]
+    if not article_text_dir:
+        raise click.UsageError('No valid inputs provided.')
+
+    def _write_jsonl(outfile, input_files, topic):
+        for text_file in sorted(input_files):
+            art_id = os.path.splitext(os.path.basename(text_file))[0]
+            if combine_topics:
+                art_id = '/'.join((topic, art_id))
+            article_data = {
+                'id': art_id,
+                'text': open(text_file, 'r').read().strip(),
+            }
+            json.dump(article_data, outfile, ensure_ascii=False)
+            outfile.write('\n')
+
+    for at in tqdm(article_text_dir, desc='Reading input dirs', unit='dirs', leave=False):
         topics = sorted([d for d in os.listdir(at) if os.path.isdir(os.path.join(at, d))])
         if not topics:
             continue
 
-        with open(os.path.join(output_dir, os.path.basename(at) + '.jsonl'), 'w') as out:
-            for topic in tqdm(topics, desc='Reading source files', unit='files', leave=False):
-                for text_file in sorted(glob.glob(os.path.join(at, topic, 'art-*.txt'))):
-                    art_id = '/'.join((topic, os.path.splitext(os.path.basename(text_file))[0]))
-                    article_data = {
-                        'id': art_id,
-                        'text': open(text_file, 'r').read().strip(),
-                    }
-                    json.dump(article_data, out, ensure_ascii=False)
-                    out.write('\n')
+        if combine_topics:
+            outname = os.path.join(output_dir, os.path.basename(at) + '.jsonl')
+            with open(outname, 'w') as out:
+                for topic in topics:
+                    _write_jsonl(out, glob.glob(os.path.join(at, topic, 'art-*.txt')), topic)
+        else:
+            for topic in topics:
+                outname = os.path.join(output_dir, os.path.basename(at), topic + '.jsonl')
+                os.makedirs(os.path.dirname(outname), exist_ok=True)
+                with open(outname, 'w') as out:
+                    _write_jsonl(out, glob.glob(os.path.join(at, topic, 'art-*.txt')), topic)
 
 
-@main.command(help='Convert JSONL files to directories with text files')
+@main.command(help='Convert directories with JSONL files to directories with text files')
 @click.argument('article_jsonl_dir', type=click.Path(exists=True, file_okay=False), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'articles-text'), show_default=True)
