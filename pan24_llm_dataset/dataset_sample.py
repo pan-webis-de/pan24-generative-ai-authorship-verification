@@ -105,7 +105,8 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 @click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
 @click.option('--prune-outliers', type=click.FloatRange(0, 0.9), default=0.01, show_default=True,
               help='Prune percentage of outliers')
-def plot_length_dist(input_dir, no_log, prune_outliers):
+@click.option('-b', '--num-bins', type=int, default=50, show_default=True, help="Number of bins")
+def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
     ws_re = re.compile(r'\s+')
     input_dir = [d for d in input_dir if os.path.isdir(d)]
     tokens = pd.DataFrame(columns=['dataset', 'art_id', 'characters'])
@@ -138,7 +139,6 @@ def plot_length_dist(input_dir, no_log, prune_outliers):
     first_col_w = tokens[ds_col].map(len).max()
     col_wrap = min(n_ds, max(3, int(np.sqrt(n_ds))))
     x_lim = (tokens[val_col].min(), tokens[val_col].max())
-    bin_width = (x_lim[1] - x_lim[0]) // 50
 
     def _plot_hist(*, data=None, x=None, **kwargs):
         ax = sns.histplot(data=data, x=x, **kwargs)
@@ -161,9 +161,12 @@ def plot_length_dist(input_dir, no_log, prune_outliers):
             ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
             print(f'{ds_name:<{first_col_w + 1}} loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
 
-    g = sns.FacetGrid(tokens, col=ds_col, col_wrap=col_wrap, height=3, sharex=True,
-                      sharey=True, legend_out=True, aspect=1.5)
-    g.map_dataframe(_plot_hist, x=val_col, kde=True, log_scale=not no_log, label='Density', binwidth=bin_width)
+    if no_log:
+        bins = np.linspace(*x_lim, num_bins, dtype=int)
+    else:
+        bins = np.log10(np.logspace(*np.log10(x_lim), num_bins, dtype=int, base=10))
+    g = sns.FacetGrid(tokens, col=ds_col, col_wrap=col_wrap, height=3, sharex=True, sharey=True, aspect=1.5)
+    g.map_dataframe(_plot_hist, x=val_col, kde=True, log_scale=not no_log, label='Density', bins=bins)
     g.add_legend()
     plt.show()
 
