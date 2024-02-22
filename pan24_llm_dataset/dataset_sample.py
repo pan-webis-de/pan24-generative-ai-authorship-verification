@@ -149,7 +149,7 @@ def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
             mean, std = norm.fit(data[x].astype(int))
             x_pdf = np.linspace(*x_lim, 100)
             y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
-            y_pdf *= max(p.get_height() for p in ax.patches) / np.max(y_pdf)
+            y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)
             ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
             print(f'{ds_name:<{first_col_w + 1}} μ = {mean:.2f}, σ = {std:.2f}')
         else:
@@ -157,7 +157,7 @@ def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
             x_pdf = np.logspace(*np.log10(np.clip(x_lim, 1, None)), 100, base=10)
             y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
             y_pdf *= x_pdf / (scale * np.exp((s ** 2) / 2))                   # Correct for x bin shift
-            y_pdf *= max(p.get_height() for p in ax.patches) / np.max(y_pdf)  # Scale up height to match histogram
+            y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)  # Scale up height to match histogram
             ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
             print(f'{ds_name:<{first_col_w + 1}} loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
 
