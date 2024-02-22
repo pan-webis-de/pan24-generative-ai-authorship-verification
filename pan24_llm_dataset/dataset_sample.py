@@ -83,7 +83,7 @@ def jsonl2text(article_jsonl_dir, output_dir):
 @click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
 @click.option('-x', '--hard-max', type=int, default=8000, show_default=True, help='Hard maximum number of characters')
 def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
-    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), label='Resampling text lengths', unit='texts'):
+    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), desc='Resampling text lengths', unit='texts'):
         out = os.path.join(output_dir, os.path.basename(os.path.dirname(f)))
         os.makedirs(out, exist_ok=True)
         out = os.path.join(out, os.path.basename(f))
