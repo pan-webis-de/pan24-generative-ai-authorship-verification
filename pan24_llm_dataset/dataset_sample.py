@@ -101,38 +101,70 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 
 
 @main.command(help='Plot text length distribution')
-@click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
+@click.argument('input_dir', type=click.Path(exists=True), nargs=-1)
 @click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
-def plot_length_dist(input_dir, no_log):
+@click.option('--prune-outliers', type=click.FloatRange(0, 0.9), default=0.01, show_default=True,
+              help='Prune percentage of outliers')
+def plot_length_dist(input_dir, no_log, prune_outliers):
     ws_re = re.compile(r'\s+')
-    tokens = []
+    input_dir = [d for d in input_dir if os.path.isdir(d)]
+    tokens = pd.DataFrame(columns=['dataset', 'art_id', 'characters'])
 
-    for f in tqdm(glob.glob(os.path.join(input_dir, '*', 'art-*.txt')), desc='Counting tokens', unit='tokens'):
-        l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
-        if l > 1000:
-            tokens.append(l)
+    ds_col = 'dataset'
+    art_col = 'art_id'
+    val_col = 'characters'
 
-    tokens = pd.DataFrame(tokens, columns=['Characters'])
-    ax = sns.histplot(data=tokens, x='Characters', kde=True, log_scale=not no_log, label='Density')
+    for indir in tqdm(input_dir, desc='Calculating statistics', leave=False):
+        token_list = []
+        ds = os.path.basename(indir.rstrip(os.path.sep))
+        for f in glob.glob(os.path.join(indir, '*', 'art-*.txt')):
+            art_id = os.path.splitext(os.path.basename(f))[0]
+            l = len(ws_re.sub(open(f, 'r').read().strip(), ' '))
+            token_list.append((ds, art_id, l))
 
-    # Overlay (log-)normal distribution
-    if no_log:
-        mean, std = norm.fit(tokens)
-        x_pdf = np.linspace(*ax.get_xlim(), 100)
-        y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
-        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)
-        ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
-        print(f'μ = {mean:.2f}, σ = {std:.2f}')
-    else:
-        s, loc, scale = lognorm.fit(tokens)
-        x_pdf = np.logspace(*np.log10(np.clip(ax.get_xlim(), 1, None)), 100, base=10)
-        y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
-        y_pdf *= x_pdf / (scale * np.exp((s**2) / 2))        # Correct for x bin shift
-        y_pdf *= ax.get_ylim()[1] / np.max(y_pdf)            # Scale up height to match histogram
-        ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
-        print(f'loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
+        pd_tmp = pd.DataFrame(token_list, columns=[ds_col, art_col, val_col])
+        if prune_outliers > 0:
+            p_lo, p_hi = pd_tmp[val_col].quantile(q=[prune_outliers / 2, 1.0 - prune_outliers / 2])
+            pd_tmp = pd_tmp[(pd_tmp[val_col] > p_lo) & (pd_tmp[val_col] < p_hi)]
+        tokens = pd.concat((tokens, pd_tmp))
+        del pd_tmp
 
-    plt.legend()
+    tokens.reset_index(inplace=True)
+
+    n_ds = tokens[ds_col].nunique()
+    if n_ds == 0:
+        raise click.UsageError('No valid input data provided.')
+
+    first_col_w = tokens[ds_col].map(len).max()
+    col_wrap = min(n_ds, max(3, int(np.sqrt(n_ds))))
+    x_lim = (tokens[val_col].min(), tokens[val_col].max())
+    bin_width = (x_lim[1] - x_lim[0]) // 50
+
+    def _plot_hist(*, data=None, x=None, **kwargs):
+        ax = sns.histplot(data=data, x=x, **kwargs)
+        ds_name = data[ds_col].iloc[0]
+
+        # Overlay (log-)normal distribution
+        if no_log:
+            mean, std = norm.fit(data[x].astype(int))
+            x_pdf = np.linspace(*x_lim, 100)
+            y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
+            y_pdf *= max(p.get_height() for p in ax.patches) / np.max(y_pdf)
+            ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
+            print(f'{ds_name:<{first_col_w + 1}} μ = {mean:.2f}, σ = {std:.2f}')
+        else:
+            s, loc, scale = lognorm.fit(data[x].astype(int))
+            x_pdf = np.logspace(*np.log10(np.clip(x_lim, 1, None)), 100, base=10)
+            y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
+            y_pdf *= x_pdf / (scale * np.exp((s ** 2) / 2))                   # Correct for x bin shift
+            y_pdf *= max(p.get_height() for p in ax.patches) / np.max(y_pdf)  # Scale up height to match histogram
+            ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
+            print(f'{ds_name:<{first_col_w + 1}} loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
+
+    g = sns.FacetGrid(tokens, col=ds_col, col_wrap=col_wrap, height=3, sharex=True,
+                      sharey=True, legend_out=True, aspect=1.5)
+    g.map_dataframe(_plot_hist, x=val_col, kde=True, log_scale=not no_log, label='Density', binwidth=bin_width)
+    g.add_legend()
     plt.show()
 
 
