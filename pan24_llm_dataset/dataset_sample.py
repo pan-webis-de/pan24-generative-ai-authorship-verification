@@ -251,7 +251,9 @@ def _write_jsonl(it, ids, suffix, output_dir):
 @click.option('-s', '--seed', type=int, default=42, help='Random seed')
 @click.option('-p', '--test-pairwise', is_flag=True, help='Output test set as pairs')
 @click.option('-r', '--scramble-test-ids', is_flag=True, help='Scramble test case IDs')
-def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed, test_pairwise, scramble_test_ids):
+@click.option('-t', '--truth', is_flag=True, help='Add truth values to test set')
+def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed,
+                     test_pairwise, scramble_test_ids, truth):
     random.seed(seed)
 
     # Secret for scrambling test case IDs (depends on the set seed!).
@@ -300,7 +302,7 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
                     'id': case_id,
                     'text1': t1,
                     'text2': t2,
-                    'is_human': [l1, l2]
+                    **({'is_human': [l1, l2]} if truth else {})
                 }, out, ensure_ascii=False)
                 out.write('\n')
 
