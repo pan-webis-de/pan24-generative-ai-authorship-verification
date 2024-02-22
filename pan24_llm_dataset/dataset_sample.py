@@ -150,7 +150,7 @@ def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
             x_pdf = np.linspace(*x_lim, 100)
             y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
             y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)
-            ax.plot(x_pdf, y_pdf, 'r', label='Normal distribution')
+            ax.plot(x_pdf, y_pdf, 'r', label='Normal dist.')
             print(f'{ds_name:<{first_col_w + 1}} μ = {mean:.2f}, σ = {std:.2f}')
         else:
             s, loc, scale = lognorm.fit(data[x].astype(int))
@@ -158,15 +158,17 @@ def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
             y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
             y_pdf *= x_pdf / (scale * np.exp((s ** 2) / 2))                   # Correct for x bin shift
             y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)  # Scale up height to match histogram
-            ax.plot(x_pdf, y_pdf, 'r', label='Log-normal distribution')
+            ax.plot(x_pdf, y_pdf, 'r', label='Log-normal dist.')
             print(f'{ds_name:<{first_col_w + 1}} loc = {loc:.2f}, scale = {scale:.2f}, σ = {s:.2f} (log-normal)')
 
     if no_log:
         bins = np.linspace(*x_lim, num_bins, dtype=int)
     else:
         bins = np.log10(np.logspace(*np.log10(x_lim), num_bins, dtype=int, base=10))
-    g = sns.FacetGrid(tokens, col=ds_col, col_wrap=col_wrap, height=3, sharex=True, sharey=True, aspect=1.5)
-    g.map_dataframe(_plot_hist, x=val_col, kde=True, log_scale=not no_log, label='Density', bins=bins)
+    g = sns.FacetGrid(tokens, col=ds_col, col_wrap=col_wrap, height=3, sharex=True,
+                      sharey=True, aspect=1.5, legend_out=False)
+    g.map_dataframe(_plot_hist, x=val_col, kde=True, log_scale=not no_log,
+                    line_kws={'label': 'Kernel density'}, bins=bins)
     g.add_legend()
     plt.show()
 
