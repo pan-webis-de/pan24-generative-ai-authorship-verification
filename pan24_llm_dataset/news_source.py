@@ -297,11 +297,11 @@ def validate_llm_json(input_dir):
 
 @main.command(help='Combine article lists and texts with LLM summaries')
 @click.argument('article_list_dir', type=click.Path(exists=True, file_okay=False))
-@click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
+@click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-jsonl-combined'), show_default=True)
-def combine(article_list_dir, article_text_dir, article_summary_dir, output_dir):
+              default=os.path.join('data', 'articles-jsonl-with-meta'), show_default=True)
+def combine(article_list_dir, article_summary_dir, article_text_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     for topic_file in tqdm(glob.glob(os.path.join(article_list_dir, '*.jsonl')),
