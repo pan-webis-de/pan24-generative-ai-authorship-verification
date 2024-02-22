@@ -258,12 +258,17 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
     # This is not cryptographically secure, but should suffice for us!
     uuid_secret = random.randbytes(24)
 
-    machine_txt = [m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt]
+    machine_txt = list({m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
 
-    train_ids = [l.strip() for l in train_ids.readlines() if l.strip()]
-    test_ids = [l.strip() for l in test_ids.readlines() if l.strip()]
+    train_ids = {l.strip() for l in train_ids.readlines() if l.strip()}
+    test_ids = {l.strip() for l in test_ids.readlines() if l.strip()}
+    if train_ids == test_ids:
+        raise click.UsageError('Train and test input are the same.')
+    for t in test_ids:
+        if t in train_ids:
+            raise click.UsageError(f'Test ID "{t}" found in training set.')
 
     os.makedirs(output_dir, exist_ok=True)
 
