@@ -245,7 +245,7 @@ def _write_jsonl(it, ids, suffix, output_dir):
 @click.argument('train_ids', type=click.File('r'))
 @click.argument('test_ids', type=click.File('r'))
 @click.argument('human_txt', type=click.Path(exists=True, file_okay=False))
-@click.argument('machine_txt',  type=click.Path(exists=True, file_okay=False), nargs=-1)
+@click.argument('machine_txt',  type=click.Path(exists=True), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'dataset-final'), show_default=True)
 @click.option('-s', '--seed', type=int, default=42, help='Random seed')
@@ -258,7 +258,7 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
     # This is not cryptographically secure, but should suffice for us!
     uuid_secret = random.randbytes(24)
 
-    machine_txt = [m for m in set(machine_txt) if m != human_txt]
+    machine_txt = [m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt]
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
 
