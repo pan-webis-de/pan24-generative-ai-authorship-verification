@@ -231,41 +231,25 @@ def _read_texts(base_dir, ids):
         yield i, _normalize_text(open(file_name, 'r').read())
 
 
-def _write_jsonl(it, ids, suffix, output_dir):
-    for i, in_dir in enumerate(it):
-        name = os.path.basename(in_dir) if i > 0 else 'human'
-        out_name = os.path.join(output_dir, name + f'-{suffix}.jsonl')
-        with open(out_name, 'w') as out:
-            for tid, text in _read_texts(in_dir, ids):
-                json.dump({'id': tid, 'text': text}, out, ensure_ascii=False)
-                out.write('\n')
-
-
-@main.command(help='Assemble dataset from sorted (!) human and machine JSONL files')
+@main.command(help='Assemble dataset from human and machine text files')
 @click.argument('train_ids', type=click.File('r'))
 @click.argument('test_ids', type=click.File('r'))
 @click.argument('human_txt', type=click.Path(exists=True, file_okay=False))
 @click.argument('machine_txt',  type=click.Path(exists=True), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'dataset-final'), show_default=True)
-@click.option('-s', '--seed', type=int, default=42, help='Random seed')
-@click.option('-p', '--test-pairwise', is_flag=True, help='Output test set as pairs')
-@click.option('-r', '--scramble-test-ids', is_flag=True, help='Scramble test case IDs')
-@click.option('-t', '--truth', is_flag=True, help='Add truth values to test set')
-def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed,
-                     test_pairwise, scramble_test_ids, truth):
+@click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
+def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed):
     random.seed(seed)
 
-    # Secret for scrambling test case IDs (depends on the set seed!).
-    # This is not cryptographically secure, but should suffice for us!
-    uuid_secret = random.randbytes(24)
-
-    machine_txt = list({m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
+    machine_txt = sorted({m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
 
-    train_ids = {l.strip() for l in train_ids.readlines() if l.strip()}
-    test_ids = {l.strip() for l in test_ids.readlines() if l.strip()}
+    train_ids = sorted({l.strip() for l in train_ids.readlines() if l.strip()})
+    test_ids = sorted({l.strip() for l in test_ids.readlines() if l.strip()}, key=lambda _: random.random())
+    if not train_ids or not test_ids:
+        raise click.UsageError('Train or test set empty.')
     if train_ids == test_ids:
         raise click.UsageError('Train and test input are the same.')
     for t in test_ids:
@@ -274,13 +258,18 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # Output train set
     train_it = tqdm([human_txt] + machine_txt, desc='Assembling train split', unit=' inputs')
-    _write_jsonl(train_it, train_ids, 'train', output_dir)
-
-    if not test_pairwise:
-        test_it = tqdm([human_txt] + machine_txt, desc='Assembling test split', unit=' inputs')
-        _write_jsonl(test_it, test_ids, 'test', output_dir)
-        return
+    for i, in_dir in enumerate(train_it):
+        name = os.path.basename(in_dir) if i > 0 else 'human'
+        out_name = os.path.join(output_dir, name + '.jsonl')
+        with open(out_name, 'w') as out:
+            for tid, text in _read_texts(in_dir, train_ids):
+                if not text:
+                    logger.warning('Skipped empty training text: %s', tid)
+                    continue
+                json.dump({'id': tid, 'text': text}, out, ensure_ascii=False)
+                out.write('\n')
 
     # Pairwise output with randomised (human, machine) or (machine, human) pairs
     for machine in tqdm(machine_txt, desc='Assembling pairwise test split', unit=' inputs'):
@@ -288,23 +277,35 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
         h_it = _read_texts(human_txt, test_ids)
         m_it = _read_texts(machine, test_ids)
         out_name = os.path.join(output_dir, machine_name + '-test.jsonl')
-        with open(out_name, 'w') as out:
+        out_name_truth = os.path.join(output_dir, machine_name + '-test-truth.jsonl')
+
+        with open(out_name, 'w') as out, open(out_name_truth, 'w') as out_truth:
             for (i, t1), (_, t2) in zip(h_it, m_it):
                 l1, l2 = True, False
                 if random.randint(0, 1):
                     t1, t2 = t2, t1
                     l1, l2 = l2, l1
                 case_id = '/'.join((machine_name, i))
-                if scramble_test_ids:
-                    case_id = '/'.join((uuid_secret.hex(), case_id))
-                    case_id = urlsafe_b64encode(uuid.uuid5(uuid.NAMESPACE_OID, case_id).bytes).decode().rstrip('=')
+                random_case_id = urlsafe_b64encode(
+                    uuid.UUID(int=random.getrandbits(128), version=4).bytes).decode().rstrip('=')
+
+                if not t1 or not t2:
+                    logger.warning('Skipped test case %s due to empty text.', case_id)
+                    continue
+
                 json.dump({
-                    'id': case_id,
+                    'id': random_case_id,
                     'text1': t1,
                     'text2': t2,
-                    **({'is_human': [l1, l2]} if truth else {})
                 }, out, ensure_ascii=False)
                 out.write('\n')
+
+                json.dump({
+                    'id': random_case_id,
+                    'source_id': case_id,
+                    'is_human': [l1, l2]
+                }, out_truth, ensure_ascii=False)
+                out_truth.write('\n')
 
 
 if __name__ == '__main__':
