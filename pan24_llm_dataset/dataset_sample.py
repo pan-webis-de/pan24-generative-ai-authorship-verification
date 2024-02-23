@@ -21,6 +21,49 @@ from tqdm import tqdm
 
 logger = getLogger(__name__)
 
+_SINGLE_QUOTE_RE = re.compile(r'[‘’‚‛]')
+_DOUBLE_QUOTE_RE = re.compile(r'[“”„‟]')
+
+
+def _normalize_text(text):
+    text = unicodedata.normalize('NFKC', text)
+    text = _SINGLE_QUOTE_RE.sub('\'', text)
+    text = _DOUBLE_QUOTE_RE.sub('"', text)
+    return text.strip()
+
+
+def _read_texts(base_dir, topic_name, article_ids=None, normalize=False, skip_empty=True):
+    if not article_ids:
+        article_ids = (os.path.basename(a)[:-4] for a in glob.glob(os.path.join(base_dir, topic_name, 'art-*.txt')))
+
+    for art_id in article_ids:
+        file_name = os.path.join(base_dir, topic_name, art_id + '.txt')
+        if not os.path.isfile(file_name):
+            logger.warning('File not found: %s', file_name)
+            continue
+
+        text = open(file_name, 'r').read().strip()
+        if normalize:
+            text = _normalize_text(text)
+
+        if skip_empty and not text:
+            logger.warning('Skipped empty training text: %s/%s', topic_name, art_id)
+            continue
+
+        yield art_id, text
+
+
+def _write_jsonl(outfile, input_text_it, id_prefix=None,):
+    for tid, text in input_text_it:
+        if id_prefix:
+            tid = '/'.join((id_prefix, tid))
+
+        json.dump({
+            'id': tid,
+            'text': text,
+        }, outfile, ensure_ascii=False)
+        outfile.write('\n')
+
 
 @click.group()
 def main():
@@ -39,18 +82,6 @@ def text2jsonl(article_text_dir, output_dir, combine_topics):
     if not article_text_dir:
         raise click.UsageError('No valid inputs provided.')
 
-    def _write_jsonl(outfile, input_files, topic):
-        for text_file in sorted(input_files):
-            art_id = os.path.splitext(os.path.basename(text_file))[0]
-            if combine_topics:
-                art_id = '/'.join((topic, art_id))
-            article_data = {
-                'id': art_id,
-                'text': open(text_file, 'r').read().strip(),
-            }
-            json.dump(article_data, outfile, ensure_ascii=False)
-            outfile.write('\n')
-
     for at in tqdm(article_text_dir, desc='Reading input dirs', unit='dirs', leave=False):
         topics = sorted([d for d in os.listdir(at) if os.path.isdir(os.path.join(at, d))])
         if not topics:
@@ -60,13 +91,13 @@ def text2jsonl(article_text_dir, output_dir, combine_topics):
             outname = os.path.join(output_dir, os.path.basename(at) + '.jsonl')
             with open(outname, 'w') as out:
                 for topic in topics:
-                    _write_jsonl(out, glob.glob(os.path.join(at, topic, 'art-*.txt')), topic)
+                    _write_jsonl(out, _read_texts(at, topic), topic)
         else:
             for topic in topics:
                 outname = os.path.join(output_dir, os.path.basename(at), topic + '.jsonl')
                 os.makedirs(os.path.dirname(outname), exist_ok=True)
                 with open(outname, 'w') as out:
-                    _write_jsonl(out, glob.glob(os.path.join(at, topic, 'art-*.txt')), topic)
+                    _write_jsonl(out, _read_texts(at, topic))
 
 
 @main.command(help='Convert directories with JSONL files to directories with text files')
@@ -209,28 +240,6 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
     open(os.path.join(output_dir, 'ids-test.txt'), 'w').write('\n'.join(test))
 
 
-_SINGLE_QUOTE_RE = re.compile(r'[‘’‚‛]')
-_DOUBLE_QUOTE_RE = re.compile(r'[“”„‟]')
-
-
-def _normalize_text(text):
-    text = unicodedata.normalize('NFKC', text)
-    text = _SINGLE_QUOTE_RE.sub('\'', text)
-    text = _DOUBLE_QUOTE_RE.sub('"', text)
-    return text.strip()
-
-
-def _read_texts(base_dir, ids):
-    for i in ids:
-        topic, article = i.split('/')
-        file_name = os.path.join(base_dir, topic, article + '.txt')
-        if not os.path.isfile(file_name):
-            logger.warning('File not found: %s', file_name)
-            yield i, ''
-            continue
-        yield i, _normalize_text(open(file_name, 'r').read())
-
-
 @main.command(help='Assemble dataset from human and machine text files')
 @click.argument('train_ids', type=click.File('r'))
 @click.argument('test_ids', type=click.File('r'))
@@ -242,7 +251,9 @@ def _read_texts(base_dir, ids):
 def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed):
     random.seed(seed)
 
-    machine_txt = sorted({m for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
+    human_txt = human_txt.rstrip(os.path.sep)
+    human_name = os.path.basename(human_txt)
+    machine_txt = sorted({m.rstrip(os.path.sep) for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
 
@@ -263,19 +274,13 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
     for i, in_dir in enumerate(train_it):
         name = os.path.basename(in_dir) if i > 0 else 'human'
         out_name = os.path.join(output_dir, name + '.jsonl')
-        with open(out_name, 'w') as out:
-            for tid, text in _read_texts(in_dir, train_ids):
-                if not text:
-                    logger.warning('Skipped empty training text: %s', tid)
-                    continue
-                json.dump({'id': tid, 'text': text}, out, ensure_ascii=False)
-                out.write('\n')
+        _write_jsonl(open(out_name, 'w'), _read_texts(os.path.dirname(in_dir), name, train_ids, normalize=True), name)
 
     # Pairwise output with randomised (human, machine) or (machine, human) pairs
     for machine in tqdm(machine_txt, desc='Assembling pairwise test split', unit=' inputs'):
         machine_name = os.path.basename(machine)
-        h_it = _read_texts(human_txt, test_ids)
-        m_it = _read_texts(machine, test_ids)
+        h_it = _read_texts(os.path.dirname(human_txt), human_name, test_ids, normalize=True)
+        m_it = _read_texts(os.path.dirname(machine), machine_name, test_ids, normalize=True)
         out_name = os.path.join(output_dir, machine_name + '-test.jsonl')
         out_name_truth = os.path.join(output_dir, machine_name + '-test-truth.jsonl')
 
