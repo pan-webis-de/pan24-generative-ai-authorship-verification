@@ -247,7 +247,7 @@ def _vertexai_gen_article(article_data, model_name: str, prompt_template: str, *
 
 def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_template, headline_only=False, **kwargs):
     role = 'user'
-    if model.config.model_type in ['llama', 'qwen2'] or "'system'" in (tokenizer.chat_template or ''):
+    if model.config.model_type in ['llama', 'qwen2']:
         role = 'system'
     messages = [{'role': role, 'content': _generate_instruction_prompt(article_data, prompt_template)}]
     if role == 'system':
