@@ -294,7 +294,7 @@ def main():
 @main.command(help='Generate articles using the OpenAI API')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-llm'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-llm'), show_default=True)
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
@@ -321,7 +321,7 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @main.command(help='Generate articles using the VertexAI API')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-llm'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-llm'), show_default=True)
 @click.option('-m', '--model-name', default='gemini-pro', show_default=True)
 @click.option('-p', '--parallelism', default=5, show_default=True)
 @click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.3, show_default=True,
@@ -354,7 +354,7 @@ def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.argument('model_name')
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False),
-              default=os.path.join('data', 'articles-llm'), show_default=True, help='Output directory')
+              default=os.path.join('data', 'text', 'articles-llm'), show_default=True, help='Output directory')
 @click.option('-d', '--device', type=click.Choice(['auto', 'cuda', 'cpu']), default='auto',
               help='Select device to run model on')
 @click.option('-m', '--min-length', type=click.IntRange(1), default=370,

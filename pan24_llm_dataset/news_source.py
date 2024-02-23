@@ -106,7 +106,7 @@ def list_news(start_date, end_date, topic_file, output_dir, language, country, n
 @main.command(help='Download news articles from article lists')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-raw'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-raw'), show_default=True)
 def scrape_articles(input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
@@ -158,7 +158,7 @@ def scrape_articles(input_dir, output_dir):
 @main.command(help='Filter downloaded articles')
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-filtered'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-filtered'), show_default=True)
 @click.option('-n', '--min-length', type=int, default=2000, help='Minimum post length in characters', show_default=True)
 def filter(input_dir, output_dir, min_length):
     os.makedirs(output_dir, exist_ok=True)
@@ -300,7 +300,7 @@ def validate_llm_json(input_dir):
 @click.argument('article_summary_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('article_text_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-jsonl-with-meta'), show_default=True)
+              default=os.path.join('data', 'jsonl', 'articles-jsonl-with-meta'), show_default=True)
 def combine(article_list_dir, article_summary_dir, article_text_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 

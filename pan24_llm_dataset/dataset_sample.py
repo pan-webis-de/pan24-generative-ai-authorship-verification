@@ -73,7 +73,7 @@ def main():
 @main.command(help='Convert directories with text files to JSONL files')
 @click.argument('article_text_dir', type=click.Path(exists=True), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-jsonl'), show_default=True)
+              default=os.path.join('data', 'jsonl', 'articles-converted-jsonl'), show_default=True)
 @click.option('-c', '--combine-topics', is_flag=True, help='Combine all topics into one file')
 def text2jsonl(article_text_dir, output_dir, combine_topics):
     os.makedirs(output_dir, exist_ok=True)
@@ -103,7 +103,7 @@ def text2jsonl(article_text_dir, output_dir, combine_topics):
 @main.command(help='Convert directories with JSONL files to directories with text files')
 @click.argument('article_jsonl_dir', type=click.Path(exists=True, file_okay=False), nargs=-1)
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-text'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-converted-text'), show_default=True)
 def jsonl2text(article_jsonl_dir, output_dir):
     for aj in article_jsonl_dir:
         aj = aj.rstrip(os.path.sep)
@@ -126,7 +126,7 @@ def jsonl2text(article_jsonl_dir, output_dir):
 @main.command(help='Truncate text character lengths according to a specific log-normal distribution')
 @click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
-              default=os.path.join('data', 'articles-truncated'), show_default=True)
+              default=os.path.join('data', 'text', 'articles-truncated'), show_default=True)
 @click.option('-m', '--scale', type=float, default=3300.0, show_default=True, help='Distribution scale')
 @click.option('-l', '--loc', type=float, default=0.0, show_default=True, help='Distribution left location')
 @click.option('-s', '--sigma', type=float, default=.28, show_default=True, help='Distribution standard deviation')
