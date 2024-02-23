@@ -12,7 +12,7 @@ import uuid
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import lognorm, norm
+import scipy.stats as st
 import seaborn as sns
 
 import click
@@ -195,16 +195,16 @@ def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
 
         # Overlay (log-)normal distribution
         if no_log:
-            mean, std = norm.fit(data[x].astype(int))
+            a, mean, std = st.skewnorm.fit(data[x].astype(int))
             x_pdf = np.linspace(*x_lim, 100)
-            y_pdf = norm.pdf(x_pdf, loc=mean, scale=std)
+            y_pdf = st.skewnorm.pdf(x_pdf, a=a, loc=mean, scale=std)
             y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)
-            ax.plot(x_pdf, y_pdf, 'r', label='Normal dist.')
-            print(f'{ds_name:<{first_col_w + 1}} μ = {mean:.2f}, σ = {std:.2f}')
+            ax.plot(x_pdf, y_pdf, 'r', label='Skew-normal dist.')
+            print(f'{ds_name:<{first_col_w + 1}} α = {a:.2f}, μ = {mean:.2f}, σ = {std:.2f}')
         else:
-            s, loc, scale = lognorm.fit(data[x].astype(int))
+            s, loc, scale = st.lognorm.fit(data[x].astype(int))
             x_pdf = np.logspace(*np.log10(np.clip(x_lim, 1, None)), 100, base=10)
-            y_pdf = lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
+            y_pdf = st.lognorm.pdf(x_pdf, s=s, loc=loc, scale=scale)
             y_pdf *= x_pdf / (scale * np.exp((s ** 2) / 2))                   # Correct for x bin shift
             y_pdf *= max(ax.lines[0].get_ydata()) / np.max(y_pdf)  # Scale up height to match histogram
             ax.plot(x_pdf, y_pdf, 'r', label='Log-normal dist.')
