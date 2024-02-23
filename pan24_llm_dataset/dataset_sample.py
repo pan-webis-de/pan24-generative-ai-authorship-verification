@@ -152,7 +152,7 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
 @main.command(help='Plot text length distribution')
 @click.argument('input_dir', type=click.Path(exists=True), nargs=-1)
 @click.option('-l', '--no-log', is_flag=True, help='Fit a normal distribution instead of log-normal')
-@click.option('--prune-outliers', type=click.FloatRange(0, 0.9), default=0.01, show_default=True,
+@click.option('-p', '--prune-outliers', type=click.FloatRange(0, 0.9), default=0.01, show_default=True,
               help='Prune percentage of outliers')
 @click.option('-b', '--num-bins', type=int, default=50, show_default=True, help="Number of bins")
 def plot_length_dist(input_dir, no_log, prune_outliers, num_bins):
