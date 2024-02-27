@@ -37,12 +37,14 @@ def _read_texts(base_dir, topic_name, article_ids=None, normalize=False, skip_em
         article_ids = (os.path.basename(a)[:-4] for a in glob.glob(os.path.join(base_dir, topic_name, 'art-*.txt')))
 
     for art_id in article_ids:
+        text = ''
         file_name = os.path.join(base_dir, topic_name, art_id + '.txt')
-        if not os.path.isfile(file_name):
+        if os.path.isfile(file_name):
+            text = open(file_name, 'r').read().strip()
+        elif skip_empty:
             logger.warning('File not found: %s', file_name)
             continue
 
-        text = open(file_name, 'r').read().strip()
         if normalize:
             text = _normalize_text(text)
 
@@ -253,6 +255,7 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
 
     human_txt = human_txt.rstrip(os.path.sep)
     human_name = os.path.basename(human_txt)
+
     machine_txt = sorted({m.rstrip(os.path.sep) for m in set(machine_txt) if os.path.isdir(m) and m != human_txt})
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
@@ -271,18 +274,23 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
 
     # Output train set
     train_it = tqdm([human_txt] + machine_txt, desc='Assembling train split', unit=' inputs')
+    os.makedirs(os.path.join(output_dir, 'machines'), exist_ok=True)
     for i, in_dir in enumerate(train_it):
-        name = os.path.basename(in_dir) if i > 0 else 'human'
-        out_name = os.path.join(output_dir, name + '.jsonl')
-        _write_jsonl(open(out_name, 'w'), _read_texts(os.path.dirname(in_dir), name, train_ids, normalize=True), name)
+        name = os.path.basename(in_dir)
+        if in_dir != human_txt:
+            out_name = os.path.join(output_dir, 'machines', name + '.jsonl')
+        else:
+            out_name = os.path.join(output_dir, 'human.jsonl')
+        _write_jsonl(open(out_name, 'w'),
+                     _read_texts(os.path.dirname(in_dir), name, train_ids, skip_empty=False, normalize=True), name)
 
     # Pairwise output with randomised (human, machine) or (machine, human) pairs
     for machine in tqdm(machine_txt, desc='Assembling pairwise test split', unit=' inputs'):
         machine_name = os.path.basename(machine)
         h_it = _read_texts(os.path.dirname(human_txt), human_name, test_ids, normalize=True)
         m_it = _read_texts(os.path.dirname(machine), machine_name, test_ids, normalize=True)
-        out_name = os.path.join(output_dir, machine_name + '-test.jsonl')
-        out_name_truth = os.path.join(output_dir, machine_name + '-test-truth.jsonl')
+        out_name = os.path.join(output_dir, 'machines', machine_name + '-test.jsonl')
+        out_name_truth = os.path.join(output_dir, 'machines', machine_name + '-test-truth.jsonl')
 
         with open(out_name, 'w') as out, open(out_name_truth, 'w') as out_truth:
             for (i, t1), (_, t2) in zip(h_it, m_it):
