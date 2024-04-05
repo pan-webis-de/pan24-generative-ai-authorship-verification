@@ -6,7 +6,8 @@ authors = ["Janek Bevendorff <janek.bevendorff@uni-weimar.de>"]
 readme = "README.md"
 packages = [
     { include = "pan24_llm_dataset" },
-    { include = "pan24_llm_baselines" }
+    { include = "pan24_llm_baselines" },
+    { include = "pan24_llm_evaluator" },
 ]
 license = "Apache License 2.0"
 
@@ -36,12 +37,14 @@ auto-gptq = "^0.6.0"
 google-cloud-aiplatform = "^1.41.0"
 matplotlib = "^3.8.4"
 seaborn = "^0.13.2"
+scikit-learn = "^1.4.1.post1"
 
 [tool.poetry.scripts]
 news-source = 'pan24_llm_dataset.news_source:main'
 llm-generate = 'pan24_llm_dataset.llm_generate:main'
 dataset-sample = 'pan24_llm_dataset.dataset_sample:main'
 baselines = 'pan24_llm_baselines.main:main'
+evaluator = 'pan24_llm_evaluator.evaluator:main'
 
 [build-system]
 requires = ["poetry-core"]

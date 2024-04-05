@@ -13,7 +13,7 @@ def main():
 @main.command()
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
-@click.argument('-n', '--out-name', help='Output file name', default='binoculars.jsonl')
+@click.option('-n', '--out-name', help='Output file name', default='binoculars.jsonl')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-f', '--flash-attn', is_flag=True,
               help='Use flash-attn 2 (must be installed separately)')
