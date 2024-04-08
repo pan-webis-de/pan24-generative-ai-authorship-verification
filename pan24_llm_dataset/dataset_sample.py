@@ -264,7 +264,8 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'dataset-final'), show_default=True)
 @click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
-def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed):
+@click.option('-n', '--no-source', is_flag=True, help='Do not include source IDs')
+def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed, no_source):
     random.seed(seed)
 
     human_txt = human_txt.rstrip(os.path.sep)
@@ -329,7 +330,7 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
 
                 json.dump({
                     'id': random_case_id,
-                    'source_id': case_id,
+                    **({'source_id': case_id} if not no_source else {}),
                     'is_human': [l1, l2]
                 }, out_truth, ensure_ascii=False)
                 out_truth.write('\n')
