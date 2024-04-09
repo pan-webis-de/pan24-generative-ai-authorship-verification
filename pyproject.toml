@@ -8,6 +8,7 @@ packages = [
     { include = "pan24_llm_dataset" },
     { include = "pan24_llm_baselines" },
     { include = "pan24_llm_evaluator" },
+    { include = "llm_detection_tools" },
 ]
 license = "Apache License 2.0"
 
@@ -45,6 +46,7 @@ llm-generate = 'pan24_llm_dataset.llm_generate:main'
 dataset-sample = 'pan24_llm_dataset.dataset_sample:main'
 baselines = 'pan24_llm_baselines.main:main'
 evaluator = 'pan24_llm_evaluator.evaluator:main'
+llm-stats = 'llm_detection_tools.llm_stats:main'
 
 [build-system]
 requires = ["poetry-core"]
