@@ -309,15 +309,16 @@ def main():
 @click.argument('input_dir', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'text', 'articles-llm'), show_default=True)
+@click.option('-n', '--outdir-name', help='Output subdirectory name (defaults to model name)')
 @click.option('-k', '--api_key', type=click.Path(dir_okay=False, exists=True),
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
 @click.option('-p', '--parallelism', default=5, show_default=True)
-def openai(input_dir, output_dir, api_key, model_name, parallelism):
+def openai(input_dir, output_dir, outdir_name, api_key, model_name, parallelism):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
 
-    output_dir = os.path.join(output_dir, model_name)
+    output_dir = os.path.join(output_dir, outdir_name if outdir_name else model_name.lower())
     os.makedirs(output_dir, exist_ok=True)
 
     client = OpenAI(api_key=open(api_key).read().strip() if api_key else os.environ.get('OPENAI_API_KEY'))
@@ -337,17 +338,18 @@ def openai(input_dir, output_dir, api_key, model_name, parallelism):
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'text', 'articles-llm'), show_default=True)
 @click.option('-m', '--model-name', default='gemini-pro', show_default=True)
+@click.option('-n', '--outdir-name', help='Output subdirectory name (defaults to model name)')
 @click.option('-p', '--parallelism', default=5, show_default=True)
-@click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.3, show_default=True,
+@click.option('-t', '--temperature', type=click.FloatRange(0, 1), default=0.6, show_default=True,
               help='Model temperature')
 @click.option('-x', '--max-output-tokens', type=click.IntRange(0, 1024), default=1024, show_default=True,
               help='Maximum number of output tokens')
-@click.option('-k', '--top-k', type=click.IntRange(1, 40), default=40, show_default=True,
+@click.option('-k', '--top-k', type=click.IntRange(1, 40), default=None, show_default=True,
               help='Top-k sampling')
 @click.option('--top-p', type=click.FloatRange(0, 1), default=0.95, show_default=True,
               help='Top-p sampling')
-def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
-    output_dir = os.path.join(output_dir, model_name.replace('@', '-'))
+def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, **kwargs):
+    output_dir = os.path.join(output_dir, outdir_name if outdir_name else model_name.replace('@', '-').lower())
     os.makedirs(output_dir, exist_ok=True)
 
     fn = partial(
@@ -369,6 +371,7 @@ def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
 @click.argument('model_name')
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False),
               default=os.path.join('data', 'text', 'articles-llm'), show_default=True, help='Output directory')
+@click.option('-n', '--outdir-name', help='Output subdirectory name (defaults to model name)')
 @click.option('-d', '--device', type=click.Choice(['auto', 'cuda', 'cpu']), default='auto',
               help='Select device to run model on')
 @click.option('-m', '--min-length', type=click.IntRange(1), default=370,
@@ -381,8 +384,10 @@ def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
               show_default=True, help='Length decay penalty factor')
 @click.option('-b', '--num-beams', type=click.IntRange(1), default=5,
               show_default=True, help='Number of search beams')
-@click.option('-k', '--top-k', type=click.IntRange(0), default=100,
+@click.option('-k', '--top-k', type=click.IntRange(0), default=0,
               show_default=True, help='Top-k sampling (0 to disable)')
+@click.option('-p', '--top-p', type=click.FloatRange(0, 1), default=0.9,
+              show_default=True, help='Top-p sampling')
 @click.option('-t', '--temperature', type=click.FloatRange(0), default=2,
               show_default=True, help='Model temperature')
 @click.option('-f', '--flash-attn', is_flag=True,
@@ -392,7 +397,7 @@ def vertexai(input_dir, output_dir, model_name, parallelism, **kwargs):
 @click.option('-h', '--headlines-only', is_flag=True, help='Run on previous output and generate missing headlines')
 @click.option('--short-prompt', is_flag=True, help='Shorten the input prompt')
 @click.option('--trust-remote-code', is_flag=True, help='Trust remote code')
-def huggingface_chat(input_dir, model_name, output_dir, device, quantization, top_k,
+def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, quantization, top_k,
                      decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
                      trust_remote_code, short_prompt, **kwargs):
 
@@ -414,7 +419,7 @@ def huggingface_chat(input_dir, model_name, output_dir, device, quantization, to
     model_name_out = model_name_out.replace('\\', '/').rstrip('/')
     if '/' in model_name_out:
         model_name_out = '-'.join(model_name_out.split('/')[-2:])
-    output_dir = os.path.join(output_dir, model_name_out.lower())
+    output_dir = os.path.join(output_dir, outdir_name if outdir_name else model_name_out.lower())
 
     try:
         model = AutoModelForCausalLM.from_pretrained(
