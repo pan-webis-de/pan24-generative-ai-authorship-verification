@@ -189,7 +189,8 @@ def evaluate_all(true_y, pred_y):
 @click.argument('output_dir', type=click.Path(exists=True, file_okay=False))
 @click.option('-t', '--truth-glob', help='Truth file glob', default='*-truth.jsonl', show_default=True)
 @click.option('-a', '--answer-glob', help='Answer file glob', default='*.jsonl', show_default=True)
-def main(truth_dir, answer_dir, output_dir, truth_glob, answer_glob):
+@click.option('-o', '--outfile-name', help='Output filename', default='evaluation.json', show_default=True)
+def main(truth_dir, answer_dir, output_dir, truth_glob, answer_glob, outfile_name):
     truth = load_problem_file(glob(os.path.join(truth_dir, truth_glob))[0])
     pred = load_problem_file(glob(os.path.join(answer_dir, answer_glob))[0])
 
@@ -201,8 +202,8 @@ def main(truth_dir, answer_dir, output_dir, truth_glob, answer_glob):
         if pid not in pred:
             pred[pid] = 0.5
 
-    assert len(truth) == len(pred)
-    assert set(truth.keys()).union(set(pred)) == set(truth.keys())
+    if len(truth) != len(pred) or set(truth.keys()).union(set(pred)) != set(truth.keys()):
+        raise click.UsageError('Truth file does not match answer file.')
 
     # align the scores
     scores = [(truth[k], pred[k]) for k in sorted(truth)]
@@ -215,7 +216,7 @@ def main(truth_dir, answer_dir, output_dir, truth_glob, answer_glob):
     results = evaluate_all(truth, pred)
     jstr = json.dumps(results, indent=4, sort_keys=False)
     click.echo(jstr)
-    with open(os.path.join(output_dir, 'evaluation.json'), 'w') as f:
+    with open(os.path.join(output_dir, outfile_name), 'w') as f:
         f.write(jstr)
 
 

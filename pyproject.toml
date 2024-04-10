@@ -39,12 +39,13 @@ google-cloud-aiplatform = "^1.41.0"
 matplotlib = "^3.8.4"
 seaborn = "^0.13.2"
 scikit-learn = "^1.4.1.post1"
+pyppmd = "^1.1.0"
 
 [tool.poetry.scripts]
 news-source = 'pan24_llm_dataset.news_source:main'
 llm-generate = 'pan24_llm_dataset.llm_generate:main'
 dataset-sample = 'pan24_llm_dataset.dataset_sample:main'
-baselines = 'pan24_llm_baselines.main:main'
+baseline = 'pan24_llm_baselines.baseline:main'
 evaluator = 'pan24_llm_evaluator.evaluator:main'
 llm-stats = 'llm_detection_tools.llm_stats:main'
 

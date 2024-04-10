@@ -69,6 +69,7 @@ def plot_entropy(input_dir):
         dir_path = Path(i)
         if not dir_path.is_dir():
             continue
+
         for p in tqdm(dir_path.rglob('*.txt'), desc='Reading text files', leave=False, unit=' files'):
             t = normalize_text(open(p, errors='ignore').read())
 
