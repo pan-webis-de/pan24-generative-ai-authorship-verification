@@ -132,5 +132,40 @@ def length(input_file, output_directory, outfile_name):
             out.write('\n')
 
 
+@main.command()
+@click.argument('input_file', type=click.File('r'))
+@click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--outfile-name', help='Output file name', default='unmasking.jsonl', show_default=True)
+def unmasking(input_file, output_directory, outfile_name):
+    """
+    PAN'24 baseline: Authorship unmasking.
+
+    References:
+    ===========
+        Koppel, M., & Schler, J. (2004, July). Authorship verification as a one-class
+        classification problem. In Proceedings of the twenty-first international
+        conference on Machine learning (p. 62).
+
+        Bevendorff, J., Stein, B., Hagen, M., & Potthast, M. (2019, June). Generalizing
+        unmasking for short texts. In Proceedings of the 2019 Conference of the North
+        American Chapter of the Association for Computational Linguistics: Human Language
+        Technologies, Volume 1 (Long and Short Papers) (pp. 654-659).
+    """
+
+    from pan24_llm_baselines import unmasking
+
+    with open(os.path.join(output_directory, outfile_name), 'w') as out:
+        for l in tqdm(input_file, desc='Predicting cases'):
+            j = json.loads(l)
+            t1 = j['text1']
+            t2 = j['text2']
+
+            score1 = unmasking.score(t1[:len(t1) // 2], t1[len(t1) // 2:])
+            score2 = unmasking.score(t2[:len(t2) // 2], t2[len(t2) // 2:])
+
+            json.dump({'id': j['id'], 'is_human': comparative_score(score1, score2)}, out)
+            out.write('\n')
+
+
 if __name__ == '__main__':
     main()
