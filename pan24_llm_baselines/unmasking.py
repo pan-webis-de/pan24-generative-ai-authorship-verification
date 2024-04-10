@@ -12,7 +12,7 @@ warnings.simplefilter('ignore', category=ConvergenceWarning)
 
 
 def tokenize(text):
-    yield from (text[i:i + 3] for i in range(0, len(text) - 2))
+    return [text[i:i + 3] for i in range(0, len(text) - 2)]
 
 
 def get_token_freqs(*token_lists):
@@ -24,13 +24,11 @@ def get_token_freqs(*token_lists):
 
 
 def bootstrap_tokens(tokens, n_tokens):
-    for _ in range(n_tokens):
-        yield tokens[randint(0, len(tokens) - 1)]
+    return [tokens[randint(0, len(tokens) - 1)] for _ in range(n_tokens)]
 
 
 def create_chunks(tokens, chunk_size, n_chunks):
-    for _ in range(n_chunks):
-        yield list(bootstrap_tokens(tokens, chunk_size))
+    return [bootstrap_tokens(tokens, chunk_size) for _ in range(n_chunks)]
 
 
 def chunks_to_matrix(chunks, top_token_list):
@@ -76,11 +74,11 @@ def score(text_left, text_right, rounds=35, top_n=200, cv_folds=10, n_delete=4, 
     :return: score in [0, 1] indicating the "humanness" of the text
     """
 
-    tokens_left = list(tokenize(text_left))
-    tokens_right = list(tokenize(text_right))
+    tokens_left = tokenize(text_left)
+    tokens_right = tokenize(text_right)
 
-    chunks_left = list(create_chunks(tokens_left, chunk_size, n_chunks))
-    chunks_right = list(create_chunks(tokens_right, chunk_size, n_chunks))
+    chunks_left = create_chunks(tokens_left, chunk_size, n_chunks)
+    chunks_right = create_chunks(tokens_right, chunk_size, n_chunks)
 
     token_freqs = get_token_freqs(*chunks_left, *chunks_right)
     most_frequent = sorted(token_freqs.keys(), key=lambda x: token_freqs[x], reverse=True)[:top_n]
