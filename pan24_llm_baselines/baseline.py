@@ -8,6 +8,9 @@ from tqdm import tqdm
 
 @click.group()
 def main():
+    """
+    PAN'24 Generative Authorship Detection baselines.
+    """
     pass
 
 
@@ -36,7 +39,7 @@ def comparative_score(score1, score2, epsilon=1e-3):
               help='Use flash-attn 2 (must be installed separately)')
 def binoculars(input_file, output_directory, out_name, quantization, flash_attn):
     """
-    PAN24 baseline: Binoculars.
+    PAN'24 baseline: Binoculars.
 
     References:
     ===========
@@ -65,7 +68,7 @@ def binoculars(input_file, output_directory, out_name, quantization, flash_attn)
 @click.option('-n', '--out-name', help='Output file name', default='ppmd.jsonl')
 def ppmd(input_file, output_directory, out_name):
     """
-    PAN24 baseline: Compression-based cosine.
+    PAN'24 baseline: Compression-based cosine.
 
     References:
     ===========
@@ -98,6 +101,24 @@ def ppmd(input_file, output_directory, out_name):
             cbc2 = _cbc(t2[:len(t2) // 2], t2[len(t2) // 2:])
 
             json.dump({'id': j['id'], 'is_human': comparative_score(cbc1, cbc2)}, out)
+            out.write('\n')
+
+
+@main.command()
+@click.argument('input_file', type=click.File('r'))
+@click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-n', '--out-name', help='Output file name', default='length.jsonl')
+def length(input_file, output_directory, out_name):
+    """
+    PAN'24 baseline: Text length.
+    """
+
+    with open(os.path.join(output_directory, out_name), 'w') as out:
+        for l in tqdm(input_file, desc='Predicting cases'):
+            j = json.loads(l)
+            l1 = len(j['text1'])
+            l2 = len(j['text2'])
+            json.dump({'id': j['id'], 'is_human': float(l1 < l2)}, out)
             out.write('\n')
 
 
