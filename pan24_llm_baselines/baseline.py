@@ -21,7 +21,7 @@ def comparative_score(score1, score2, epsilon=1e-3):
     :param score1: first score
     :param score2: second score
     :param epsilon: non-answer (output score = 0.5) epsilon threshold
-    :return: [0, 0.5) if score1 > score2; (0.5, 1] if score2 > score2; 0.5 otherwise
+    :return: [0, 0.5) if score1 > score2; (0.5, 1] if score2 > score1; 0.5 otherwise
     """
     if abs(score1 - score2) < epsilon:
         return 0.5
@@ -33,11 +33,15 @@ def comparative_score(score1, score2, epsilon=1e-3):
 @main.command()
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
-@click.option('-n', '--out-name', help='Output file name', default='binoculars.jsonl')
-@click.option('-q', '--quantization', type=click.Choice(['4', '8']))
-@click.option('-f', '--flash-attn', is_flag=True,
-              help='Use flash-attn 2 (must be installed separately)')
-def binoculars(input_file, output_directory, out_name, quantization, flash_attn):
+@click.option('-o', '--outfile-name', help='Output file name', default='binoculars.jsonl', show_default=True)
+@click.option('-q', '--quantize', type=click.Choice(['4', '8']))
+@click.option('-f', '--flash-attn', is_flag=True, help='Use flash-attn 2 (must be installed separately)')
+@click.option('--observer', help='Observer model', default='tiiuae/falcon-7b', show_default=True)
+@click.option('--performer', help='Performer model', default='tiiuae/falcon-7b-instruct', show_default=True)
+@click.option('--device1', help='Observer model device', default='auto', show_default=True)
+@click.option('--device2', help='Performer model device', default='auto', show_default=True)
+def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
+               observer, performer, device1, device2):
     """
     PAN'24 baseline: Binoculars.
 
@@ -50,9 +54,15 @@ def binoculars(input_file, output_directory, out_name, quantization, flash_attn)
     """
     from pan24_llm_baselines.thirdparty_binoculars import Binoculars
 
-    bino = Binoculars(quantization_bits=quantization, use_flash_attn=flash_attn)
+    bino = Binoculars(
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
+        observer_name_or_path=observer,
+        performer_name_or_path=performer,
+        device1=device1,
+        device2=device2)
 
-    with open(os.path.join(output_directory, out_name), 'w') as out:
+    with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):
             j = json.loads(l)
             score1 = bino.compute_score(j['text1'])
@@ -65,8 +75,8 @@ def binoculars(input_file, output_directory, out_name, quantization, flash_attn)
 @main.command()
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
-@click.option('-n', '--out-name', help='Output file name', default='ppmd.jsonl')
-def ppmd(input_file, output_directory, out_name):
+@click.option('-o', '--outfile-name', help='Output file name', default='ppmd.jsonl', show_default=True)
+def ppmd(input_file, output_directory, outfile_name):
     """
     PAN'24 baseline: Compression-based cosine.
 
@@ -88,7 +98,7 @@ def ppmd(input_file, output_directory, out_name):
         cxy = len(pyppmd.compress(t1 + t2))
         return 1.0 - (cx + cy - cxy) / np.sqrt(cx * cy)
 
-    with open(os.path.join(output_directory, out_name), 'w') as out:
+    with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):
             j = json.loads(l)
 
@@ -107,13 +117,13 @@ def ppmd(input_file, output_directory, out_name):
 @main.command()
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
-@click.option('-n', '--out-name', help='Output file name', default='length.jsonl')
-def length(input_file, output_directory, out_name):
+@click.option('-o', '--outfile-name', help='Output file name', default='length.jsonl', show_default=True)
+def length(input_file, output_directory, outfile_name):
     """
     PAN'24 baseline: Text length.
     """
 
-    with open(os.path.join(output_directory, out_name), 'w') as out:
+    with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):
             j = json.loads(l)
             l1 = len(j['text1'])
