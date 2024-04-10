@@ -16,18 +16,18 @@ def main():
 
 def comparative_score(score1, score2, epsilon=1e-3):
     """
-    Return a single score in [0, 1] based on the comparison of two input scores.
+    Return a single score in [0, 1] based on the comparison of two [0, 1] input scores.
 
     :param score1: first score
     :param score2: second score
     :param epsilon: non-answer (output score = 0.5) epsilon threshold
-    :return: [0, 0.5) if score1 > score2; (0.5, 1] if score2 > score1; 0.5 otherwise
+    :return: [0, 0.5) if score1 > score2 + eps; (0.5, 1] if score2 > score1 + eps; 0.5 otherwise
     """
-    if abs(score1 - score2) < epsilon:
-        return 0.5
-    if score1 > score2:
+    if score1 > score2 + epsilon:
         return max(min(1.0 - score1, 0.49), 0.0)
-    return min(max(0.51, score2), 1.0)
+    if score2 > score1 + epsilon:
+        return min(max(0.51, score2), 1.0)
+    return 0.5
 
 
 @main.command()
