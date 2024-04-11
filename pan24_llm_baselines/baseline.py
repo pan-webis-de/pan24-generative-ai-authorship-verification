@@ -52,7 +52,7 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
         “Spotting LLMs with Binoculars: Zero-Shot Detection of Machine-Generated
         Text.” arXiv [Cs.CL]. arXiv. http://arxiv.org/abs/2401.12070.
     """
-    from pan24_llm_baselines.binoculars import Binoculars
+    from pan24_llm_baselines.impl.binoculars import Binoculars
 
     bino = Binoculars(
         observer_name_or_path=observer,
@@ -152,7 +152,7 @@ def unmasking(input_file, output_directory, outfile_name):
 
     """
 
-    from pan24_llm_baselines import unmasking
+    from pan24_llm_baselines.impl import unmasking
 
     with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):

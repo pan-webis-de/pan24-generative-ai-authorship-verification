@@ -18,7 +18,7 @@ import numpy.typing as npt
 import torch
 import transformers
 
-from pan24_llm_baselines.detector_base import DetectorBase
+from pan24_llm_baselines.impl.detector_base import DetectorBase
 
 
 class Binoculars(DetectorBase):
