@@ -24,9 +24,9 @@ def comparative_score(score1, score2, epsilon=1e-3):
     :return: [0, 0.5) if score1 > score2 + eps; (0.5, 1] if score2 > score1 + eps; 0.5 otherwise
     """
     if score1 > score2 + epsilon:
-        return max(min(1.0 - score1, 0.49), 0.0)
+        return float(max(min(1.0 - score1, 0.49), 0.0))
     if score2 > score1 + epsilon:
-        return min(max(0.51, score2), 1.0)
+        return float(min(max(0.51, score2), 1.0))
     return 0.5
 
 
@@ -47,26 +47,26 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 
     References:
     ===========
-        Hans, A., Schwarzschild, A., Cherepanova, V., Kazemi, H., Saha, A.,
-        Goldblum, M., ... & Goldstein, T. (2024). Spotting LLMs With
-        Binoculars: Zero-Shot Detection of Machine-Generated Text.
-        arXiv preprint arXiv:2401.12070.
+        Hans, Abhimanyu, Avi Schwarzschild, Valeriia Cherepanova, Hamid Kazemi,
+        Aniruddha Saha, Micah Goldblum, Jonas Geiping, and Tom Goldstein. 2024.
+        “Spotting LLMs with Binoculars: Zero-Shot Detection of Machine-Generated
+        Text.” arXiv [Cs.CL]. arXiv. http://arxiv.org/abs/2401.12070.
     """
-    from pan24_llm_baselines.thirdparty_binoculars import Binoculars
+    from pan24_llm_baselines.binoculars import Binoculars
 
     bino = Binoculars(
-        quantization_bits=quantize,
-        use_flash_attn=flash_attn,
         observer_name_or_path=observer,
         performer_name_or_path=performer,
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
         device1=device1,
         device2=device2)
 
     with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):
             j = json.loads(l)
-            score1 = bino.compute_score(j['text1'])
-            score2 = bino.compute_score(j['text2'])
+            score1 = bino.get_score(j['text1'])
+            score2 = bino.get_score(j['text2'])
 
             json.dump({'id': j['id'], 'is_human': comparative_score(score1, score2)}, out)
             out.write('\n')
@@ -82,13 +82,12 @@ def ppmd(input_file, output_directory, outfile_name):
 
     References:
     ===========
-        Sculley, D., & Brodley, C. E. (2006, March). Compression and machine learning:
-        A new perspective on feature space vectors. In Data Compression Conference (DCC'06)
-        (pp. 332-341). IEEE.
+        Sculley, D., and C. E. Brodley. 2006. “Compression and Machine Learning: A New Perspective
+        on Feature Space Vectors.” In Data Compression Conference (DCC’06), 332–41. IEEE.
 
-        Halvani, O., Winter, C., & Graner, L. (2017, August). On the usefulness of
-        compression models for authorship verification. In Proceedings of the 12th
-        international conference on availability, reliability and security (pp. 1-10).
+        Halvani, Oren, Christian Winter, and Lukas Graner. 2017. “On the Usefulness of Compression
+        Models for Authorship Verification.” In ACM International Conference Proceeding Series. Vol.
+        Part F1305. Association for Computing Machinery. https://doi.org/10.1145/3098954.3104050.
     """
     import pyppmd
 
@@ -142,14 +141,15 @@ def unmasking(input_file, output_directory, outfile_name):
 
     References:
     ===========
-        Koppel, M., & Schler, J. (2004, July). Authorship verification as a one-class
-        classification problem. In Proceedings of the twenty-first international
-        conference on Machine learning (p. 62).
+        Koppel, Moshe, and Jonathan Schler. 2004. “Authorship Verification as a One-Class
+        Classification Problem.” In Proceedings, Twenty-First International Conference on
+        Machine Learning, ICML 2004, 489–95.
 
-        Bevendorff, J., Stein, B., Hagen, M., & Potthast, M. (2019, June). Generalizing
-        unmasking for short texts. In Proceedings of the 2019 Conference of the North
-        American Chapter of the Association for Computational Linguistics: Human Language
-        Technologies, Volume 1 (Long and Short Papers) (pp. 654-659).
+        Bevendorff, Janek, Benno Stein, Matthias Hagen, and Martin Potthast. 2019. “Generalizing
+        Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
+        Stroudsburg, PA, USA: Association for Computational Linguistics.
+
+
     """
 
     from pan24_llm_baselines import unmasking
