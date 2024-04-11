@@ -1,12 +1,30 @@
+# Copyright 2024 Janek Bevendorff, Webis
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from collections import defaultdict
 from random import randint
 import warnings
+from typing import Union, List
 
 import numpy as np
+from numpy import typing as npt
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import cross_validate
 from sklearn.svm import LinearSVC
 from sklearn.utils import shuffle
+
+from pan24_llm_baselines.impl.detector_base import DetectorBase
 
 warnings.simplefilter('ignore', category=ConvergenceWarning)
 
@@ -27,8 +45,8 @@ def bootstrap_tokens(tokens, n_tokens):
     return [tokens[randint(0, len(tokens) - 1)] for _ in range(n_tokens)]
 
 
-def create_chunks(tokens, chunk_size, n_chunks):
-    return [bootstrap_tokens(tokens, chunk_size) for _ in range(n_chunks)]
+def create_chunks(cls, tokens, chunk_size, n_chunks):
+    return [cls.bootstrap_tokens(tokens, chunk_size) for _ in range(n_chunks)]
 
 
 def chunks_to_matrix(chunks, top_token_list):
@@ -59,31 +77,54 @@ def deconstruct(x_left, x_right, rounds, n_delete=5, cv_folds=10, smoothing_kern
     return scores
 
 
-def score(text_left, text_right, rounds=35, top_n=200, cv_folds=10, n_delete=4, chunk_size=700, n_chunks=30):
+class UnmaskingDetector(DetectorBase):
     """
-    Calculate normalized cumulative sum of the authorship unmasking curve points.
+    LLM detector calculating normalized cumulative sum of the authorship unmasking curve points.
 
-    :param text_left: input text2
-    :param text_right: input text2
-    :param rounds: number of deconstruction rounds
-    :param top_n: number of top tokens to sample
-    :param cv_folds: number of cross-validation folds
-    :param n_delete: number of features to eliminate in each round
-    :param chunk_size: size of bootstrapped chunks
-    :param n_chunks: number of chunks to generate
-    :return: score in [0, 1] indicating the "humanness" of the text
+    References:
+    ===========
+        Koppel, Moshe, and Jonathan Schler. 2004. “Authorship Verification as a One-Class
+        Classification Problem.” In Proceedings, Twenty-First International Conference on
+        Machine Learning, ICML 2004, 489–95.
+
+        Bevendorff, Janek, Benno Stein, Matthias Hagen, and Martin Potthast. 2019. “Generalizing
+        Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
+        Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
+    def __init__(self, rounds=35, top_n=200, cv_folds=10, n_delete=4, chunk_size=700, n_chunks=30):
+        """
+        :param rounds: number of deconstruction rounds
+        :param top_n: number of top tokens to sample
+        :param cv_folds: number of cross-validation folds
+        :param n_delete: number of features to eliminate in each round
+        :param chunk_size: size of bootstrapped chunks
+        :param n_chunks: number of chunks to generate
+        :return: score in [0, 1] indicating the "humanness" of the text
+        """
+        self.rounds = rounds
+        self.top_n = top_n
+        self.cv_folds = cv_folds
+        self.n_delete = n_delete
+        self.chunk_size = chunk_size
+        self.n_chunks = n_chunks
 
-    tokens_left = tokenize(text_left)
-    tokens_right = tokenize(text_right)
+    def get_score(self, text: List[str]) -> Union[np.float64, npt.NDArray[np.float64]]:
+        if isinstance(text, str) or len(text) != 2:
+            raise TypeError('Input must be a list of exactly two strings.')
 
-    chunks_left = create_chunks(tokens_left, chunk_size, n_chunks)
-    chunks_right = create_chunks(tokens_right, chunk_size, n_chunks)
+        tokens_left = tokenize(text[0])
+        tokens_right = tokenize(text[1])
 
-    token_freqs = get_token_freqs(*chunks_left, *chunks_right)
-    most_frequent = sorted(token_freqs.keys(), key=lambda x: token_freqs[x], reverse=True)[:top_n]
-    x_left = chunks_to_matrix(chunks_left, most_frequent)
-    x_right = chunks_to_matrix(chunks_right, most_frequent)
+        chunks_left = create_chunks(tokens_left, self.chunk_size, self.n_chunks)
+        chunks_right = create_chunks(tokens_right, self.chunk_size, self.n_chunks)
 
-    scores = deconstruct(x_left, x_right, rounds, n_delete, cv_folds)
-    return np.sum(scores) / len(scores)
+        token_freqs = get_token_freqs(*chunks_left, *chunks_right)
+        most_frequent = sorted(token_freqs.keys(), key=lambda x: token_freqs[x], reverse=True)[:self.top_n]
+        x_left = chunks_to_matrix(chunks_left, most_frequent)
+        x_right = chunks_to_matrix(chunks_right, most_frequent)
+
+        scores = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
+        return np.sum(scores) / len(scores)
+
+    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.bool_]]:
+        raise NotImplemented

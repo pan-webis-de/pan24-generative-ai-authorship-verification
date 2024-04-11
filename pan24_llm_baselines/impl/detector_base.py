@@ -1,3 +1,17 @@
+# Copyright 2024 Janek Bevendorff, Webis
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Union
 
@@ -13,12 +27,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 class DetectorBase(ABC):
     """
     LLM detector base class.
-
-    Implements shared functionality useful for implementing transformer-based LLM detectors.
     """
 
     @abstractmethod
-    def get_score(self, text: Union[str, List[str]]) -> npt.NDArray[np.float64]:
+    def get_score(self, text: Union[str, List[str]]) -> Union[np.float64, npt.NDArray[np.float64]]:
         """
         Return a prediction score indicating the "humanness" of the input text.
 
@@ -27,13 +39,21 @@ class DetectorBase(ABC):
         """
 
     @abstractmethod
-    def predict(self, text: Union[str, List[str]]) -> npt.NDArray[np.bool_]:
+    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.float64]]:
         """
         Make a prediction whether the input text was written by a human.
 
         :param text: input text or list of input texts
         :return: boolean values indicating whether inputs are classified as human
         """
+
+
+class DetectorBaseTorch(DetectorBase, ABC):
+    """
+    LLM detector base class with Torch helper functions.
+
+    Implements shared functionality useful for implementing transformer-based LLM detectors.
+    """
 
     @staticmethod
     @torch.inference_mode()
