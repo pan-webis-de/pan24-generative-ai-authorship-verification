@@ -20,8 +20,7 @@ import numpy.typing as npt
 import torch
 import torch.nn.functional as F
 import transformers
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, \
-    PreTrainedModel, PreTrainedTokenizerBase
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
 class DetectorBase(ABC):
@@ -64,7 +63,7 @@ class DetectorBaseTorch(DetectorBase, ABC):
                     quantization_bits=None,
                     trust_remote_code=False,
                     torch_dtype: torch.dtype = torch.bfloat16,
-                    **additional_args) -> Tuple[PreTrainedModel, PreTrainedTokenizerBase]:
+                    **additional_args) -> Tuple[transformers.PreTrainedModel, transformers.PreTrainedTokenizerBase]:
 
         model_args = {
             'trust_remote_code': trust_remote_code,
@@ -94,7 +93,7 @@ class DetectorBaseTorch(DetectorBase, ABC):
     @staticmethod
     @torch.inference_mode()
     def _tokenize(batch: Union[str, List[str]],
-                  tokenizer: PreTrainedTokenizerBase,
+                  tokenizer: transformers.PreTrainedTokenizerBase,
                   device: torch.device = None,
                   max_length: int = None,
                   **additional_args) -> transformers.BatchEncoding:
@@ -114,7 +113,7 @@ class DetectorBaseTorch(DetectorBase, ABC):
 
     @staticmethod
     @torch.inference_mode()
-    def _perplexity(logits_or_model: Union[torch.Tensor, PreTrainedModel],
+    def _perplexity(logits_or_model: Union[torch.Tensor, transformers.PreTrainedModel],
                     encoding: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
         """
         Calculate model perplexity / negative log loss on a batch of input sequences.
@@ -124,7 +123,7 @@ class DetectorBaseTorch(DetectorBase, ABC):
         :return: model perplexity on the sequence
         """
 
-        if isinstance(logits_or_model, PreTrainedModel):
+        if isinstance(logits_or_model, transformers.PreTrainedModel):
             if encoding.input_ids.shape[0] == 1:
                 # Batch size == 1
                 return logits_or_model(**encoding, labels=encoding.input_ids).loss
