@@ -59,30 +59,43 @@ class Binoculars(DetectorBase):
     def __init__(self,
                  observer_name_or_path='tiiuae/falcon-7b',
                  performer_name_or_path='tiiuae/falcon-7b-instruct',
-                 device1: Union[str, Dict[str, Union[int, str, torch.device]], int, torch.device] = 'auto',
-                 device2: Union[str, Dict[str, Union[int, str, torch.device]], int, torch.device] = 'auto',
+                 device1: TorchDeviceMapType = 'auto',
+                 device2: TorchDeviceMapType = 'auto',
                  mode: Literal['low-fpr', 'accuracy'] = 'low-fpr',
                  max_token_observed=512,
                  use_flash_attn=False,
                  quantization_bits=None,
                  **model_args):
+        """
+        :param observer_name_or_path: observer model
+        :param performer_name_or_path: performer model
+        :param device1: observer device
+        :param device2: performer device
+        :param mode: prediction mode
+        :param max_token_observed: max number of tokens to analyze
+        :param use_flash_attn: use flash attention
+        :param quantization_bits: quantize model
+        :param model_args: additional model args
+        """
 
         self.threshold = None
         self.change_mode(mode)
 
-        self.observer_model, self.tokenizer = torch_load_model(
+        self.observer_model = transformers_load_model(
             observer_name_or_path,
             device_map=device1,
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
+        self.tokenizer = transformers_load_tokenizer(observer_name_or_path)
 
-        self.performer_model, perf_tokenizer = torch_load_model(
+        self.performer_model = transformers_load_model(
             performer_name_or_path,
             device_map=device2,
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
+        perf_tokenizer = transformers_load_tokenizer(performer_name_or_path)
 
         if not hasattr(self.tokenizer, 'vocab') or self.tokenizer.vocab != perf_tokenizer.vocab:
             raise ValueError(f'Incompatible tokenizers for {observer_name_or_path} and {performer_name_or_path}.')

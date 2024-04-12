@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Tuple, Type, Union
+from typing import Dict, List, Type, Union
 
 import torch
 import torch.nn.functional as F
@@ -20,15 +20,19 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
+AutoModelClsType = Type[transformers.models.auto.auto_factory._BaseAutoModelClass]
+TorchDeviceMapType = Union[str, Dict[str, Union[int, str, torch.device]], int, torch.device]
+
+
 @torch.inference_mode()
-def torch_load_model(model_name: str,
-                     device_map: Union[str, Dict[str, Union[int, str, torch.device]], int, torch.device],
-                     auto_cls: Type[transformers.models.auto.auto_factory._BaseAutoModelClass] = AutoModelForCausalLM,
-                     use_flash_attn=False,
-                     quantization_bits=None,
-                     trust_remote_code=False,
-                     torch_dtype: torch.dtype = torch.bfloat16,
-                     **additional_args) -> Tuple[transformers.PreTrainedModel, transformers.PreTrainedTokenizerBase]:
+def transformers_load_model(model_name: str,
+                            device_map: TorchDeviceMapType,
+                            auto_cls: AutoModelClsType = AutoModelForCausalLM,
+                            use_flash_attn=False,
+                            quantization_bits=None,
+                            trust_remote_code=False,
+                            torch_dtype: torch.dtype = torch.bfloat16,
+                            **additional_args) -> transformers.PreTrainedModel:
 
     model_args = {
         'trust_remote_code': trust_remote_code,
@@ -49,11 +53,15 @@ def torch_load_model(model_name: str,
 
     model = auto_cls.from_pretrained(model_name, device_map=device_map, **model_args)
     model.eval()
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    return model
+
+
+@torch.inference_mode()
+def transformers_load_tokenizer(model_name: str, **tokenizer_args) -> transformers.PreTrainedTokenizerBase:
+    tokenizer = AutoTokenizer.from_pretrained(model_name, tokenizer_args)
     if not tokenizer.pad_token:
         tokenizer.pad_token = tokenizer.eos_token
-
-    return model, tokenizer
+    return tokenizer
 
 
 @torch.inference_mode()
