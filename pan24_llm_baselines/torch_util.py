@@ -58,7 +58,7 @@ def transformers_load_model(model_name: str,
 
 @torch.inference_mode()
 def transformers_load_tokenizer(model_name: str, **tokenizer_args) -> transformers.PreTrainedTokenizerBase:
-    tokenizer = AutoTokenizer.from_pretrained(model_name, tokenizer_args)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, **tokenizer_args)
     if not tokenizer.pad_token:
         tokenizer.pad_token = tokenizer.eos_token
     return tokenizer
@@ -67,20 +67,21 @@ def transformers_load_tokenizer(model_name: str, **tokenizer_args) -> transforme
 @torch.inference_mode()
 def torch_tokenize(batch: Union[str, List[str]],
                    tokenizer: transformers.PreTrainedTokenizerBase,
-                   device: torch.device = None,
+                   device: Union[str, torch.device] = None,
                    max_length: int = None,
+                   return_tensors='pt',
                    **additional_args) -> transformers.BatchEncoding:
     batch = [batch] if isinstance(batch, str) else batch
     encodings = tokenizer(
         batch,
-        return_tensors='pt',
+        return_tensors=return_tensors,
         padding='longest' if len(batch) > 1 else False,
-        truncation=True,
+        truncation=max_length is not None,
         max_length=max_length,
         return_token_type_ids=False,
         **additional_args
     )
-    if device:
+    if device and return_tensors == 'pt':
         return encodings.to(device)
     return encodings
 

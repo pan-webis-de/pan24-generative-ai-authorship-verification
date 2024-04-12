@@ -13,10 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import List, Union
-
-import numpy as np
-import numpy.typing as npt
+from typing import Iterable, List, Union
 
 
 class DetectorBase(ABC):
@@ -25,7 +22,7 @@ class DetectorBase(ABC):
     """
 
     @abstractmethod
-    def get_score(self, text: Union[str, List[str]]) -> Union[np.float64, npt.NDArray[np.float64]]:
+    def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
         """
         Return a prediction score indicating the "humanness" of the input text.
 
@@ -34,7 +31,7 @@ class DetectorBase(ABC):
         """
 
     @abstractmethod
-    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.float64]]:
+    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
         """
         Make a prediction whether the input text was written by a human.
 

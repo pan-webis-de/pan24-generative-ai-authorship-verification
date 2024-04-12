@@ -15,10 +15,9 @@
 from collections import defaultdict
 from random import randint
 import warnings
-from typing import Union, List
+from typing import Iterable, List, Union
 
 import numpy as np
-from numpy import typing as npt
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import cross_validate
 from sklearn.svm import LinearSVC
@@ -108,7 +107,7 @@ class UnmaskingDetector(DetectorBase):
         self.chunk_size = chunk_size
         self.n_chunks = n_chunks
 
-    def get_score(self, text: List[str]) -> Union[np.float64, npt.NDArray[np.float64]]:
+    def get_score(self, text: List[str]) -> Union[float, Iterable[float]]:
         if isinstance(text, str) or len(text) != 2:
             raise TypeError('Input must be a list of exactly two strings.')
 
@@ -126,5 +125,5 @@ class UnmaskingDetector(DetectorBase):
         scores = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
         return np.sum(scores) / len(scores)
 
-    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.bool_]]:
+    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
         raise NotImplemented

@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, List
+from typing import Iterable, List, Union
 
 import numpy as np
-from numpy import typing as npt
 import pyppmd
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
@@ -35,7 +34,7 @@ class PPMdDetector(DetectorBase):
         Part F1305. Association for Computing Machinery. https://doi.org/10.1145/3098954.3104050.
     """
 
-    def get_score(self, text: Union[str, List[str]]) -> Union[np.float64, npt.NDArray[np.float64]]:
+    def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
         if isinstance(text, str) or len(text) != 2:
             raise TypeError('Input must be a list of exactly two strings.')
 
@@ -44,5 +43,5 @@ class PPMdDetector(DetectorBase):
         cxy = len(pyppmd.compress(text[0] + text[1]))
         return 1.0 - (cx + cy - cxy) / np.sqrt(cx * cy)
 
-    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.bool_]]:
+    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
         raise NotImplemented

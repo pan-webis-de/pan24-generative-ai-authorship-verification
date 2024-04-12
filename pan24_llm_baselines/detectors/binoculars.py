@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Literal
+from typing import Iterable, Literal, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -120,7 +120,7 @@ class Binoculars(DetectorBase):
         return observer_logits, performer_logits
 
     @torch.inference_mode()
-    def get_score(self, text: Union[str, List[str]]) -> Union[np.float64, npt.NDArray[np.float64]]:
+    def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
         encodings = torch_tokenize(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
         ppl = torch_perplexity(performer_logits, encodings)
@@ -130,5 +130,5 @@ class Binoculars(DetectorBase):
         binoculars_scores = (ppl / x_ppl).cpu().float().numpy()
         return binoculars_scores[0] if isinstance(text, str) else binoculars_scores
 
-    def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.bool_]]:
+    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
         return self.get_score(text) > self.threshold
