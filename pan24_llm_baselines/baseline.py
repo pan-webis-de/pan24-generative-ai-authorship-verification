@@ -129,7 +129,7 @@ def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
     from pan24_llm_baselines.detectors.detectgpt import DetectGPT
     from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
 
-    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2)
+    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2, batch_size=10)
     detector = DetectGPT(
         base_model=base_model,
         quantization_bits=quantize,

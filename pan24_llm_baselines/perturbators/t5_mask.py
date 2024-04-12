@@ -3,6 +3,8 @@ from typing import Tuple
 
 import numpy as np
 import numpy.typing as npt
+from torch.nn.utils.rnn import pad_sequence
+from tqdm import tqdm
 from transformers import AutoModelForSeq2SeqLM
 
 from pan24_llm_baselines.torch_util import *
@@ -19,6 +21,8 @@ class T5MaskPerturbator(PerturbatorBase):
                  quantization_bits=None,
                  use_flash_attn=False,
                  max_tokens=512,
+                 batch_size=20,
+                 verbose=True,
                  **model_args):
         """
         :param mask_span_length: length of token spans to mask out
@@ -29,12 +33,16 @@ class T5MaskPerturbator(PerturbatorBase):
         :param quantization_bits: quantize model
         :param use_flash_attn: use flash attention
         :param max_tokens: max number of tokens the model can handle
+        :param batch_size: perturbation variant batch size
+        :param verbose: show progress bar
         :param model_args: additional model arguments
         """
         self.span_length = mask_span_length
         self.mask_pct = mask_pct
         self.mask_buffer_size = mask_buffer_size
         self.max_tokens = max_tokens
+        self.batch_size = batch_size
+        self.verbose = verbose
 
         self.model = transformers_load_model(model_name,
                                              device_map=device,
@@ -44,16 +52,16 @@ class T5MaskPerturbator(PerturbatorBase):
                                              **model_args)
         self.tokenizer = transformers_load_tokenizer(model_name, model_max_length=max_tokens)
 
-    def _mask_tokens(self, token_ids) -> Tuple[npt.NDArray[np.float64], int]:
+    def _mask_tokens(self, token_ids, n_target) -> Tuple[npt.NDArray[np.float64], int]:
         """
         Randomly replace token spans with masks.
 
         :param token_ids: input token ids
+        :param n_target: target number of masks
         :return: masked token sequence, number of masked tokens
         """
         mask_id = self.tokenizer.encode('<extra_id_0>')[0]
 
-        n_target = min(int(self.mask_pct * len(token_ids) / (self.span_length + self.mask_buffer_size * 2)) + 1, 99)
         spans = []
         while len(spans) < n_target:
             start = random.randint(0, len(token_ids) - self.span_length)
@@ -75,7 +83,7 @@ class T5MaskPerturbator(PerturbatorBase):
         """
         Generate a new text from masked token sequence.
         
-        :param token_ids: masked input token ids
+        :param token_ids: (batch of) masked input token ids
         :param num_masks: number of masks in the text
         :return: generated text
         """
@@ -90,26 +98,46 @@ class T5MaskPerturbator(PerturbatorBase):
             do_sample=True,
             num_return_sequences=1,
             eos_token_id=stop_id,
-            pad_token_id=self.tokenizer.pad_token_id)[0].cpu()
-        if len(token_ids) > 1:
-            outputs = outputs[outputs != self.tokenizer.pad_token_id]
+            pad_token_id=self.tokenizer.pad_token_id).cpu()
 
-        token_ids = token_ids.flatten()
-        input_mask_pos = np.argwhere(token_ids >= stop_id).flatten()
-        output_mask_pos = torch.argwhere(outputs >= stop_id).flatten().cpu()
-        last_pos = 0
-        out_ids = []
-        for i in range(min(len(input_mask_pos), len(output_mask_pos))):
-            out_ids.extend(token_ids[last_pos:input_mask_pos[i]])
-            # out_ids.extend(outputs[output_mask_pos[i] + 1:output_mask_pos[min(i + 1, len(output_mask_pos) - 1)]])
-            last_pos = input_mask_pos[i] + 1
-        out_ids.extend(token_ids[last_pos:-1])
-        return self.tokenizer.decode(out_ids)
+        out_ids_batch = []
+        for output in outputs:
+            if len(token_ids) > 1:
+                output = output[output != self.tokenizer.pad_token_id]
 
-    def perturb(self, text: Union[str, List[str]]) -> Union[str, List[str]]:
-        tokens_batch = torch_tokenize(text, self.tokenizer, return_tensors='np').input_ids
+            token_ids = token_ids.flatten()
+            input_mask_pos = np.argwhere(token_ids >= stop_id).flatten()
+            output_mask_pos = torch.argwhere(output >= stop_id).flatten().cpu()
+            last_pos = 0
+            out_ids = []
+            for i in range(min(len(input_mask_pos), len(output_mask_pos))):
+                out_ids.extend(token_ids[last_pos:input_mask_pos[i]])
+                out_ids.extend(output[output_mask_pos[i] + 1:output_mask_pos[min(i + 1, len(output_mask_pos) - 1)]])
+                last_pos = input_mask_pos[i] + 1
+            out_ids.extend(token_ids[last_pos:-1])
+            out_ids_batch.append(out_ids)
+
+        return self.tokenizer.batch_decode(out_ids_batch)
+
+    def perturb(self, text: str, n_variants: int = 1) -> Union[str, List[str]]:
+        tokens_batch = torch_tokenize(text, self.tokenizer, max_length=self.max_tokens, return_tensors='np').input_ids
         perturbed_texts = []
-        for batch in tokens_batch:
-            masked_ids, n_masks = self._mask_tokens(batch)
-            perturbed_texts.append(self._generate_text(torch.from_numpy(masked_ids), n_masks))
+
+        for token_ids in tokens_batch:
+            masked = []
+            n_masks = min(int(self.mask_pct * len(token_ids) / (self.span_length + self.mask_buffer_size * 2)) + 1, 99)
+            for _ in range(n_variants):
+                t, _ = self._mask_tokens(np.array(token_ids), n_masks)
+                masked.append(torch.from_numpy(t))
+
+            batch_it = range(0, len(masked), self.batch_size)
+            if self.verbose:
+                batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit=' batches')
+            for b in batch_it:
+                m = pad_sequence(
+                    masked[b:b + self.batch_size],
+                    batch_first=True,
+                    padding_value=self.tokenizer.pad_token_id)
+                perturbed_texts.extend(self._generate_text(m, n_masks))
+
         return perturbed_texts if len(perturbed_texts) > 1 else perturbed_texts[0]

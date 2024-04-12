@@ -22,10 +22,11 @@ class PerturbatorBase(ABC):
     """
 
     @abstractmethod
-    def perturb(self, text: Union[str, List[str]]) -> Union[str, List[str]]:
+    def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
         """
         Perturb a given text by changing parts of the input.
 
         :param text: input text or list of input texts
+        :param n_variants: number of perturbation variants
         :return: perturbed text
         """
