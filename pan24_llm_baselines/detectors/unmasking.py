@@ -24,7 +24,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.svm import LinearSVC
 from sklearn.utils import shuffle
 
-from pan24_llm_baselines.impl.detector_base import DetectorBase
+from pan24_llm_baselines.detectors.detector_base import DetectorBase
 
 warnings.simplefilter('ignore', category=ConvergenceWarning)
 

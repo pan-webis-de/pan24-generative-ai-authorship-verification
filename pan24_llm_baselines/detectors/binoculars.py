@@ -30,17 +30,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Dict, Literal, List, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-import torch
-import transformers
 
-from pan24_llm_baselines.impl.detector_base import DetectorBaseTorch
+from pan24_llm_baselines.detectors.detector_base import DetectorBase
+from pan24_llm_baselines.torch_util import *
 
 
-class Binoculars(DetectorBaseTorch):
+class Binoculars(DetectorBase):
     """
     Binoculars LLM detector.
 
@@ -71,14 +70,14 @@ class Binoculars(DetectorBaseTorch):
         self.threshold = None
         self.change_mode(mode)
 
-        self.observer_model, self.tokenizer = self._load_model(
+        self.observer_model, self.tokenizer = torch_load_model(
             observer_name_or_path,
             device_map=device1,
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
 
-        self.performer_model, perf_tokenizer = self._load_model(
+        self.performer_model, perf_tokenizer = torch_load_model(
             performer_name_or_path,
             device_map=device2,
             use_flash_attn=use_flash_attn,
@@ -109,13 +108,13 @@ class Binoculars(DetectorBaseTorch):
 
     @torch.inference_mode()
     def get_score(self, text: Union[str, List[str]]) -> Union[np.float64, npt.NDArray[np.float64]]:
-        encodings = self._tokenize(text, self.tokenizer, self.observer_model.device)
+        encodings = torch_tokenize(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
-        ppl = self._perplexity(performer_logits, encodings)
-        x_ppl = self._cross_entropy(observer_logits,
+        ppl = torch_perplexity(performer_logits, encodings)
+        x_ppl = torch_cross_entropy(observer_logits,
                                     performer_logits.to(self.observer_model.device),
                                     encodings.attention_mask)
-        binoculars_scores = ppl / x_ppl
+        binoculars_scores = (ppl / x_ppl).cpu().float().numpy()
         return binoculars_scores[0] if isinstance(text, str) else binoculars_scores
 
     def predict(self, text: Union[str, List[str]]) -> Union[np.bool_, npt.NDArray[np.bool_]]:

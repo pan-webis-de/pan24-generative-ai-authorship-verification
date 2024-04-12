@@ -92,7 +92,7 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
         “Spotting LLMs with Binoculars: Zero-Shot Detection of Machine-Generated
         Text.” arXiv [Cs.CL]. arXiv. http://arxiv.org/abs/2401.12070.
     """
-    from pan24_llm_baselines.impl.binoculars import Binoculars
+    from pan24_llm_baselines.detectors.binoculars import Binoculars
 
     detector = Binoculars(
         observer_name_or_path=observer,
@@ -132,7 +132,7 @@ def ppmd(input_file, output_directory, outfile_name):
         Part F1305. Association for Computing Machinery. https://doi.org/10.1145/3098954.3104050.
     """
 
-    from pan24_llm_baselines.impl.ppmd import PPMdDetector
+    from pan24_llm_baselines.detectors.ppmd import PPMdDetector
     detector = PPMdDetector()
     detect(detector, input_file, output_directory, outfile_name, within_texts=True)
 
@@ -172,7 +172,7 @@ def unmasking(input_file, output_directory, outfile_name):
         Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
         Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
-    from pan24_llm_baselines.impl.unmasking import UnmaskingDetector
+    from pan24_llm_baselines.detectors.unmasking import UnmaskingDetector
     detector = UnmaskingDetector()
     detect(detector, input_file, output_directory, outfile_name, within_texts=True)
 

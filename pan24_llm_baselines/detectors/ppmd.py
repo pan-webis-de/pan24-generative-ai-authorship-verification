@@ -18,7 +18,7 @@ import numpy as np
 from numpy import typing as npt
 import pyppmd
 
-from pan24_llm_baselines.impl.detector_base import DetectorBase
+from pan24_llm_baselines.detectors.detector_base import DetectorBase
 
 
 class PPMdDetector(DetectorBase):
