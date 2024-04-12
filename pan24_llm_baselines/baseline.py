@@ -104,14 +104,39 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
     detect(detector, input_file, output_directory, outfile_name)
 
 
-    with open(os.path.join(output_directory, outfile_name), 'w') as out:
-        for l in tqdm(input_file, desc='Predicting cases'):
-            j = json.loads(l)
-            score1 = bino.get_score(j['text1'])
-            score2 = bino.get_score(j['text2'])
+@main.command()
+@click.argument('input_file', type=click.File('r'))
+@click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--outfile-name', help='Output file name', default='detectgpt.jsonl', show_default=True)
+@click.option('-q', '--quantize', type=click.Choice(['4', '8']))
+@click.option('-f', '--flash-attn', is_flag=True, help='Use flash-attn 2 (must be installed separately)')
+@click.option('--base-model', help='Base detection model', default='tiiuae/falcon-7b', show_default=True)
+@click.option('--perturb-model', help='Perturbation model', default='t5-large', show_default=True)
+@click.option('--device1', help='Base model device', default='auto', show_default=True)
+@click.option('--device2', help='Perturbation model device', default='auto', show_default=True)
+def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
+              base_model, perturb_model, device1, device2):
+    """
+    PAN'24 baseline: DetectGPT.
 
-            json.dump({'id': j['id'], 'is_human': comparative_score(score1, score2)}, out)
-            out.write('\n')
+    References:
+    ===========
+        Mitchell, Eric, Yoonho Lee, Alexander Khazatsky, Christopher D. Manning,
+        and Chelsea Finn. 2023. “DetectGPT: Zero-Shot Machine-Generated Text
+        Detection Using Probability Curvature.” arXiv [Cs.CL]. arXiv.
+        http://arxiv.org/abs/2301.11305.
+    """
+    from pan24_llm_baselines.detectors.detectgpt import DetectGPT
+    from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
+
+    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2)
+    detector = DetectGPT(
+        base_model=base_model,
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
+        perturbator=perturbator,
+        device=device1)
+    detect(detector, input_file, output_directory, outfile_name)
 
 
 @main.command()
