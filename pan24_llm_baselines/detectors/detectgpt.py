@@ -36,34 +36,31 @@ class DetectGPT(DetectorBase):
     def __init__(self, base_model='tiiuae/falcon-7b',
                  device: TorchDeviceMapType = 'auto',
                  perturbator: PerturbatorBase = None,
-                 n_perturbations=50,
+                 n_perturbed=5,
                  **base_model_args):
         """
         :param base_model: base language model
         :param device: base model device
         :param perturbator: perturbation model (default: T5MaskPerturbator)
+        :param n_perturbed: number of perturbed texts to generate
         :param base_model_args: additional base model arguments
         """
 
-        self.n_perturbations = n_perturbations
+        self.n_perturbed = n_perturbed
         self.perturbator = perturbator if perturbator else T5MaskPerturbator(device=device)
-        self.base_model = load_model(
-            base_model,
-            device_map=device,
-            **base_model_args)
+        self.base_model = load_model(base_model, device_map=device, **base_model_args)
         self.base_tokenizer = load_tokenizer(base_model)
 
     @torch.inference_mode()
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
-        enc_orig = tokenize_sequence(text, self.base_tokenizer, self.base_model.device, 512)
-        ll_orig = log_likelihood(self.base_model, enc_orig).cpu().item()
+        enc_orig = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
+        ll_orig = -log_likelihood(self.base_model, enc_orig).cpu().item()
 
-        perturbed = self.perturbator.perturb(text, n_variants=self.n_perturbations)
-        enc_pert = tokenize_sequence(perturbed, self.base_tokenizer, self.base_model.device, 512)
-        ll_pert = log_likelihood(self.base_model, enc_pert).cpu()
+        perturbed = self.perturbator.perturb(text, n_variants=self.n_perturbed)
+        enc_pert = tokenize_sequences(perturbed, self.base_tokenizer, self.base_model.device, 512)
+        ll_pert = -log_likelihood(self.base_model, enc_pert).cpu()
         ll_pert_std = ll_pert.std().item()
         ll_pert = ll_pert.mean().item()
-
         return max(0.0, (ll_orig - ll_pert) / ll_pert_std)
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:

@@ -68,6 +68,7 @@ def detect(detector, input_file, output_directory, outfile_name, within_texts=Fa
 
             json.dump({'id': j['id'], 'is_human': float(comparative_score(score1, score2))}, out)
             out.write('\n')
+            out.flush()
 
 
 @main.command()
@@ -129,13 +130,13 @@ def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
     from pan24_llm_baselines.detectors.detectgpt import DetectGPT
     from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
 
-    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2, batch_size=10)
+    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2)
     detector = DetectGPT(
         base_model=base_model,
         quantization_bits=quantize,
         use_flash_attn=flash_attn,
         perturbator=perturbator,
-        n_perturbations=10,
+        n_perturbed=5,
         device=device1)
     detect(detector, input_file, output_directory, outfile_name)
 

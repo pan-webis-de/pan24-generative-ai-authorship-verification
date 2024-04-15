@@ -121,9 +121,9 @@ class Binoculars(DetectorBase):
 
     @torch.inference_mode()
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
-        encodings = tokenize_sequence(text, self.tokenizer, self.observer_model.device)
+        encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
-        log_ppl = -log_likelihood(performer_logits, encodings)
+        log_ppl = log_likelihood(performer_logits, encodings)
         x_ppl = cross_entropy(observer_logits,
                               performer_logits.to(self.observer_model.device),
                               encodings.attention_mask)
