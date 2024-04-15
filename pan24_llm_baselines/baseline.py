@@ -36,6 +36,10 @@ def comparative_score(score1, score2, epsilon=1e-3):
     :param epsilon: non-answer (output score = 0.5) epsilon threshold
     :return: [0, 0.5) if score1 > score2 + eps; (0.5, 1] if score2 > score1 + eps; 0.5 otherwise
     """
+    if score1 > 1 or score2 > 1:
+        m = max(score1, score2)
+        score1, score2 = score1 / m, score2 / m
+
     if score1 > score2 + epsilon:
         return max(min(1.0 - score1, 0.49), 0.0)
     if score2 > score1 + epsilon:
@@ -43,7 +47,12 @@ def comparative_score(score1, score2, epsilon=1e-3):
     return 0.5
 
 
-def detect(detector, input_file, output_directory, outfile_name, within_texts=False):
+def inverse_comparative_score(score1, score2, epsilon=1e-3):
+    return comparative_score(score2, score1, epsilon)
+
+
+def detect(detector, input_file, output_directory, outfile_name, within_texts=False,
+           comp_fn=comparative_score):
     """
     Run a detector on an input file and write results to output directory.
 
@@ -52,6 +61,7 @@ def detect(detector, input_file, output_directory, outfile_name, within_texts=Fa
     :param output_directory: output directory path
     :param outfile_name: output filename
     :param within_texts: measure the scores within instead of between texts
+    :param comp_fn: function to compare scores
     """
     with open(os.path.join(output_directory, outfile_name), 'w') as out:
         for l in tqdm(input_file, desc='Predicting cases'):
@@ -66,7 +76,7 @@ def detect(detector, input_file, output_directory, outfile_name, within_texts=Fa
                 score1 = detector.get_score(t1)
                 score2 = detector.get_score(t2)
 
-            json.dump({'id': j['id'], 'is_human': float(comparative_score(score1, score2))}, out)
+            json.dump({'id': j['id'], 'is_human': float(comp_fn(score1, score2))}, out)
             out.write('\n')
             out.flush()
 
@@ -138,7 +148,7 @@ def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
         perturbator=perturbator,
         n_perturbed=5,
         device=device1)
-    detect(detector, input_file, output_directory, outfile_name)
+    detect(detector, input_file, output_directory, outfile_name, comp_fn=inverse_comparative_score)
 
 
 @main.command()
