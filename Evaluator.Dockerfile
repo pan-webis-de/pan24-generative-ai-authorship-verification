@@ -10,4 +10,5 @@ RUN set -x \
     && chmod +x /opt/pan24_llm_evaluator/evaluator.py \
     && ln -s /opt/pan24_llm_evaluator/evaluator.py /usr/local/bin/evaluator
 
+USER 1000
 CMD /usr/local/bin/evaluator

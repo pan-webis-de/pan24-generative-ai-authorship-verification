@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from glob import glob
 import json
 import os
 
@@ -141,9 +140,9 @@ def brier_score(true_y, pred_y):
         return 0.0
 
 
-def load_problem_file(fn):
+def load_problem_file(file_obj):
     problems = {}
-    for l in open(fn):
+    for l in file_obj:
         j = json.loads(l)
 
         if 'is_human' not in j:
@@ -184,15 +183,13 @@ def evaluate_all(true_y, pred_y):
 
 
 @click.command(help='Evaluation script GenAIDetection @ PAN\'24')
-@click.argument('truth_dir', type=click.Path(exists=True, file_okay=False))
-@click.argument('answer_dir', type=click.Path(exists=True, file_okay=False))
+@click.argument('answer_file', type=click.File('r'))
+@click.argument('truth_file', type=click.File('r'))
 @click.argument('output_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-t', '--truth-glob', help='Truth file glob', default='*-truth.jsonl', show_default=True)
-@click.option('-a', '--answer-glob', help='Answer file glob', default='*.jsonl', show_default=True)
 @click.option('-o', '--outfile-name', help='Output filename', default='evaluation.json', show_default=True)
-def main(truth_dir, answer_dir, output_dir, truth_glob, answer_glob, outfile_name):
-    truth = load_problem_file(glob(os.path.join(truth_dir, truth_glob))[0])
-    pred = load_problem_file(glob(os.path.join(answer_dir, answer_glob))[0])
+def main(answer_file, truth_file, output_dir, outfile_name):
+    pred = load_problem_file(answer_file)
+    truth = load_problem_file(truth_file)
 
     click.echo(f'-> {len(truth)} problems in ground truth', err=True)
     click.echo(f'-> {len(pred)} solutions explicitly proposed', err=True)
