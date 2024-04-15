@@ -36,7 +36,7 @@ import numpy as np
 import numpy.typing as npt
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
-from pan24_llm_baselines.torch_util import *
+from pan24_llm_baselines.util import *
 
 
 class Binoculars(DetectorBase):
@@ -81,21 +81,21 @@ class Binoculars(DetectorBase):
         self.threshold = None
         self.change_mode(mode)
 
-        self.observer_model = transformers_load_model(
+        self.observer_model = load_model(
             observer_name_or_path,
             device_map=device1,
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
-        self.tokenizer = transformers_load_tokenizer(observer_name_or_path)
+        self.tokenizer = load_tokenizer(observer_name_or_path)
 
-        self.performer_model = transformers_load_model(
+        self.performer_model = load_model(
             performer_name_or_path,
             device_map=device2,
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
-        perf_tokenizer = transformers_load_tokenizer(performer_name_or_path)
+        perf_tokenizer = load_tokenizer(performer_name_or_path)
 
         if not hasattr(self.tokenizer, 'vocab') or self.tokenizer.vocab != perf_tokenizer.vocab:
             raise ValueError(f'Incompatible tokenizers for {observer_name_or_path} and {performer_name_or_path}.')
@@ -121,13 +121,13 @@ class Binoculars(DetectorBase):
 
     @torch.inference_mode()
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
-        encodings = torch_tokenize(text, self.tokenizer, self.observer_model.device)
+        encodings = tokenize_sequence(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
-        ppl = torch_perplexity(performer_logits, encodings)
-        x_ppl = torch_cross_entropy(observer_logits,
-                                    performer_logits.to(self.observer_model.device),
-                                    encodings.attention_mask)
-        binoculars_scores = (ppl / x_ppl).cpu().float().numpy()
+        log_ppl = -log_likelihood(performer_logits, encodings)
+        x_ppl = cross_entropy(observer_logits,
+                              performer_logits.to(self.observer_model.device),
+                              encodings.attention_mask)
+        binoculars_scores = (log_ppl / x_ppl).cpu().float().numpy()
         return binoculars_scores[0] if isinstance(text, str) else binoculars_scores
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:

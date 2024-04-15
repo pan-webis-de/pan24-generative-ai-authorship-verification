@@ -7,7 +7,7 @@ from torch.nn.utils.rnn import pad_sequence
 from tqdm import tqdm
 from transformers import AutoModelForSeq2SeqLM
 
-from pan24_llm_baselines.torch_util import *
+from pan24_llm_baselines.util import *
 from pan24_llm_baselines.perturbators.perturbator_base import PerturbatorBase
 
 
@@ -44,13 +44,13 @@ class T5MaskPerturbator(PerturbatorBase):
         self.batch_size = batch_size
         self.verbose = verbose
 
-        self.model = transformers_load_model(model_name,
-                                             device_map=device,
-                                             auto_cls=AutoModelForSeq2SeqLM,
-                                             quantization_bits=quantization_bits,
-                                             use_flash_attn=use_flash_attn,
-                                             **model_args)
-        self.tokenizer = transformers_load_tokenizer(model_name, model_max_length=max_tokens)
+        self.model = load_model(model_name,
+                                device_map=device,
+                                auto_cls=AutoModelForSeq2SeqLM,
+                                quantization_bits=quantization_bits,
+                                use_flash_attn=use_flash_attn,
+                                **model_args)
+        self.tokenizer = load_tokenizer(model_name, model_max_length=max_tokens)
 
     def _mask_tokens(self, token_ids, n_target) -> Tuple[npt.NDArray[np.float64], int]:
         """
@@ -120,7 +120,7 @@ class T5MaskPerturbator(PerturbatorBase):
         return self.tokenizer.batch_decode(out_ids_batch)
 
     def perturb(self, text: str, n_variants: int = 1) -> Union[str, List[str]]:
-        tokens_batch = torch_tokenize(text, self.tokenizer, max_length=self.max_tokens, return_tensors='np').input_ids
+        tokens_batch = tokenize_sequence(text, self.tokenizer, max_length=self.max_tokens, return_tensors='np').input_ids
         perturbed_texts = []
 
         for token_ids in tokens_batch:

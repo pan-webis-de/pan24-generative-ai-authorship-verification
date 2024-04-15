@@ -135,6 +135,7 @@ def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
         quantization_bits=quantize,
         use_flash_attn=flash_attn,
         perturbator=perturbator,
+        n_perturbations=10,
         device=device1)
     detect(detector, input_file, output_directory, outfile_name)
 

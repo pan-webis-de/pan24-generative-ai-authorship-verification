@@ -25,14 +25,14 @@ TorchDeviceMapType = Union[str, Dict[str, Union[int, str, torch.device]], int, t
 
 
 @torch.inference_mode()
-def transformers_load_model(model_name: str,
-                            device_map: TorchDeviceMapType,
-                            auto_cls: AutoModelClsType = AutoModelForCausalLM,
-                            use_flash_attn=False,
-                            quantization_bits=None,
-                            trust_remote_code=False,
-                            torch_dtype: torch.dtype = torch.bfloat16,
-                            **additional_args) -> transformers.PreTrainedModel:
+def load_model(model_name: str,
+               device_map: TorchDeviceMapType,
+               auto_cls: AutoModelClsType = AutoModelForCausalLM,
+               use_flash_attn=False,
+               quantization_bits=None,
+               trust_remote_code=False,
+               torch_dtype: torch.dtype = torch.bfloat16,
+               **additional_args) -> transformers.PreTrainedModel:
 
     model_args = {
         'trust_remote_code': trust_remote_code,
@@ -57,7 +57,7 @@ def transformers_load_model(model_name: str,
 
 
 @torch.inference_mode()
-def transformers_load_tokenizer(model_name: str, **tokenizer_args) -> transformers.PreTrainedTokenizerBase:
+def load_tokenizer(model_name: str, **tokenizer_args) -> transformers.PreTrainedTokenizerBase:
     tokenizer = AutoTokenizer.from_pretrained(model_name, **tokenizer_args)
     if not tokenizer.pad_token:
         tokenizer.pad_token = tokenizer.eos_token
@@ -65,12 +65,12 @@ def transformers_load_tokenizer(model_name: str, **tokenizer_args) -> transforme
 
 
 @torch.inference_mode()
-def torch_tokenize(batch: Union[str, List[str]],
-                   tokenizer: transformers.PreTrainedTokenizerBase,
-                   device: Union[str, torch.device] = None,
-                   max_length: int = None,
-                   return_tensors='pt',
-                   **additional_args) -> transformers.BatchEncoding:
+def tokenize_sequence(batch: Union[str, List[str]],
+                      tokenizer: transformers.PreTrainedTokenizerBase,
+                      device: Union[str, torch.device] = None,
+                      max_length: int = None,
+                      return_tensors='pt',
+                      **additional_args) -> transformers.BatchEncoding:
     batch = [batch] if isinstance(batch, str) else batch
     encodings = tokenizer(
         batch,
@@ -87,32 +87,32 @@ def torch_tokenize(batch: Union[str, List[str]],
 
 
 @torch.inference_mode()
-def torch_perplexity(logits_or_model: Union[torch.Tensor, transformers.PreTrainedModel],
-                     encoding: transformers.BatchEncoding) -> torch.Tensor:
+def log_likelihood(logits_or_model: Union[torch.Tensor, transformers.PreTrainedModel],
+                   encoding: transformers.BatchEncoding) -> torch.Tensor:
     """
-    Calculate model perplexity / negative log loss on a batch of input sequences.
+    Calculate negative log loss / model log perplexity on a batch of input sequences.
 
     :param logits_or_model: predicted logits (will be shifted to match input) or causal LM model
     :param encoding: input encoding
-    :return: model perplexity on the sequence
+    :return: summed log likelihood of the sequence according to the model
     """
 
     if isinstance(logits_or_model, transformers.PreTrainedModel):
         if encoding.input_ids.shape[0] == 1:
             # Batch size == 1
-            return logits_or_model(**encoding, labels=encoding.input_ids).loss
+            return -logits_or_model(**encoding, labels=encoding.input_ids).loss
         logits_or_model = logits_or_model(**encoding).logits
 
     logits_or_model = logits_or_model[..., :-1, :]
     labels = encoding.input_ids[..., 1:]
     attention_mask = encoding.attention_mask[..., 1:]
 
-    ppl = F.cross_entropy(logits_or_model.transpose(1, 2), labels, reduction='none')
-    return (ppl * attention_mask).sum(1) / attention_mask.sum(1)
+    ll = F.cross_entropy(logits_or_model.transpose(1, 2), labels, reduction='none')
+    return -(ll * attention_mask).sum(1) / attention_mask.sum(1)
 
 
 @torch.inference_mode()
-def torch_entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Tensor:
+def entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Tensor:
     """
     Calculate entropy of predicted logits.
 
@@ -127,7 +127,7 @@ def torch_entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Te
 
 
 @torch.inference_mode()
-def torch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.tensor) -> torch.Tensor:
+def cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.tensor) -> torch.Tensor:
     """
     Calculate cross entropy between two distributions of predicted logits.
 
