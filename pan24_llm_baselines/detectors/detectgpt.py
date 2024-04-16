@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable
+from typing import List
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
 from pan24_llm_baselines.perturbators.perturbator_base import PerturbatorBase
@@ -33,35 +33,44 @@ class DetectGPT(DetectorBase):
         Detection Using Probability Curvature.” arXiv [Cs.CL]. arXiv.
         http://arxiv.org/abs/2301.11305.
     """
-    def __init__(self, base_model='tiiuae/falcon-7b',
+    def __init__(self,
+                 base_model='tiiuae/falcon-7b',
                  device: TorchDeviceMapType = 'auto',
                  perturbator: PerturbatorBase = None,
-                 n_perturbed=5,
+                 n_samples=100,
+                 batch_size=10,
                  **base_model_args):
         """
         :param base_model: base language model
         :param device: base model device
         :param perturbator: perturbation model (default: T5MaskPerturbator)
-        :param n_perturbed: number of perturbed texts to generate
+        :param n_samples: number of perturbed texts to generate
+        :param batch_size: Log-likelihood prediction batch size
         :param base_model_args: additional base model arguments
         """
 
-        self.n_perturbed = n_perturbed
+        self.n_perturbed = n_samples
+        self.batch_size = batch_size
         self.perturbator = perturbator if perturbator else T5MaskPerturbator(device=device)
         self.base_model = load_model(base_model, device_map=device, **base_model_args)
         self.base_tokenizer = load_tokenizer(base_model)
 
     @torch.inference_mode()
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
-        enc_orig = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
-        ll_orig = -log_likelihood(self.base_model, enc_orig).cpu().item()
+        encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
+        ll_orig = -log_likelihood(self.base_model, encoding, self.batch_size)
 
         perturbed = self.perturbator.perturb(text, n_variants=self.n_perturbed)
-        enc_pert = tokenize_sequences(perturbed, self.base_tokenizer, self.base_model.device, 512)
-        ll_pert = -log_likelihood(self.base_model, enc_pert).cpu()
-        ll_pert_std = ll_pert.std().item()
-        ll_pert = ll_pert.mean().item()
-        return max(0.0, (ll_orig - ll_pert) / ll_pert_std)
+        encoding = tokenize_sequences(perturbed, self.base_tokenizer, self.base_model.device, 512)
+        ll_pert = -log_likelihood(self.base_model, encoding, self.batch_size)
+        ll_pert = ll_pert.view(len(ll_orig), self.n_perturbed)
+        ll_pert_std = ll_pert.std(-1)
+        ll_pert = ll_pert.mean(-1)
+        score = (ll_orig - ll_pert) / ll_pert_std
+
+        # Map scores to [0, 1], scale to 1/10 beforehand to prevent saturation
+        score = 1.0 / (1.0 + torch.exp(-score / 10.0))
+        return score[0].item() if isinstance(text, str) else score.tolist()
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
         pass

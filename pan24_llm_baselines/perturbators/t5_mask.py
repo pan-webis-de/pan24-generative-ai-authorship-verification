@@ -1,8 +1,7 @@
 import random
-from typing import Tuple
+from typing import List, Tuple
 
-import numpy as np
-import numpy.typing as npt
+from more_itertools import batched
 from tqdm import tqdm
 from transformers import AutoModelForSeq2SeqLM
 
@@ -20,7 +19,7 @@ class T5MaskPerturbator(PerturbatorBase):
                  quantization_bits=None,
                  use_flash_attn=False,
                  max_tokens=512,
-                 batch_size=5,
+                 batch_size=10,
                  verbose=True,
                  **model_args):
         """
@@ -51,36 +50,39 @@ class T5MaskPerturbator(PerturbatorBase):
                                 **model_args)
         self.tokenizer = load_tokenizer(model_name, model_max_length=max_tokens)
 
-    def _mask_tokens(self, token_ids) -> Tuple[npt.NDArray[np.float64], int]:
+    def _mask_tokens(self, text) -> Tuple[str, int]:
         """
-        Randomly replace token spans with masks.
-        Strips padding tokens from the sequence.
+        Randomly replace (white space) token spans with masks.
 
-        :param token_ids: input token ids
-        :return: masked token sequence, number of masked tokens
+        :param text: input text
+        :return: perturbed text with mask tokens, number of mask tokens
         """
-        mask_id = self.tokenizer.encode('<extra_id_0>')[0]
-        n_padding = np.sum(token_ids == self.tokenizer.pad_token_id)
-        text_len = len(token_ids) - n_padding
+        text = text.split(' ')
+        text_len = len(text)
         n_spans_target = int(self.mask_pct * text_len / (self.span_length + self.mask_buffer_size * 2) + 1)
         n_spans_target = min(n_spans_target, 99)    # T5 has a max of 100 sentinel tokens by default
 
-        spans = []
+        spans = set()
+        del_idx = set()
         while len(spans) < n_spans_target:
             start = random.randint(0, text_len - self.span_length - 1)
             end = start + self.span_length
-            if mask_id not in token_ids[max(0, start - self.mask_buffer_size):end + self.mask_buffer_size]:
-                token_ids[start:end] = mask_id
-                spans.append(start)
+            if None not in text[max(0, start - self.mask_buffer_size):end + self.mask_buffer_size]:
+                # token_ids[start:end] = mask_id
+                spans.add(start)
+                for i in range(start, end):
+                    text[i] = None
+                    if i > start:
+                        del_idx.add(i)
 
         spans = sorted(spans)
         for i, idx in enumerate(spans):
             # count down from <extra_id_0> to <extra_id_{len(spans)}>
-            token_ids[idx] -= i
+            text[idx] = f'<extra_id_{i}>'
 
         # Delete remainder of the spans
-        del_indexes = np.hstack([np.arange(s + 1, s + self.span_length) for s in spans])
-        return np.delete(token_ids, del_indexes), len(spans)
+        text = ' '.join(t for i, t in enumerate(text) if i not in del_idx)
+        return text, len(spans)
 
     def _generate_texts(self, token_ids: torch.Tensor, num_masks: Union[List[int], torch.Tensor]):
         """
@@ -122,23 +124,25 @@ class T5MaskPerturbator(PerturbatorBase):
         return self.tokenizer.batch_decode(out_ids, skip_special_tokens=True)
 
     def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
-        batch_size = self.batch_size if self.batch_size else len(text)
+        return_str = False
         if isinstance(text, str):
             text = [text]
+            return_str = n_variants == 1
+
+        batch_size = self.batch_size if self.batch_size else len(text)
+        n_iter = (len(text) * n_variants + 1) // batch_size
+        batch_it = batched((t for t in text for _ in range(n_variants)), batch_size)
+        if self.verbose:
+            batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit='batch', total=n_iter)
 
         perturbed = []
-        batch_it = range(0, len(text), self.batch_size)
-        if self.verbose:
-            batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit=' batches')
         for b in batch_it:
-            tokens_batch = tokenize_sequences(text[b:b + batch_size], self.tokenizer,
-                                              max_length=self.max_tokens, return_tensors='np').input_ids
             masked = []
             n_masks = []
-            for token_ids in tokens_batch:
-                for _ in range(n_variants):
-                    t, n = self._mask_tokens(np.array(token_ids))
-                    masked.append(torch.from_numpy(t))
-                    n_masks.append(n)
-            perturbed.extend(self._generate_texts(torch.stack(masked), n_masks))
-        return perturbed[0] if n_variants == 1 else perturbed
+            for t in b:
+                t, n = self._mask_tokens(t)
+                masked.append(t)
+                n_masks.append(n)
+            masked = tokenize_sequences(masked, self.tokenizer, max_length=self.max_tokens).input_ids
+            perturbed.extend(self._generate_texts(masked, n_masks))
+        return perturbed[0] if return_str else perturbed

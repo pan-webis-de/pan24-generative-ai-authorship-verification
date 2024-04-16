@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, Iterable, Optional, Type, Union
 
 import torch
 import torch.nn.functional as F
@@ -65,7 +65,7 @@ def load_tokenizer(model_name: str, **tokenizer_args) -> transformers.PreTrained
 
 
 @torch.inference_mode()
-def tokenize_sequences(batch: Union[str, List[str]],
+def tokenize_sequences(batch: Union[str, Iterable[str]],
                        tokenizer: transformers.PreTrainedTokenizerBase,
                        device: Union[str, torch.device] = None,
                        max_length: int = None,
@@ -101,22 +101,24 @@ def log_likelihood(logits_or_model: Union[torch.Tensor, transformers.PreTrainedM
     if isinstance(logits_or_model, transformers.PreTrainedModel):
         if encoding.input_ids.shape[0] == 1:
             # Batch size == 1
-            return logits_or_model(**encoding, labels=encoding.input_ids).loss
+            return logits_or_model(**encoding, labels=encoding.input_ids).loss.cpu().unsqueeze(0)
 
         if batch_size is None:
             batch_size = len(encoding.input_ids)
-        m = logits_or_model
+        model = logits_or_model
         logits_or_model = []
         for b in range(0, len(encoding.input_ids), batch_size):
-            logits_or_model.append(m(**{k: v[b:b + batch_size] for k, v in encoding.items()}).logits)
+            l = model(**{k: v[b:b + batch_size] for k, v in encoding.items()}).logits
+            logits_or_model.append(l.cpu())
+        del model
         logits_or_model = torch.vstack(logits_or_model)
 
-    logits_or_model = logits_or_model[..., :-1, :]
-    labels = encoding.input_ids[..., 1:]
-    attention_mask = encoding.attention_mask[..., 1:]
+    logits_or_model = logits_or_model[..., :-1, :].cpu()
+    labels = encoding.input_ids[..., 1:].cpu()
+    attention_mask = encoding.attention_mask[..., 1:].cpu()
 
     ll = F.cross_entropy(logits_or_model.transpose(1, 2), labels, reduction='none')
-    return (ll * attention_mask).sum(1) / attention_mask.sum(1)
+    return (ll * attention_mask).sum(-1) / attention_mask.sum(-1)
 
 
 @torch.inference_mode()
@@ -131,7 +133,7 @@ def entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Tensor:
 
     if discard_last:
         p_logits = p_logits[..., :-1, :]
-    return -(F.softmax(p_logits, -1) * F.log_softmax(p_logits, -1)).sum(-1).mean()
+    return -(F.softmax(p_logits, -1) * F.log_softmax(p_logits, -1)).sum(-1).mean(-1)
 
 
 @torch.inference_mode()
@@ -151,4 +153,4 @@ def cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.te
     q_logits = q_logits.view(-1, vocab_size)
 
     ce = F.cross_entropy(input=q_logits, target=p_prob, reduction='none').view(-1, n_tokens)
-    return (ce * mask).sum(1) / mask.sum(1)
+    return (ce * mask).sum(-1) / mask.sum(-1)

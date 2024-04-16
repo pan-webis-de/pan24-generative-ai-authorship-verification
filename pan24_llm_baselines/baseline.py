@@ -36,14 +36,10 @@ def comparative_score(score1, score2, epsilon=1e-3):
     :param epsilon: non-answer (output score = 0.5) epsilon threshold
     :return: [0, 0.5) if score1 > score2 + eps; (0.5, 1] if score2 > score1 + eps; 0.5 otherwise
     """
-    if score1 > 1 or score2 > 1:
-        m = max(score1, score2)
-        score1, score2 = score1 / m, score2 / m
-
     if score1 > score2 + epsilon:
-        return max(min(1.0 - score1, 0.49), 0.0)
+        return max((1.0 - score1) / 2.0, 0.0)
     if score2 > score1 + epsilon:
-        return min(max(0.51, score2), 1.0)
+        return min(score2 / 2.0 + 0.5, 1.0)
     return 0.5
 
 
@@ -119,14 +115,20 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--outfile-name', help='Output file name', default='detectgpt.jsonl', show_default=True)
+@click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
+@click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
+              help='Percentage of tokens to perturb')
+@click.option('-n', '--n-samples', type=int, default=100, show_default=True,
+              help='Number of perturbed samples to generate')
+@click.option('-b', '--batch-size', type=int, default=5, help='GPU task batch size')
 @click.option('-q', '--quantize', type=click.Choice(['4', '8']))
 @click.option('-f', '--flash-attn', is_flag=True, help='Use flash-attn 2 (must be installed separately)')
 @click.option('--base-model', help='Base detection model', default='tiiuae/falcon-7b', show_default=True)
 @click.option('--perturb-model', help='Perturbation model', default='t5-large', show_default=True)
 @click.option('--device1', help='Base model device', default='auto', show_default=True)
 @click.option('--device2', help='Perturbation model device', default='auto', show_default=True)
-def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
-              base_model, perturb_model, device1, device2):
+def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_pct, n_samples, batch_size,
+              quantize, flash_attn, base_model, perturb_model, device1, device2):
     """
     PAN'24 baseline: DetectGPT.
 
@@ -140,15 +142,21 @@ def detectgpt(input_file, output_directory, outfile_name, quantize, flash_attn,
     from pan24_llm_baselines.detectors.detectgpt import DetectGPT
     from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
 
-    perturbator = T5MaskPerturbator(model_name=perturb_model, device=device2)
+    perturbator = T5MaskPerturbator(
+        model_name=perturb_model,
+        device=device2,
+        span_length=span_length,
+        mask_pct=perturb_pct,
+        batch_size=batch_size)
     detector = DetectGPT(
         base_model=base_model,
         quantization_bits=quantize,
         use_flash_attn=flash_attn,
         perturbator=perturbator,
-        n_perturbed=5,
+        n_samples=n_samples,
+        batch_size=batch_size,
         device=device1)
-    detect(detector, input_file, output_directory, outfile_name, comp_fn=inverse_comparative_score)
+    detect(detector, input_file, output_directory, outfile_name)
 
 
 @main.command()
