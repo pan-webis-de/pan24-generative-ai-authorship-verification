@@ -22,6 +22,9 @@ class DetectorBase(ABC):
     """
 
     @abstractmethod
+    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+        pass
+
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
         """
         Return a prediction score indicating the "humanness" of the input text.
@@ -29,6 +32,11 @@ class DetectorBase(ABC):
         :param text: input text or list of input texts
         :return: humanness score(s)
         """
+        return_str = isinstance(text, str)
+        if return_str:
+            text = [text]
+        text = self._get_score_impl(text)
+        return text[0] if return_str else text
 
     @abstractmethod
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:

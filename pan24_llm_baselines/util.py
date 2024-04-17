@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Iterable, Optional, Type, Union
+from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn.functional as F
@@ -140,17 +140,17 @@ def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch
 def log_likelihood(model: transformers.PreTrainedModel,
                    encoding: transformers.BatchEncoding,
                    batch_size: Optional[int] = None,
-                   verbose: bool = False) -> torch.Tensor:
+                   verbose_msg: str = None) -> torch.Tensor:
     """
     Calculate per-token negative log loss / model log perplexity on a batch of input
     sequences given a causal language model.
 
     If ``batch_size != 1``, calculations are performed on the CPU to avoid GPU memory blow-up.
 
-    :param model: predicted logits (will be shifted to match input) or causal LM model
+    :param model: causal LM model
     :param encoding: input encoding
     :param batch_size: batch size
-    :param verbose: show progress bar during batched model prediction
+    :param verbose_msg: show progress bar with message during batched model prediction
     :return: per-token log likelihood according to the model
     """
 
@@ -158,13 +158,30 @@ def log_likelihood(model: transformers.PreTrainedModel,
     if encoding.input_ids.shape[0] == 1:
         return model(**encoding, labels=encoding.input_ids).loss.cpu().unsqueeze(0)
 
+    ce_vals = [batch_label_cross_entropy(lo.cpu(), la.cpu())
+               for lo, la in model_batch_forward(model, encoding, batch_size, verbose_msg)]
+    return torch.vstack(ce_vals)
+
+
+@torch.inference_mode()
+def model_batch_forward(model: transformers.PreTrainedModel,
+                        encoding: transformers.BatchEncoding,
+                        batch_size: Optional[int] = None,
+                        verbose_msg: str = None) -> Iterable[Tuple[torch.Tensor, torch.Tensor]]:
+    """
+    Batched forward pass of a model on input data.
+
+    :param model: causal LM model
+    :param encoding: input encoding
+    :param batch_size: batch size
+    :param verbose_msg: show progress bar with message during batched model prediction
+    :return: iterator of batched output logits, input labels
+    """
     batch_size = batch_size or len(encoding.input_ids)
     batch_it = range(0, len(encoding.input_ids), batch_size)
-    ce_vals = []
-    if verbose:
-        batch_it = tqdm(batch_it, desc='Calculating log probabilities', leave=False,
+    if verbose_msg:
+        batch_it = tqdm(batch_it, desc=verbose_msg, leave=False,
                         total=(len(encoding.input_ids) + 1) // batch_size, unit=' batch')
     for b in batch_it:
-        l = model(**{k: v[b:b + batch_size] for k, v in encoding.items()}).logits.cpu()
-        ce_vals.append(batch_label_cross_entropy(l, encoding.input_ids[b:b + batch_size].cpu()))
-    return torch.vstack(ce_vals)
+        yield (model(**{k: v[b:b + batch_size] for k, v in encoding.items()}).logits,
+               encoding.input_ids[b:b + batch_size])

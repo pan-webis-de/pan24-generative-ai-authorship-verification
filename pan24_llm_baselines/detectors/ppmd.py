@@ -34,7 +34,7 @@ class PPMdDetector(DetectorBase):
         Part F1305. Association for Computing Machinery. https://doi.org/10.1145/3098954.3104050.
     """
 
-    def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
+    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
         if isinstance(text, str) or len(text) != 2:
             raise TypeError('Input must be a list of exactly two strings.')
 

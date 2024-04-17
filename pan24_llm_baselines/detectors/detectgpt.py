@@ -39,6 +39,7 @@ class DetectGPT(DetectorBase):
                  perturbator: PerturbatorBase = None,
                  n_samples=100,
                  batch_size=10,
+                 verbose=True,
                  **base_model_args):
         """
         :param base_model: base language model
@@ -46,31 +47,35 @@ class DetectGPT(DetectorBase):
         :param perturbator: perturbation model (default: T5MaskPerturbator)
         :param n_samples: number of perturbed texts to generate
         :param batch_size: Log-likelihood prediction batch size
+        :param verbose: show progress bar
         :param base_model_args: additional base model arguments
         """
 
-        self.n_perturbed = n_samples
+        self.n_samples = n_samples
         self.batch_size = batch_size
+        self.verbose = verbose
         self.perturbator = perturbator if perturbator else T5MaskPerturbator(device=device)
         self.base_model = load_model(base_model, device_map=device, **base_model_args)
         self.base_tokenizer = load_tokenizer(base_model)
 
     @torch.inference_mode()
-    def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:
+    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
         encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
-        ll_orig = -log_likelihood(self.base_model, encoding, self.batch_size)
+        verbose = 'Calculating original log likelihoods' if self.verbose else None
+        ll_orig = -log_likelihood(self.base_model, encoding, self.batch_size, verbose)
 
-        perturbed = self.perturbator.perturb(text, n_variants=self.n_perturbed)
+        perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
         encoding = tokenize_sequences(perturbed, self.base_tokenizer, self.base_model.device, 512)
-        ll_pert = -log_likelihood(self.base_model, encoding, self.batch_size)
-        ll_pert = ll_pert.view(len(ll_orig), self.n_perturbed)
-        ll_pert_std = ll_pert.std(-1)
+        verbose = 'Calculating perturbed log likelihoods' if self.verbose else None
+        ll_pert = -log_likelihood(self.base_model, encoding, self.batch_size, verbose)
+        ll_pert = ll_pert.view(len(ll_orig), self.n_samples)
+        ll_pert_std = ll_pert.std(-1, correction=1)
         ll_pert = ll_pert.mean(-1)
         score = (ll_orig - ll_pert) / ll_pert_std
 
         # Map scores to [0, 1], scale to 1/10 beforehand to prevent saturation
         score = 1.0 / (1.0 + torch.exp(-score / 10.0))
-        return score[0].item() if isinstance(text, str) else score.tolist()
+        return score.tolist()
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        pass
+        raise NotImplemented

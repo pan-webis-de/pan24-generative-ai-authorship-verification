@@ -60,7 +60,7 @@ def detect(detector, input_file, output_directory, outfile_name, within_texts=Fa
     :param comp_fn: function to compare scores
     """
     with open(os.path.join(output_directory, outfile_name), 'w') as out:
-        for l in tqdm(input_file, desc='Predicting cases'):
+        for l in tqdm(input_file, desc='Predicting pairs', unit=' pair'):
             j = json.loads(l)
             t1 = j['text1']
             t2 = j['text2']
