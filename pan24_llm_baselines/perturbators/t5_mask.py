@@ -2,7 +2,6 @@ import random
 from typing import List, Tuple
 
 from more_itertools import batched
-from tqdm import tqdm
 from transformers import AutoModelForSeq2SeqLM
 
 from pan24_llm_baselines.util import *
@@ -57,7 +56,7 @@ class T5MaskPerturbator(PerturbatorBase):
         :param text: input text
         :return: perturbed text with mask tokens, number of mask tokens
         """
-        text = text.split(' ')
+        text = text.strip().split(' ')
         text_len = len(text)
         n_spans_target = int(self.mask_pct * text_len / (self.span_length + self.mask_buffer_size * 2) + 1)
         n_spans_target = min(n_spans_target, 99)    # T5 has a max of 100 sentinel tokens by default
@@ -84,17 +83,16 @@ class T5MaskPerturbator(PerturbatorBase):
         text = ' '.join(t for i, t in enumerate(text) if i not in del_idx)
         return text, len(spans)
 
-    def _generate_texts(self, token_ids: torch.Tensor, num_masks: Union[List[int], torch.Tensor]):
+    def _generate_fills(self, masked_texts: List[str], num_masks: Union[List[int], torch.Tensor]) -> List[List[str]]:
         """
         Generate a new texts from batch of masked token sequence.
         
-        :param token_ids: (batch of) masked input token ids
+        :param masked_texts: batch of masked texts
         :param num_masks: number of masks for each text
-        :return: generated text
+        :return: generated sentinel fills
         """
-        if len(token_ids.shape) < 2:
-            token_ids = token_ids.reshape((1, *token_ids.shape))
 
+        token_ids = tokenize_sequences(masked_texts, self.tokenizer, max_length=self.max_tokens).input_ids
         stop_ids = torch.tensor([self.tokenizer.encode(f'<extra_id_{n}>')[0] for n in num_masks])
         outputs = self.model.generate(
             input_ids=token_ids.to(self.model.device),
@@ -105,23 +103,39 @@ class T5MaskPerturbator(PerturbatorBase):
             eos_token_id=stop_ids,
             pad_token_id=self.tokenizer.pad_token_id).cpu()
 
-        out_ids = []
+        fills = []
         for i, output in enumerate(outputs):
             if len(token_ids) > 1:
                 # Truncate padded </s> tokens
                 output = output[output != self.tokenizer.eos_token_id]
 
-            input_mask_pos = torch.argwhere(token_ids[i] >= stop_ids[i])
-            output_mask_pos = torch.argwhere(output >= stop_ids[i])
-            last_pos = 0
+            mask_pos = torch.argwhere(output >= stop_ids[i])
             o = []
-            for j in range(min(len(input_mask_pos), len(output_mask_pos))):
-                o.extend(token_ids[i][last_pos:input_mask_pos[j]])
-                o.extend(output[output_mask_pos[j] + 1:output_mask_pos[min(j + 1, len(output_mask_pos) - 1)]])
-                last_pos = input_mask_pos[j] + 1
-            o.extend(token_ids[i][last_pos:-1])
-            out_ids.append(o)
-        return self.tokenizer.batch_decode(out_ids, skip_special_tokens=True)
+            for j in range(len(mask_pos) - 1):
+                ids = output[mask_pos[j] + 1:mask_pos[j + 1]]
+                o.append(self.tokenizer.decode(ids, skip_special_tokens=True).strip())
+            fills.append(o)
+        return fills
+
+    def _apply_fills(self, masked_text: List[str], fills: List[List[str]]) -> List[str]:
+        """
+        Back-substitute masks in original texts with generated fills.
+
+        :param masked_text: batch of original masked texts
+        :param fills: batch of fills
+        :return: back-substituted text
+        """
+
+        texts = []
+        for m, f in zip(masked_text, fills):
+            m = m.split(' ')
+            f_idx = 0
+            for i, t in enumerate(m):
+                if t == f'<extra_id_{f_idx}>':
+                    m[i] = f[f_idx] if f_idx < len(f) else ''
+                    f_idx += 1
+            texts.append(' '.join(m).strip())
+        return texts
 
     def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
         return_str = False
@@ -133,7 +147,7 @@ class T5MaskPerturbator(PerturbatorBase):
         n_iter = (len(text) * n_variants + 1) // batch_size
         batch_it = batched((t for t in text for _ in range(n_variants)), batch_size)
         if self.verbose:
-            batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit='batch', total=n_iter)
+            batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit=' batch', total=n_iter)
 
         perturbed = []
         for b in batch_it:
@@ -143,6 +157,7 @@ class T5MaskPerturbator(PerturbatorBase):
                 t, n = self._mask_tokens(t)
                 masked.append(t)
                 n_masks.append(n)
-            masked = tokenize_sequences(masked, self.tokenizer, max_length=self.max_tokens).input_ids
-            perturbed.extend(self._generate_texts(masked, n_masks))
+            fills = self._generate_fills(masked, n_masks)
+            perturbed.extend(self._apply_fills(masked, fills))
+
         return perturbed[0] if return_str else perturbed
