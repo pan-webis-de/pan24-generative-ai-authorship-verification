@@ -122,6 +122,23 @@ def batch_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor) -> tor
 
 
 @torch.inference_mode()
+def batch_label_log_rank(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """
+    Calculate average token log rank between batches of predicted next-token logits
+    and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
+
+    :param logits: next-token logits
+    :param labels: (current) token labels as class indices
+    :return: average token rank when sorted by likelihood
+    """
+    logits = logits[..., :-1, :].contiguous()
+    labels = labels[..., 1:].contiguous()
+    matches = (logits.argsort(-1, descending=True) == labels.unsqueeze(-1)).nonzero()
+    matches = matches.view(*logits.shape[:-1], len(logits.shape))
+    return torch.log(matches[..., -1] + 1).mean(-1)
+
+
+@torch.inference_mode()
 def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch.Tensor:
     """
     Calculate per-token cross entropy between two batched logit distributions.
