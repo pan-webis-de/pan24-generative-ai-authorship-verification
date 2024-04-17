@@ -59,7 +59,7 @@ class DetectGPT(DetectorBase):
         self.base_tokenizer = load_tokenizer(base_model)
 
     @torch.inference_mode()
-    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+    def _get_score_impl(self, text: List[str]) -> List[float]:
         encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
         verbose = 'Calculating original log likelihoods' if self.verbose else None
         ll_orig = -log_likelihood(self.base_model, encoding, self.batch_size, verbose)

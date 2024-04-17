@@ -117,7 +117,7 @@ class Binoculars(DetectorBase):
         return observer_logits, performer_logits
 
     @torch.inference_mode()
-    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+    def _get_score_impl(self, text: List[str]) -> List[float]:
         encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
         log_ppl = batch_label_cross_entropy(performer_logits, encodings.input_ids)

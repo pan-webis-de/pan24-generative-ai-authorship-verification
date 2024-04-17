@@ -107,7 +107,7 @@ class UnmaskingDetector(DetectorBase):
         self.chunk_size = chunk_size
         self.n_chunks = n_chunks
 
-    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+    def _get_score_impl(self, text: List[str]) -> List[float]:
         if isinstance(text, str) or len(text) != 2:
             raise TypeError('Input must be a list of exactly two strings.')
 

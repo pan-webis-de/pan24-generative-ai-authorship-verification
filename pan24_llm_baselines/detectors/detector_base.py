@@ -22,7 +22,7 @@ class DetectorBase(ABC):
     """
 
     @abstractmethod
-    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+    def _get_score_impl(self, text: List[str]) -> List[float]:
         pass
 
     def get_score(self, text: Union[str, List[str]]) -> Union[float, Iterable[float]]:

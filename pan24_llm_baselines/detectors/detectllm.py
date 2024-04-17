@@ -53,7 +53,7 @@ class DetectLLM(DetectGPT):
         lrr = batch_label_log_rank(logits, labels)
         return (ll / lrr).tolist()
 
-    def _npr(self, text: List[str]) -> Iterable[float]:
+    def _npr(self, text: List[str]) -> List[float]:
         verbose_msg = 'Calculating original logits' if self.verbose else None
         logits, labels = self._get_logits(text, verbose_msg)
         orig_rank = batch_label_log_rank(logits, labels)
@@ -66,7 +66,7 @@ class DetectLLM(DetectGPT):
         return (pert_rank / orig_rank).tolist()
 
     @torch.inference_mode()
-    def _get_score_impl(self, text: List[str]) -> Iterable[float]:
+    def _get_score_impl(self, text: List[str]) -> List[float]:
         if self.scoring_mode == 'lrr':
             return self._lrr(text)
         return self._npr(text)
