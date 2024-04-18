@@ -111,13 +111,16 @@ class Binoculars(DetectorBase):
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
+    def _normalize_scores(self, scores):
+        return torch.sigmoid(16 * scores - 12.5)
+
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> List[float]:
         encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
         log_ppl = batch_label_cross_entropy(performer_logits, encodings.input_ids)
         x_ppl = batch_cross_entropy(observer_logits, performer_logits.to(self.observer_model.device))
-        return (log_ppl / x_ppl).tolist()
+        return log_ppl / x_ppl
 
     @torch.inference_mode()
     def _predict_impl(self, text: List[str]) -> List[bool]:
@@ -127,4 +130,4 @@ class Binoculars(DetectorBase):
             threshold = self.BINOCULARS_ACCURACY_THRESHOLD
         else:
             raise ValueError(f'Invalid scoring mode: {self.scoring_mode}')
-        return [s > threshold for s in self._get_score_impl(text)]
+        return [s < threshold for s in self._get_score_impl(text)]

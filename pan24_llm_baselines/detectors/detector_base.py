@@ -12,43 +12,78 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
 from typing import List, Union
+
+import torch
+import numpy as np
 
 __all__ = ['DetectorBase']
 
 
-class DetectorBase(ABC):
+class DetectorBase:
     """
     LLM detector base class.
     """
 
-    @abstractmethod
+    def _normalize_scores(self, scores):
+        """
+        Normalize raw scores to the range [0, 1], whereby 1 indicates the highest probability
+        of a text being machine-generated.
+
+        The input is of the same type as the output of :meth:`_predict_impl`.
+
+        By default, this is the identity function, which should be overridden by subclasses as needed.
+
+        :param scores: unnormalized input scores
+        :return: normalized output scores
+        """
+        return scores
+
     def _get_score_impl(self, text: List[str]) -> List[float]:
-        pass
-
-    def get_score(self, text: Union[str, List[str]]) -> Union[float, List[float]]:
         """
-        Return a prediction score indicating the "humanness" of the input text.
-
-        :param text: input text or list of input texts
-        :return: humanness score(s)
+        Scoring implementation. To be overridden.
+        The function should return a list of floats, a Torch tensor, or a Numpy array.
         """
-        return_str = isinstance(text, str)
-        text = self._get_score_impl([text] if return_str else text)
-        return text[0] if return_str else text
+        raise NotImplementedError('Detector does not supporting scoring.')
 
-    @abstractmethod
+    def get_score(self, text: Union[str, List[str]], normalize: bool = True) -> Union[float, List[float]]:
+        """
+        Return scores indicating the probability of the input text(s) being machine-generated.
+
+        If ``normalize`` is ``False``, unnormalized raw scores are returned instead. Interpretation
+        of these scores is implementation-dependent.
+
+        :param text: input text or batch of input texts
+        :param normalize: normalize scores to represent probabilities in the range [0, 1]
+        :return: probability of the input text being machine-generated
+        """
+        scores = self._get_score_impl([text] if isinstance(text, str) else text)
+        if normalize:
+            scores = self._normalize_scores(scores)
+        return _to_pytype(scores[0]) if isinstance(text, str) else _to_pytype(scores)
+
     def _predict_impl(self, text: List[str]) -> List[bool]:
-        pass
+        """
+        Prediction implementation. To be overridden.
+        The function should return a list of bools, a Torch tensor, or a Numpy array.
+        """
+        raise NotImplementedError('Detector does not supporting binary prediction.')
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, List[bool]]:
         """
-        Make a prediction whether the input text was written by a human.
+        Make a prediction whether the input text was written by a machine.
 
-        :param text: input text or list of input texts
-        :return: boolean values indicating whether inputs are classified as human
+        :param text: input text or batch of input texts
+        :return: boolean classifications of whether inputs are likely machine-generated
         """
-        return_str = isinstance(text, str)
-        text = self._predict_impl([text] if return_str else text)
-        return text[0] if return_str else text
+        pred = self._predict_impl([text] if isinstance(text, str) else text)
+        return _to_pytype(pred[0]) if isinstance(text, str) else _to_pytype(pred)
+
+
+def _to_pytype(data):
+    """
+    Convert Torch Tensor or Numpy array to a Python type if necessary.
+    """
+    if isinstance(data, torch.Tensor) or isinstance(data, np.ndarray):
+        return data.tolist()
+    return data

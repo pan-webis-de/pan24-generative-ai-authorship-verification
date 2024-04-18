@@ -125,4 +125,4 @@ class UnmaskingDetector(DetectorBase):
         x_right = chunks_to_matrix(chunks_right, most_frequent)
 
         scores = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
-        return np.sum(scores) / len(scores)
+        return 1.0 - (np.sum(scores) / len(scores))

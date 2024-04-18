@@ -25,6 +25,9 @@ class PerturbatorBase(ABC):
 
     @abstractmethod
     def _perturb_impl(self, text: List[str], n_variants) -> List[str]:
+        """
+        Perturbation implementation. To be overridden.
+        """
         pass
 
     def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:

@@ -80,7 +80,6 @@ class DetectLLM(DetectGPT):
         verbose_msg = 'Calculating perturbed logits' if self.verbose else None
         logits, labels = self._get_logits(perturbed, verbose_msg)
         pert_rank = batch_label_log_rank(logits, labels).mean(-1)
-
         return (pert_rank / orig_rank).tolist()
 
     @torch.inference_mode()

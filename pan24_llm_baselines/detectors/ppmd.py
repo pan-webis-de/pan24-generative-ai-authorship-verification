@@ -43,4 +43,4 @@ class PPMdDetector(DetectorBase):
         cx = len(pyppmd.compress(text[0]))
         cy = len(pyppmd.compress(text[1]))
         cxy = len(pyppmd.compress(text[0] + text[1]))
-        return 1.0 - (cx + cy - cxy) / np.sqrt(cx * cy)
+        return (cx + cy - cxy) / np.sqrt(cx * cy)
