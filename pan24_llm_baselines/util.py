@@ -176,7 +176,7 @@ def log_likelihood(model: transformers.PreTrainedModel,
         return model(**encoding, labels=encoding.input_ids).loss.cpu().unsqueeze(0)
 
     ce_vals = [batch_label_cross_entropy(lo.cpu(), la.cpu())
-               for lo, la in model_batch_forward(model, encoding, batch_size, verbose_msg)]
+               for lo, la, _ in model_batch_forward(model, encoding, batch_size, verbose_msg)]
     return torch.vstack(ce_vals)
 
 
@@ -184,7 +184,7 @@ def log_likelihood(model: transformers.PreTrainedModel,
 def model_batch_forward(model: transformers.PreTrainedModel,
                         encoding: transformers.BatchEncoding,
                         batch_size: Optional[int] = None,
-                        verbose_msg: str = None) -> Iterable[Tuple[torch.Tensor, torch.Tensor]]:
+                        verbose_msg: str = None) -> Iterable[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
     """
     Batched forward pass of a model on input data.
 
@@ -192,7 +192,7 @@ def model_batch_forward(model: transformers.PreTrainedModel,
     :param encoding: input encoding
     :param batch_size: batch size
     :param verbose_msg: show progress bar with message during batched model prediction
-    :return: iterator of batched output logits, input labels
+    :return: iterator of batched output logits, input labels, attention mask
     """
     batch_size = batch_size or len(encoding.input_ids)
     batch_it = range(0, len(encoding.input_ids), batch_size)
@@ -201,4 +201,4 @@ def model_batch_forward(model: transformers.PreTrainedModel,
                         total=(len(encoding.input_ids) + 1) // batch_size, unit=' batch')
     for b in batch_it:
         yield (model(**{k: v[b:b + batch_size] for k, v in encoding.items()}).logits,
-               encoding.input_ids[b:b + batch_size])
+               encoding.input_ids[b:b + batch_size], encoding.attention_mask[b:b + batch_size])
