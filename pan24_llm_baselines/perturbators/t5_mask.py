@@ -141,12 +141,7 @@ class T5MaskPerturbator(PerturbatorBase):
             texts.append(' '.join(m).strip())
         return texts
 
-    def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
-        return_str = False
-        if isinstance(text, str):
-            text = [text]
-            return_str = n_variants == 1
-
+    def _perturb_impl(self, text: List[str], n_variants: int) -> List[str]:
         batch_size = self.batch_size if self.batch_size else len(text)
         n_iter = (len(text) * n_variants + 1) // batch_size
         batch_it = batched((t for t in text for _ in range(n_variants)), batch_size)
@@ -164,4 +159,4 @@ class T5MaskPerturbator(PerturbatorBase):
             fills = self._generate_fills(masked, n_masks)
             perturbed.extend(self._apply_fills(masked, fills))
 
-        return perturbed[0] if return_str else perturbed
+        return perturbed

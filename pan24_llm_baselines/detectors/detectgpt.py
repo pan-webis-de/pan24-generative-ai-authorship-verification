@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, List, Union
+from typing import List
 
 import torch
 
@@ -80,6 +80,3 @@ class DetectGPT(DetectorBase):
         # Map scores to [0, 1], scale to 1/10 beforehand to prevent saturation
         score = 1.0 / (1.0 + torch.exp(-score / 10.0))
         return score.tolist()
-
-    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        raise NotImplemented

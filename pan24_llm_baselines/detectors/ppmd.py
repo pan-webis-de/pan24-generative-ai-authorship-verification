@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, List, Union
+from typing import List
 
 import numpy as np
 import pyppmd
@@ -44,6 +44,3 @@ class PPMdDetector(DetectorBase):
         cy = len(pyppmd.compress(text[1]))
         cxy = len(pyppmd.compress(text[0] + text[1]))
         return 1.0 - (cx + cy - cxy) / np.sqrt(cx * cy)
-
-    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        raise NotImplemented

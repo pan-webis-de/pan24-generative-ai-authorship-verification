@@ -24,6 +24,9 @@ class PerturbatorBase(ABC):
     """
 
     @abstractmethod
+    def _perturb_impl(self, text: List[str], n_variants) -> List[str]:
+        pass
+
     def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
         """
         Perturb a given text by changing parts of the input.
@@ -32,3 +35,6 @@ class PerturbatorBase(ABC):
         :param n_variants: number of perturbation variants
         :return: perturbed text
         """
+        return_str = isinstance(text, str)
+        text = self._perturb_impl([text] if return_str else text, n_variants)
+        return text[0] if return_str else text

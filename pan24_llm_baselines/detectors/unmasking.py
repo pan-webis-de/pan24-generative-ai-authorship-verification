@@ -15,7 +15,7 @@
 from collections import defaultdict
 from random import randint
 import warnings
-from typing import Iterable, List, Union
+from typing import List
 
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
@@ -126,6 +126,3 @@ class UnmaskingDetector(DetectorBase):
 
         scores = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
         return np.sum(scores) / len(scores)
-
-    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        raise NotImplemented

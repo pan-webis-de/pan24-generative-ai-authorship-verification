@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Iterable, List, Literal, Tuple, Union
+from typing import List, Literal, Tuple
 
 import torch
 import transformers
@@ -119,10 +119,12 @@ class Binoculars(DetectorBase):
         x_ppl = batch_cross_entropy(observer_logits, performer_logits.to(self.observer_model.device))
         return (log_ppl / x_ppl).tolist()
 
-    def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        threshold = self.BINOCULARS_ACCURACY_THRESHOLD
+    @torch.inference_mode()
+    def _predict_impl(self, text: List[str]) -> List[bool]:
         if self.scoring_mode == 'low-fpr':
             threshold = self.BINOCULARS_FPR_THRESHOLD
-        pred = [s > threshold for s in self._get_score_impl(text)]
-        return pred[0] if isinstance(text, str) else pred
-
+        elif self.scoring_mode == 'accuracy':
+            threshold = self.BINOCULARS_ACCURACY_THRESHOLD
+        else:
+            raise ValueError(f'Invalid scoring mode: {self.scoring_mode}')
+        return [s > threshold for s in self._get_score_impl(text)]

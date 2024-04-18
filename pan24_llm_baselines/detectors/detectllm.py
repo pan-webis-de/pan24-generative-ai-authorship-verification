@@ -87,4 +87,6 @@ class DetectLLM(DetectGPT):
     def _get_score_impl(self, text: List[str]) -> List[float]:
         if self.scoring_mode == 'lrr':
             return self._lrr(text)
-        return self._npr(text)
+        if self.scoring_mode == 'npr':
+            return self._npr(text)
+        raise ValueError(f'Invalid scoring mode: {self.scoring_mode}')
