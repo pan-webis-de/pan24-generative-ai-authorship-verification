@@ -59,6 +59,7 @@ class Binoculars(DetectorBase):
     BINOCULARS_FPR_THRESHOLD = 0.8536432310785527       # optimized for low-fpr [chosen at 0.01%]
 
     def __init__(self,
+                 mode: Literal['low-fpr', 'accuracy'] = 'low-fpr',
                  observer_name_or_path='tiiuae/falcon-7b',
                  performer_name_or_path='tiiuae/falcon-7b-instruct',
                  device1: TorchDeviceMapType = 'auto',
@@ -79,9 +80,7 @@ class Binoculars(DetectorBase):
         :param model_args: additional model args
         """
 
-        self.threshold = None
-        self.change_mode(mode)
-
+        self.scoring_mode = mode
         self.observer_model = load_model(
             observer_name_or_path,
             device_map=device1,
@@ -103,14 +102,6 @@ class Binoculars(DetectorBase):
 
         self.max_token_observed = max_token_observed
 
-    def change_mode(self, mode: str) -> None:
-        if mode == 'low-fpr':
-            self.threshold = self.BINOCULARS_FPR_THRESHOLD
-        elif mode == 'accuracy':
-            self.threshold = self.BINOCULARS_ACCURACY_THRESHOLD
-        else:
-            raise ValueError(f'Invalid mode: {mode}')
-
     @torch.inference_mode()
     def _get_logits(self, encodings: transformers.BatchEncoding) -> Tuple[torch.Tensor, torch.Tensor]:
         observer_logits = self.observer_model(**encodings.to(self.observer_model.device)).logits
@@ -126,8 +117,12 @@ class Binoculars(DetectorBase):
         observer_logits, performer_logits = self._get_logits(encodings)
         log_ppl = batch_label_cross_entropy(performer_logits, encodings.input_ids)
         x_ppl = batch_cross_entropy(observer_logits, performer_logits.to(self.observer_model.device))
-        binoculars_scores = (log_ppl / x_ppl).cpu().float().numpy()
-        return binoculars_scores
+        return (log_ppl / x_ppl).tolist()
 
     def predict(self, text: Union[str, List[str]]) -> Union[bool, Iterable[bool]]:
-        return self._get_score_impl(text) > self.threshold
+        threshold = self.BINOCULARS_ACCURACY_THRESHOLD
+        if self.scoring_mode == 'low-fpr':
+            threshold = self.BINOCULARS_FPR_THRESHOLD
+        pred = [s > threshold for s in self._get_score_impl(text)]
+        return pred[0] if isinstance(text, str) else pred
+
