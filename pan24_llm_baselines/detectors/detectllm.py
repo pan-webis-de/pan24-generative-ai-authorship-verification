@@ -1,8 +1,26 @@
-from typing import List, Literal
+# Copyright 2024 Janek Bevendorff, Webis
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from typing import List, Literal, Tuple
+
+import torch
 
 from pan24_llm_baselines.detectors.detectgpt import DetectGPT
 from pan24_llm_baselines.perturbators.perturbator_base import PerturbatorBase
 from pan24_llm_baselines.util import *
+
+__all__ = ['DetectLLM']
 
 
 class DetectLLM(DetectGPT):
@@ -41,7 +59,7 @@ class DetectLLM(DetectGPT):
                          batch_size, verbose, **base_model_args)
         self.scoring_mode = scoring_mode
 
-    def _get_logits(self, text: List[str], verbose_msg: str):
+    def _get_logits(self, text: List[str], verbose_msg: str) -> Tuple[torch.Tensor, torch.Tensor]:
         encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
         logits = [l.cpu() for l, _ in model_batch_forward(self.base_model, encoding, self.batch_size, verbose_msg)]
         return torch.vstack(logits), encoding.input_ids.cpu()

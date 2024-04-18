@@ -30,10 +30,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import List, Literal, Tuple
+from typing import Iterable, List, Literal, Tuple, Union
+
+import torch
+import transformers
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
 from pan24_llm_baselines.util import *
+
+__all__ = ['Binoculars']
 
 
 class Binoculars(DetectorBase):
@@ -58,17 +63,16 @@ class Binoculars(DetectorBase):
                  performer_name_or_path='tiiuae/falcon-7b-instruct',
                  device1: TorchDeviceMapType = 'auto',
                  device2: TorchDeviceMapType = 'auto',
-                 mode: Literal['low-fpr', 'accuracy'] = 'low-fpr',
                  max_token_observed=512,
                  use_flash_attn=False,
                  quantization_bits=None,
                  **model_args):
         """
+        :param mode: prediction mode
         :param observer_name_or_path: observer model
         :param performer_name_or_path: performer model
         :param device1: observer device
         :param device2: performer device
-        :param mode: prediction mode
         :param max_token_observed: max number of tokens to analyze
         :param use_flash_attn: use flash attention
         :param quantization_bits: quantize model

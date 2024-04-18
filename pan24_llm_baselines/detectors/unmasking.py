@@ -25,6 +25,8 @@ from sklearn.utils import shuffle
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
 
+__all__ = ['UnmaskingDetector']
+
 warnings.simplefilter('ignore', category=ConvergenceWarning)
 
 

@@ -19,6 +19,8 @@ import pyppmd
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
 
+__all__ = ['PPMdDetector']
+
 
 class PPMdDetector(DetectorBase):
     """

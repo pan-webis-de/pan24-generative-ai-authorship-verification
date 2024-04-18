@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import Iterable, List, Union
+
+import torch
 
 from pan24_llm_baselines.detectors.detector_base import DetectorBase
 from pan24_llm_baselines.perturbators.perturbator_base import PerturbatorBase
 from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
 from pan24_llm_baselines.util import *
+
+__all__ = ['DetectGPT']
 
 
 class DetectGPT(DetectorBase):

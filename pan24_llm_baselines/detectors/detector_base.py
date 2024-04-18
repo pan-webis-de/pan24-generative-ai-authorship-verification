@@ -15,6 +15,8 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, List, Union
 
+__all__ = ['DetectorBase']
+
 
 class DetectorBase(ABC):
     """

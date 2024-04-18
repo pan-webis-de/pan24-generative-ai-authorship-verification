@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .binoculars import Binoculars
-from .detectllm import DetectLLM
-from .detectgpt import DetectGPT
-from .ppmd import PPMdDetector
-from .unmasking import UnmaskingDetector
+from .binoculars import *
+from .detectllm import *
+from .detectgpt import *
+from .ppmd import *
+from .unmasking import *
