@@ -71,8 +71,7 @@ class DetectLLM(DetectGPT):
 
     def _get_logits(self, text: List[str], verbose_msg: str) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
-        logits = [l.cpu() for l, _, __ in model_batch_forward(self.base_model, encoding, self.batch_size, verbose_msg)]
-        return torch.vstack(logits), encoding.input_ids.cpu(), encoding.attention_mask.cpu()
+        yield from model_batch_forward(self.base_model, encoding, self.batch_size, verbose_msg)
 
     def _normalize_scores(self, scores):
         if self.scoring_mode == 'lrr':
@@ -83,20 +82,28 @@ class DetectLLM(DetectGPT):
 
     def _lrr(self, text: List[str]) -> torch.Tensor:
         verbose_msg = 'Calculating logits' if self.verbose else None
-        logits, labels, mask = self._get_logits(text, verbose_msg)
-        ll = batch_label_cross_entropy(logits, labels, mask)
-        lrr = batch_label_log_rank(logits, labels, mask)
-        return ll / lrr
+        ll = []
+        lrr = []
+        for logits, labels, mask in self._get_logits(text, verbose_msg):
+            ll.append(seq_label_cross_entropy(logits, labels, mask).cpu())
+            lrr.append(seq_label_log_rank(logits, labels, mask).cpu())
+        return torch.cat(ll) / torch.cat(lrr)
 
     def _npr(self, text: List[str]) -> torch.Tensor:
         perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
 
         verbose_msg = 'Calculating logit distribution' if self.verbose else None
-        logits, labels, mask = self._get_logits(text + perturbed, verbose_msg)
+        orig_rank = []
+        pert_rank = []
+        for logits, labels, mask in self._get_logits(text + perturbed, verbose_msg):
+            text_idx = len(text) - len(orig_rank)
+            if text_idx > 0:
+                orig_rank.append(seq_label_log_rank(logits[:text_idx], labels[:text_idx], mask[:text_idx]).cpu())
+            if text_idx < logits.shape[0]:
+                pert_rank.append(seq_label_log_rank(logits[text_idx:], labels[text_idx:], mask[text_idx:]).cpu())
 
-        orig_rank = batch_label_log_rank(logits[:len(text)], labels[:len(text)], mask[:len(text)])
-        pert_rank = batch_label_log_rank(logits[len(text):], labels[len(text):], mask[len(text):])
-        pert_rank = pert_rank.view(len(text), self.n_samples).mean(-1)
+        orig_rank = torch.cat(orig_rank)
+        pert_rank = torch.cat(pert_rank).view(-1, self.n_samples).mean(-1)
         return pert_rank / orig_rank
 
     @torch.inference_mode()

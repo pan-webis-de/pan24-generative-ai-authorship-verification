@@ -23,13 +23,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 __all__ = [
     'AutoModelClsType',
     'TorchDeviceMapType',
-    'batch_cross_entropy',
-    'batch_label_log_rank',
-    'batch_label_cross_entropy',
-    'entropy',
+    'seq_cross_entropy',
+    'seq_label_log_rank',
+    'seq_label_cross_entropy',
     'load_model',
     'load_tokenizer',
-    'batch_log_likelihood',
+    'batch_seq_log_likelihood',
     'model_batch_forward',
     'tokenize_sequences',
 ]
@@ -101,46 +100,9 @@ def tokenize_sequences(batch: Union[str, Iterable[str]],
 
 
 @torch.inference_mode()
-def entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Tensor:
+def seq_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
-    Calculate entropy of predicted logits.
-
-    :param p_logits: predicted logits
-    :param discard_last: discard last logit
-    :return: logit softmax entropy
-    """
-
-    if discard_last:
-        p_logits = p_logits[..., :-1, :]
-    return -(F.softmax(p_logits, -1) * F.log_softmax(p_logits, -1)).sum(-1).mean(-1)
-
-
-@torch.inference_mode()
-def batch_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-    """
-    Calculate sequence cross-entropy values between batches of predicted next-token logits
-    and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
-
-    :param logits: next-token logits
-    :param labels: (current) token labels as class indices
-    :param mask: padding mask
-    :return: per-token cross-entropy values
-    """
-    logits = logits[..., :-1, :].contiguous()
-    labels = labels[..., 1:].contiguous()
-    mask = mask[..., 1:].contiguous()
-    batch_size, seq_length, vocab_size = logits.shape
-
-    ll = F.cross_entropy(logits.view(batch_size * seq_length, vocab_size),
-                         labels.view(batch_size * seq_length), reduction='none')
-    ll = ll.view(batch_size, seq_length)
-    return (ll * mask).sum(-1) / mask.sum(-1)
-
-
-@torch.inference_mode()
-def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-    """
-    Calculate cross entropy between two batched sequences of logit distributions.
+    Calculate cross entropy between two batches of sequences of logit distributions.
 
     :param p_logits: "true" logits
     :param q_logits: predicted logits
@@ -155,9 +117,30 @@ def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: to
 
 
 @torch.inference_mode()
-def batch_label_log_rank(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+def seq_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
-    Calculate average sequence token log rank between batches of predicted next-token logits
+    Calculate sequence cross-entropy values between a batch of predicted next-token logits
+    and a batch of token ids. ``logits`` and ``labels`` will be shifted by one to match.
+
+    :param logits: next-token logits
+    :param labels: (current) token labels as class indices
+    :param mask: padding mask
+    :return: average token cross-entropy values
+    """
+    logits = logits[..., :-1, :].contiguous()
+    mask = mask[..., 1:].contiguous().bool()
+    labels = labels[..., 1:].contiguous()
+    labels = labels.where(mask, -100)
+
+    _, seq_length, vocab_size = logits.shape
+    ll = F.cross_entropy(logits.view(-1, vocab_size), labels.view(-1), reduction='none', ignore_index=-100)
+    return ll.view(-1, seq_length).sum(-1) / mask.sum(-1)
+
+
+@torch.inference_mode()
+def seq_label_log_rank(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+    """
+    Calculate average sequence token log rank between two batches of predicted next-token logits
     and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
 
     :param logits: next-token logits
@@ -178,30 +161,31 @@ def batch_label_log_rank(logits: torch.Tensor, labels: torch.Tensor, mask: torch
 
 
 @torch.inference_mode()
-def batch_log_likelihood(model: transformers.PreTrainedModel,
-                         encoding: transformers.BatchEncoding,
-                         batch_size: Optional[int] = None,
-                         verbose_msg: str = None) -> torch.Tensor:
+def batch_seq_log_likelihood(model: transformers.PreTrainedModel,
+                             encoding: transformers.BatchEncoding,
+                             batch_size: Optional[int] = None,
+                             verbose: bool = False) -> torch.Tensor:
     """
-    Calculate average sequence negative log loss / model log perplexity on batches of input
+    Calculate average sequence negative log loss / model log perplexity on a batch of input
     sequences given a causal language model.
 
-    Batch summations for entropy calculation are performed on the CPU to avoid GPU memory blow-up.
+    Likelihood estimations are performed in mini batches of size ``batch_size <= len(input batch size)``
+    on the model's GPU device.
 
     :param model: causal LM model
     :param encoding: input encoding
-    :param batch_size: batch size
-    :param verbose_msg: show progress bar with message during batched model prediction
+    :param batch_size: mini batch size
+    :param verbose: show progress bar
     :return: per-token log likelihood according to the model
     """
-
     # Simply return forward loss if only one sequence given
     if encoding.input_ids.shape[0] == 1:
         return model(**encoding, labels=encoding.input_ids).loss.cpu().unsqueeze(0)
 
-    ce_vals = [batch_label_cross_entropy(lo.cpu(), la.cpu(), ma.cpu())
+    verbose_msg = 'Estimating log likelihoods' if verbose else None
+    ce_vals = [seq_label_cross_entropy(lo, la, ma).cpu()
                for lo, la, ma in model_batch_forward(model, encoding, batch_size, verbose_msg)]
-    return torch.vstack(ce_vals)
+    return torch.cat(ce_vals)
 
 
 @torch.inference_mode()

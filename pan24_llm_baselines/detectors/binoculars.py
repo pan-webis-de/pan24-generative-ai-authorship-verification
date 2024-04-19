@@ -118,10 +118,10 @@ class Binoculars(DetectorBase):
     def _get_score_impl(self, text: List[str]) -> torch.Tensor:
         encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device)
         observer_logits, performer_logits = self._get_logits(encodings)
-        log_ppl = batch_label_cross_entropy(performer_logits, encodings.input_ids, encodings.attention_mask)
-        x_ppl = batch_cross_entropy(observer_logits,
-                                    performer_logits.to(self.observer_model.device),
-                                    encodings.attention_mask)
+        log_ppl = seq_label_cross_entropy(performer_logits, encodings.input_ids, encodings.attention_mask)
+        x_ppl = seq_cross_entropy(observer_logits,
+                                  performer_logits.to(self.observer_model.device),
+                                  encodings.attention_mask)
         return log_ppl / x_ppl
 
     @property

@@ -63,19 +63,17 @@ class DetectGPT(DetectorBase):
         self.base_tokenizer = load_tokenizer(base_model)
 
     def _normalize_scores(self, scores):
+        return scores
         return torch.sigmoid(18 * scores.to(torch.float64) - 3.5)
 
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> List[float]:
-        encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
-        verbose = 'Calculating original log likelihoods' if self.verbose else None
-        ll_orig = -batch_log_likelihood(self.base_model, encoding, self.batch_size, verbose)
-
         perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
-        encoding = tokenize_sequences(perturbed, self.base_tokenizer, self.base_model.device, 512)
-        verbose = 'Calculating perturbed log likelihoods' if self.verbose else None
-        ll_pert = -batch_log_likelihood(self.base_model, encoding, self.batch_size, verbose)
-        ll_pert = ll_pert.view(ll_orig.shape[0], self.n_samples)
+
+        encoding = tokenize_sequences(text + perturbed, self.base_tokenizer, self.base_model.device, 512)
+        ll = -batch_seq_log_likelihood(self.base_model, encoding, self.batch_size, self.verbose)
+        ll_orig, ll_pert = ll[:len(text)], ll[len(text):]
+        ll_pert = ll_pert.view(len(text), self.n_samples)
         ll_pert_std = ll_pert.std(-1, correction=1)
         ll_pert = ll_pert.mean(-1)
 
