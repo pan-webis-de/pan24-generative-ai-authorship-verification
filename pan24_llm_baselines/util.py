@@ -29,7 +29,7 @@ __all__ = [
     'entropy',
     'load_model',
     'load_tokenizer',
-    'log_likelihood',
+    'batch_log_likelihood',
     'model_batch_forward',
     'tokenize_sequences',
 ]
@@ -116,66 +116,77 @@ def entropy(p_logits: torch.Tensor, discard_last: bool = True) -> torch.Tensor:
 
 
 @torch.inference_mode()
-def batch_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+def batch_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
-    Calculate per-token cross-entropy values between batches of predicted next-token logits
+    Calculate sequence cross-entropy values between batches of predicted next-token logits
     and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
 
     :param logits: next-token logits
     :param labels: (current) token labels as class indices
+    :param mask: padding mask
     :return: per-token cross-entropy values
     """
     logits = logits[..., :-1, :].contiguous()
     labels = labels[..., 1:].contiguous()
+    mask = mask[..., 1:].contiguous()
     batch_size, seq_length, vocab_size = logits.shape
 
     ll = F.cross_entropy(logits.view(batch_size * seq_length, vocab_size),
                          labels.view(batch_size * seq_length), reduction='none')
-    return ll.view(batch_size, seq_length).mean(-1)
+    ll = ll.view(batch_size, seq_length)
+    return (ll * mask).sum(-1) / mask.sum(-1)
 
 
 @torch.inference_mode()
-def batch_label_log_rank(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
-    Calculate average token log rank between batches of predicted next-token logits
-    and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
-
-    :param logits: next-token logits
-    :param labels: (current) token labels as class indices
-    :return: average token rank when sorted by likelihood
-    """
-    logits = logits[..., :-1, :].contiguous()
-    labels = labels[..., 1:].contiguous()
-    matches = (logits.argsort(-1, descending=True) == labels.unsqueeze(-1)).nonzero()
-    matches = matches.view(*logits.shape[:-1], len(logits.shape))
-    return torch.log(matches[..., -1] + 1).mean(-1)
-
-
-@torch.inference_mode()
-def batch_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch.Tensor:
-    """
-    Calculate per-token cross entropy between two batched logit distributions.
+    Calculate cross entropy between two batched sequences of logit distributions.
 
     :param p_logits: "true" logits
     :param q_logits: predicted logits
+    :param mask: padding mask
     :return: per-token cross entropy
     """
     _, seq_length, vocab_size = p_logits.shape
     p_prob = F.softmax(p_logits, -1).view(-1, vocab_size)
     q_logits = q_logits.view(-1, vocab_size)
-    return F.cross_entropy(input=q_logits, target=p_prob, reduction='none').view(-1, seq_length).mean(-1)
+    ce = F.cross_entropy(input=q_logits, target=p_prob, reduction='none').view(-1, seq_length)
+    return (ce * mask).sum(-1) / mask.sum(-1)
 
 
 @torch.inference_mode()
-def log_likelihood(model: transformers.PreTrainedModel,
-                   encoding: transformers.BatchEncoding,
-                   batch_size: Optional[int] = None,
-                   verbose_msg: str = None) -> torch.Tensor:
+def batch_label_log_rank(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """
-    Calculate per-token negative log loss / model log perplexity on a batch of input
+    Calculate average sequence token log rank between batches of predicted next-token logits
+    and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
+
+    :param logits: next-token logits
+    :param labels: (current) token labels as class indices
+    :param mask: padding mask
+    :return: average token rank when sorted by likelihood
+    """
+    logits = logits[..., :-1, :].contiguous()
+    labels = labels[..., 1:].contiguous()
+    mask = mask[..., 1:].contiguous().bool()
+
+    matches = logits.argsort(-1, descending=True)
+    matches = (matches == labels.unsqueeze(-1)).nonzero()
+    matches = matches.where(mask.view(-1, 1), 0)
+    matches = matches[..., -1].view(logits.shape[:2])
+
+    return torch.log(matches + 1).sum(-1) / mask.sum(-1)
+
+
+@torch.inference_mode()
+def batch_log_likelihood(model: transformers.PreTrainedModel,
+                         encoding: transformers.BatchEncoding,
+                         batch_size: Optional[int] = None,
+                         verbose_msg: str = None) -> torch.Tensor:
+    """
+    Calculate average sequence negative log loss / model log perplexity on batches of input
     sequences given a causal language model.
 
-    If ``batch_size != 1``, calculations are performed on the CPU to avoid GPU memory blow-up.
+    Batch summations for entropy calculation are performed on the CPU to avoid GPU memory blow-up.
 
     :param model: causal LM model
     :param encoding: input encoding
@@ -184,12 +195,12 @@ def log_likelihood(model: transformers.PreTrainedModel,
     :return: per-token log likelihood according to the model
     """
 
-    # Simply return forward loss if batch size == 1
+    # Simply return forward loss if only one sequence given
     if encoding.input_ids.shape[0] == 1:
         return model(**encoding, labels=encoding.input_ids).loss.cpu().unsqueeze(0)
 
-    ce_vals = [batch_label_cross_entropy(lo.cpu(), la.cpu())
-               for lo, la, _ in model_batch_forward(model, encoding, batch_size, verbose_msg)]
+    ce_vals = [batch_label_cross_entropy(lo.cpu(), la.cpu(), ma.cpu())
+               for lo, la, ma in model_batch_forward(model, encoding, batch_size, verbose_msg)]
     return torch.vstack(ce_vals)
 
 
@@ -199,11 +210,11 @@ def model_batch_forward(model: transformers.PreTrainedModel,
                         batch_size: Optional[int] = None,
                         verbose_msg: str = None) -> Iterable[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
     """
-    Batched forward pass of a model on input data.
+    Batched model forward pass on input data.
 
     :param model: causal LM model
     :param encoding: input encoding
-    :param batch_size: batch size
+    :param batch_size: batch size (``None`` for single batch)
     :param verbose_msg: show progress bar with message during batched model prediction
     :return: iterator of batched output logits, input labels, attention mask
     """

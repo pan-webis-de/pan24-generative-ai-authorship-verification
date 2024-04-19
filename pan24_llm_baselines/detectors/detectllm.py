@@ -59,33 +59,49 @@ class DetectLLM(DetectGPT):
                          batch_size, verbose, **base_model_args)
         self.scoring_mode = scoring_mode
 
-    def _get_logits(self, text: List[str], verbose_msg: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    @property
+    def scoring_mode(self):
+        return self._scoring_mode
+
+    @scoring_mode.setter
+    def scoring_mode(self, mode):
+        if mode not in ['lrr', 'npr']:
+            raise ValueError(f'Invalid scoring mode: {mode}')
+        self._scoring_mode = mode
+
+    def _get_logits(self, text: List[str], verbose_msg: str) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         encoding = tokenize_sequences(text, self.base_tokenizer, self.base_model.device, 512)
-        logits = [l.cpu() for l, _ in model_batch_forward(self.base_model, encoding, self.batch_size, verbose_msg)]
-        return torch.vstack(logits), encoding.input_ids.cpu()
+        logits = [l.cpu() for l, _, __ in model_batch_forward(self.base_model, encoding, self.batch_size, verbose_msg)]
+        return torch.vstack(logits), encoding.input_ids.cpu(), encoding.attention_mask.cpu()
 
-    def _lrr(self, text: List[str]) -> List[float]:
+    def _normalize_scores(self, scores):
+        if self.scoring_mode == 'lrr':
+            return torch.sigmoid(10 * (scores - 2))
+        if self.scoring_mode == 'npr':
+            return torch.sigmoid(10 * (scores - 1.17))
+        return scores
+
+    def _lrr(self, text: List[str]) -> torch.Tensor:
         verbose_msg = 'Calculating logits' if self.verbose else None
-        logits, labels = self._get_logits(text, verbose_msg)
-        ll = batch_label_cross_entropy(logits, labels)
-        lrr = batch_label_log_rank(logits, labels)
-        return (ll / lrr).tolist()
+        logits, labels, mask = self._get_logits(text, verbose_msg)
+        ll = batch_label_cross_entropy(logits, labels, mask)
+        lrr = batch_label_log_rank(logits, labels, mask)
+        return ll / lrr
 
-    def _npr(self, text: List[str]) -> List[float]:
-        verbose_msg = 'Calculating original logits' if self.verbose else None
-        logits, labels = self._get_logits(text, verbose_msg)
-        orig_rank = batch_label_log_rank(logits, labels)
-
+    def _npr(self, text: List[str]) -> torch.Tensor:
         perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
-        verbose_msg = 'Calculating perturbed logits' if self.verbose else None
-        logits, labels = self._get_logits(perturbed, verbose_msg)
-        pert_rank = batch_label_log_rank(logits, labels).mean(-1)
-        return (pert_rank / orig_rank).tolist()
+
+        verbose_msg = 'Calculating logit distribution' if self.verbose else None
+        logits, labels, mask = self._get_logits(text + perturbed, verbose_msg)
+
+        orig_rank = batch_label_log_rank(logits[:len(text)], labels[:len(text)], mask[:len(text)])
+        pert_rank = batch_label_log_rank(logits[len(text):], labels[len(text):], mask[len(text):])
+        pert_rank = pert_rank.view(len(text), self.n_samples).mean(-1)
+        return pert_rank / orig_rank
 
     @torch.inference_mode()
-    def _get_score_impl(self, text: List[str]) -> List[float]:
+    def _get_score_impl(self, text: List[str]) -> torch.Tensor:
         if self.scoring_mode == 'lrr':
             return self._lrr(text)
         if self.scoring_mode == 'npr':
             return self._npr(text)
-        raise ValueError(f'Invalid scoring mode: {self.scoring_mode}')

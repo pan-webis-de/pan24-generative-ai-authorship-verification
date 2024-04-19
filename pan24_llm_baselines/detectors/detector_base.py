@@ -50,8 +50,10 @@ class DetectorBase:
         """
         Return scores indicating the probability of the input text(s) being machine-generated.
 
-        If ``normalize`` is ``False``, unnormalized raw scores are returned instead. Interpretation
-        of these scores is implementation-dependent.
+        Scores are normalized to represent valid probability values with higher values meaning higher confidence
+        in the texts being machine-generated. However, scores between different detector implementations are not
+        necessarily comparable. If ``normalize`` is ``False``, unnormalized raw scores are returned instead.
+        Interpretation of these raw scores is entirely implementation-dependent.
 
         :param text: input text or batch of input texts
         :param normalize: normalize scores to represent probabilities in the range [0, 1]
