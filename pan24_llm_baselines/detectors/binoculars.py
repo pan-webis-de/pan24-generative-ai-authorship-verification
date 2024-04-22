@@ -1,34 +1,16 @@
-# Refactored version of Hans et al.'s Binoculars LLM detector
-#
-# BSD 3-Clause License
-#
-# Copyright (c) 2023, Abhimanyu Hans, Avi Schwarzschild, Tom Goldstein
 # Copyright 2024 Janek Bevendorff, Webis
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# 1. Redistributions of source code must retain the above copyright notice, this
-#    list of conditions and the following disclaimer.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-#    contributors may be used to endorse or promote products derived from
-#    this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import List, Literal, Tuple
 
@@ -64,7 +46,7 @@ class Binoculars(DetectorBase):
                  performer_name_or_path='tiiuae/falcon-7b-instruct',
                  device1: TorchDeviceMapType = 'auto',
                  device2: TorchDeviceMapType = 'auto',
-                 max_token_observed=512,
+                 max_length=512,
                  use_flash_attn=False,
                  quantization_bits=None,
                  **model_args):
@@ -74,7 +56,7 @@ class Binoculars(DetectorBase):
         :param performer_name_or_path: performer model
         :param device1: observer device
         :param device2: performer device
-        :param max_token_observed: max number of tokens to analyze
+        :param max_length: max number of tokens to analyze
         :param use_flash_attn: use flash attention
         :param quantization_bits: quantize model
         :param model_args: additional model args
@@ -87,7 +69,7 @@ class Binoculars(DetectorBase):
             use_flash_attn=use_flash_attn,
             quantization_bits=quantization_bits,
             **model_args)
-        self.tokenizer = load_tokenizer(observer_name_or_path)
+        self.tokenizer = load_tokenizer(observer_name_or_path, max_length=max_length)
 
         self.performer_model = load_model(
             performer_name_or_path,
@@ -99,8 +81,6 @@ class Binoculars(DetectorBase):
 
         if not hasattr(self.tokenizer, 'vocab') or self.tokenizer.vocab != perf_tokenizer.vocab:
             raise ValueError(f'Incompatible tokenizers for {observer_name_or_path} and {performer_name_or_path}.')
-
-        self.max_token_observed = max_token_observed
 
     @torch.inference_mode()
     def _get_logits(self, encodings: transformers.BatchEncoding) -> Tuple[torch.Tensor, torch.Tensor]:
