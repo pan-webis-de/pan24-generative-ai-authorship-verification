@@ -117,19 +117,25 @@ def seq_cross_entropy(p_logits: torch.Tensor, q_logits: torch.Tensor, mask: torc
 
 
 @torch.inference_mode()
-def seq_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+def seq_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor,
+                            mask: torch.Tensor, shift: bool = True) -> torch.Tensor:
     """
     Calculate sequence cross-entropy values between a batch of predicted next-token logits
-    and a batch of token ids. ``logits`` and ``labels`` will be shifted by one to match.
+    and a batch of truth token ids.
+
+    If ``shift`` is ``True``, ``logits`` and ``labels`` will be shifted by one to match.
 
     :param logits: next-token logits
     :param labels: (current) token labels as class indices
     :param mask: padding mask
+    :param shift: shift next-token logits and labels to match
     :return: average token cross-entropy values
     """
-    logits = logits[..., :-1, :].contiguous()
-    mask = mask[..., 1:].contiguous().bool()
-    labels = labels[..., 1:].contiguous()
+    if shift:
+        logits = logits[..., :-1, :].contiguous()
+        labels = labels[..., 1:].contiguous()
+        mask = mask[..., 1:].contiguous()
+    mask = mask.bool()
     labels = labels.where(mask, -100)
 
     _, seq_length, vocab_size = logits.shape
@@ -138,19 +144,25 @@ def seq_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor, mask: to
 
 
 @torch.inference_mode()
-def seq_label_log_rank(logits: torch.Tensor, labels: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+def seq_label_log_rank(logits: torch.Tensor, labels: torch.Tensor,
+                       mask: torch.Tensor, shift: bool = True) -> torch.Tensor:
     """
-    Calculate average sequence token log rank between two batches of predicted next-token logits
-    and batches of token ids. ``logits`` and ``labels`` will be shifted by one to match.
+    Calculate average sequence token log rank between a batch of predicted next-token
+    logits and a batch of truth token ids.
+
+    If ``shift`` is ``True``, ``logits`` and ``labels`` will be shifted by one to match.
 
     :param logits: next-token logits
     :param labels: (current) token labels as class indices
     :param mask: padding mask
+    :param shift: shift next-token logits and labels to match
     :return: average token rank when sorted by likelihood
     """
-    logits = logits[..., :-1, :].contiguous()
-    labels = labels[..., 1:].contiguous()
-    mask = mask[..., 1:].contiguous().bool()
+    if shift:
+        logits = logits[..., :-1, :].contiguous()
+        labels = labels[..., 1:].contiguous()
+        mask = mask[..., 1:].contiguous()
+    mask = mask.bool()
 
     matches = logits.argsort(-1, descending=True)
     matches = (matches == labels.unsqueeze(-1)).nonzero()
