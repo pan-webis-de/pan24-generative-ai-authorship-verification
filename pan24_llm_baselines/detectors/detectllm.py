@@ -75,9 +75,9 @@ class DetectLLM(DetectGPT):
 
     def _normalize_scores(self, scores):
         if self.scoring_mode == 'lrr':
-            return torch.sigmoid(10 * (scores - 2))
+            return torch.sigmoid(10 * (scores.to(torch.float64) - 2))
         if self.scoring_mode == 'npr':
-            return torch.sigmoid(10 * (scores - 1.17))
+            return torch.sigmoid(10 * (scores.to(torch.float64) - 1.17))
         return scores
 
     def _lrr(self, text: List[str]) -> torch.Tensor:

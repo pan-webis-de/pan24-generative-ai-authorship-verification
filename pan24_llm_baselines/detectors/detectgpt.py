@@ -63,8 +63,7 @@ class DetectGPT(DetectorBase):
         self.base_tokenizer = load_tokenizer(base_model)
 
     def _normalize_scores(self, scores):
-        return scores
-        return torch.sigmoid(18 * scores.to(torch.float64) - 3.5)
+        return torch.sigmoid(2 * (scores.to(torch.float64) - 2.1))
 
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> List[float]:

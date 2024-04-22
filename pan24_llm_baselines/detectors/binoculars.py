@@ -112,7 +112,7 @@ class Binoculars(DetectorBase):
         return observer_logits, performer_logits
 
     def _normalize_scores(self, scores):
-        return torch.sigmoid(-10 * self.threshold * (scores - self.threshold))
+        return torch.sigmoid(-10 * self.threshold * (scores.to(torch.float64) - self.threshold))
 
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> torch.Tensor:
