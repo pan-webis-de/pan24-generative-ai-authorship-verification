@@ -280,7 +280,7 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
 
     if train_ids:
         train_ids = sorted({l.strip() for l in train_ids.readlines() if l.strip()})
-        test_ids = sorted({l.strip() for l in test_ids.readlines() if l.strip()}, key=lambda _: random.random())
+        test_ids = sorted(sorted({l.strip() for l in test_ids.readlines() if l.strip()}), key=lambda _: random.random())
         if not train_ids or not test_ids:
             raise click.UsageError('Train or test set empty.')
         if train_ids == test_ids:
@@ -291,8 +291,8 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
     else:
         logger.info('No train / test split specified, using all inputs as test.')
         test_ids = sorted({os.path.splitext(p)[0][len(human_txt) + 1:]
-                           for p in glob.glob(os.path.join(human_txt, '**', '*.txt'), recursive=True)},
-                          key=lambda _: random.random())
+                           for p in glob.glob(os.path.join(human_txt, '**', '*.txt'), recursive=True)})
+        test_ids = sorted(test_ids, key=lambda _: random.random())
 
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(os.path.join(output_dir, 'machines'), exist_ok=True)
@@ -331,11 +331,12 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                     logger.warning('Skipped test case %s due to empty text.', case_id)
                     continue
 
-                # Cut texts to same length in white-space-separated words +10
+                # Cut texts to same length in white-space-separated words + random margin
                 t1, t2 = t1.split(' '), t2.split(' ')
                 min_len = min(len(t1), len(t2))
                 t_tmp = t1 if len(t1) > len(t2) else t2
-                while len(t_tmp) > min_len + 10 or not t_tmp[-1] or t_tmp[-1][-1] not in string.punctuation:
+                margin = random.randint(30, 50)
+                while len(t_tmp) > min_len + margin or not t_tmp[-1].strip() or t_tmp[-1][-1] not in string.punctuation:
                     t_tmp.pop()
                 t1, t2 = ' '.join(t1), ' '.join(t2)
 
