@@ -41,6 +41,7 @@ seaborn = "^0.13.2"
 scikit-learn = "^1.4.1.post1"
 pyppmd = "^1.1.0"
 more-itertools = "^10.2.0"
+tira = "^0.0.125"
 
 [tool.poetry.scripts]
 news-source = 'pan24_llm_dataset.news_source:main'
