@@ -154,7 +154,7 @@ def truncate(input_dir, output_dir, scale, loc, sigma, hard_max):
         out = os.path.join(out, os.path.basename(f))
 
         t = open(f, 'r').read()
-        r = lognorm.rvs(loc=loc, s=sigma, scale=scale)
+        r = st.lognorm.rvs(loc=loc, s=sigma, scale=scale)
         while len(t) > hard_max or len(t) > r + 200:
             t = t[:t.rfind('\n\n')]
 
@@ -257,16 +257,19 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
 
 
 @main.command(help='Assemble dataset from human and machine text files')
-@click.argument('train_ids', type=click.File('r'))
-@click.argument('test_ids', type=click.File('r'))
 @click.argument('human_txt', type=click.Path(exists=True, file_okay=False))
 @click.argument('machine_txt',  type=click.Path(exists=True), nargs=-1)
+@click.option('-a', '--train-ids', type=click.File('r'), help='File with train IDs')
+@click.option('-b', '--test-ids', type=click.File('r'), help='File with test IDs')
 @click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
               default=os.path.join('data', 'dataset-final'), show_default=True)
 @click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
 @click.option('-n', '--no-source', is_flag=True, help='Do not include source IDs')
-def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, seed, no_source):
+def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source):
     random.seed(seed)
+
+    if (train_ids and not test_ids) or (test_ids and not train_ids):
+        raise click.UsageError('Need to specify either train and test IDs or neither.')
 
     human_txt = human_txt.rstrip(os.path.sep)
     human_name = os.path.basename(human_txt)
@@ -275,29 +278,37 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
     if not machine_txt:
         raise click.UsageError('At least one machine folder must be specified.')
 
-    train_ids = sorted({l.strip() for l in train_ids.readlines() if l.strip()})
-    test_ids = sorted({l.strip() for l in test_ids.readlines() if l.strip()}, key=lambda _: random.random())
-    if not train_ids or not test_ids:
-        raise click.UsageError('Train or test set empty.')
-    if train_ids == test_ids:
-        raise click.UsageError('Train and test input are the same.')
-    for t in test_ids:
-        if t in train_ids:
-            raise click.UsageError(f'Test ID "{t}" found in training set.')
+    if train_ids:
+        train_ids = sorted({l.strip() for l in train_ids.readlines() if l.strip()})
+        test_ids = sorted({l.strip() for l in test_ids.readlines() if l.strip()}, key=lambda _: random.random())
+        if not train_ids or not test_ids:
+            raise click.UsageError('Train or test set empty.')
+        if train_ids == test_ids:
+            raise click.UsageError('Train and test input are the same.')
+        for t in test_ids:
+            if t in train_ids:
+                raise click.UsageError(f'Test ID "{t}" found in training set.')
+    else:
+        logger.info('No train / test split specified, using all inputs as test.')
+        print(os.path.join(human_txt, '*', '*.txt'))
+        test_ids = sorted({os.path.splitext(p)[0][len(human_txt) + 1:]
+                           for p in glob.glob(os.path.join(human_txt, '**', '*.txt'), recursive=True)},
+                          key=lambda _: random.random())
 
     os.makedirs(output_dir, exist_ok=True)
-
-    # Output train set
-    train_it = tqdm([human_txt] + machine_txt, desc='Assembling train split', unit=' inputs')
     os.makedirs(os.path.join(output_dir, 'machines'), exist_ok=True)
-    for i, in_dir in enumerate(train_it):
-        name = os.path.basename(in_dir)
-        if in_dir != human_txt:
-            out_name = os.path.join(output_dir, 'machines', name + '.jsonl')
-        else:
-            out_name = os.path.join(output_dir, 'human.jsonl')
-        _write_jsonl(open(out_name, 'w'),
-                     _read_texts(os.path.dirname(in_dir), name, train_ids, skip_empty=False, normalize=True), name)
+
+    if train_ids:
+        # Output train set
+        train_it = tqdm([human_txt] + machine_txt, desc='Assembling train split', unit=' inputs')
+        for i, in_dir in enumerate(train_it):
+            name = os.path.basename(in_dir)
+            if in_dir != human_txt:
+                out_name = os.path.join(output_dir, 'machines', name + '.jsonl')
+            else:
+                out_name = os.path.join(output_dir, 'human.jsonl')
+            _write_jsonl(open(out_name, 'w'),
+                         _read_texts(os.path.dirname(in_dir), name, train_ids, skip_empty=False, normalize=True), name)
 
     # Pairwise output with randomised (human, machine) or (machine, human) pairs
     for machine in tqdm(machine_txt, desc='Assembling pairwise test split', unit=' inputs'):
@@ -320,6 +331,14 @@ def assemble_dataset(train_ids, test_ids, human_txt, machine_txt, output_dir, se
                 if not t1 or not t2:
                     logger.warning('Skipped test case %s due to empty text.', case_id)
                     continue
+
+                # Cut texts to same length in white-space-separated words +10
+                t1, t2 = t1.split(' '), t2.split(' ')
+                min_len = min(len(t1), len(t2))
+                t_tmp = t1 if len(t1) > len(t2) else t2
+                while len(t_tmp) > min_len + 10 or not t_tmp[-1] or t_tmp[-1][-1] not in string.punctuation:
+                    t_tmp.pop()
+                t1, t2 = ' '.join(t1), ' '.join(t2)
 
                 json.dump({
                     'id': random_case_id,
