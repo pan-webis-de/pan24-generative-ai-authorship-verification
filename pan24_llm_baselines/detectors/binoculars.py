@@ -96,7 +96,7 @@ class Binoculars(DetectorBase):
 
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> torch.Tensor:
-        encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device)
+        encodings = tokenize_sequences(text, self.tokenizer, self.observer_model.device, max_length=512)
         observer_logits, performer_logits = self._get_logits(encodings)
         log_ppl = seq_label_cross_entropy(performer_logits, encodings.input_ids, encodings.attention_mask)
         x_ppl = seq_cross_entropy(observer_logits,
