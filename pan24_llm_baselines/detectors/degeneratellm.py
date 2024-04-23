@@ -28,7 +28,7 @@ class DegenerateLLM(DetectorBase):
     """
 
     def __init__(self,
-                 base_model='tiiuae/falcon-7b',
+                 base_model='openai-community/gpt2',
                  device: TorchDeviceMapType = 'auto',
                  prefix_length=128,
                  max_generation_length=256,
@@ -57,6 +57,9 @@ class DegenerateLLM(DetectorBase):
                                         max_length=self.prefix_len + self.max_generation_len,
                                         padding_side='left')
 
+    def _normalize_scores(self, scores):
+        return torch.sigmoid(2 * (scores.to(torch.float64) - 6))
+
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> torch.Tensor:
         encoding = tokenize_sequences(text, self.tokenizer, self.base_model.device)
@@ -81,8 +84,8 @@ class DegenerateLLM(DetectorBase):
         suffix_mask = encoding.attention_mask[:, self.prefix_len:total_len]
         ce_pred = seq_label_cross_entropy(gen_logits, suffix_ids, suffix_mask, shift=False).cpu()
 
-        truth_ids = encoding.input_ids[:total_len]#[:, self.prefix_len:self.prefix_len + suffix_len]#[:, :self.prefix_len]
-        truth_mask = encoding.attention_mask[:total_len]#[:, self.prefix_len:self.prefix_len + suffix_len]#[:, :self.prefix_len]
+        truth_ids = encoding.input_ids[:total_len]
+        truth_mask = encoding.attention_mask[:total_len]
         truth_logits = self.base_model(input_ids=truth_ids, attention_mask=truth_mask).logits
         ce_truth = seq_label_cross_entropy(truth_logits, truth_ids, truth_mask).cpu()
 
