@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Janek Bevendorff, Webis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,7 +94,7 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
         “Spotting LLMs with Binoculars: Zero-Shot Detection of Machine-Generated
         Text.” arXiv [Cs.CL]. arXiv. http://arxiv.org/abs/2401.12070.
     """
-    from pan24_llm_baselines.detectors.binoculars import Binoculars
+    from pan24_llm_baselines.detectors import Binoculars
 
     detector = Binoculars(
         observer_name_or_path=observer,
@@ -108,11 +109,60 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 @main.command()
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-m', '--scoring-mode', type=click.Choice(['lrr', 'npr']), default='lrr', show_default=True)
 @click.option('-o', '--outfile-name', help='Output file name', default='detectgpt.jsonl', show_default=True)
 @click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
 @click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Percentage of tokens to perturb')
-@click.option('-n', '--n-samples', type=int, default=100, show_default=True,
+@click.option('-n', '--n-samples', type=int, default=20, show_default=True,
+              help='Number of perturbed samples to generate for NPR')
+@click.option('-b', '--batch-size', type=int, default=5, help='GPU task batch size')
+@click.option('-q', '--quantize', type=click.Choice(['4', '8']))
+@click.option('-f', '--flash-attn', is_flag=True, help='Use flash-attn 2 (must be installed separately)')
+@click.option('--base-model', help='Base detection model', default='tiiuae/falcon-7b', show_default=True)
+@click.option('--perturb-model', help='Perturbation model for NPR', default='t5-large', show_default=True)
+@click.option('--device1', help='Base model device', default='auto', show_default=True)
+@click.option('--device2', help='Perturbation model device', default='auto', show_default=True)
+def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_length, perturb_pct, n_samples,
+              batch_size, quantize, flash_attn, base_model, perturb_model, device1, device2):
+    """
+    PAN'24 baseline: DetectLLM.
+
+    References:
+    ===========
+        Su, Jinyan, Terry Yue Zhuo, Di Wang, and Preslav Nakov. 2023. “DetectLLM: Leveraging
+        Log Rank Information for Zero-Shot Detection of Machine-Generated Text.”
+        arXiv [Cs.CL]. arXiv. http://arxiv.org/abs/2306.05540.
+    """
+    from pan24_llm_baselines.detectors import DetectLLM
+    from pan24_llm_baselines.perturbators import T5MaskPerturbator
+
+    perturbator = T5MaskPerturbator(
+        model_name=perturb_model,
+        device=device2,
+        span_length=span_length,
+        mask_pct=perturb_pct,
+        batch_size=batch_size)
+    detector = DetectLLM(
+        scoring_mode=scoring_mode,
+        base_model=base_model,
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
+        perturbator=perturbator,
+        n_samples=n_samples,
+        batch_size=batch_size,
+        device=device1)
+    detect(detector, input_file, output_directory, outfile_name)
+
+
+@main.command()
+@click.argument('input_file', type=click.File('r'))
+@click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--outfile-name', help='Output file name', default='detectgpt.jsonl', show_default=True)
+@click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
+@click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
+              help='Percentage of tokens to perturb')
+@click.option('-n', '--n-samples', type=int, default=20, show_default=True,
               help='Number of perturbed samples to generate')
 @click.option('-b', '--batch-size', type=int, default=5, help='GPU task batch size')
 @click.option('-q', '--quantize', type=click.Choice(['4', '8']))
@@ -133,8 +183,8 @@ def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_p
         Detection Using Probability Curvature.” arXiv [Cs.CL]. arXiv.
         http://arxiv.org/abs/2301.11305.
     """
-    from pan24_llm_baselines.detectors.detectgpt import DetectGPT
-    from pan24_llm_baselines.perturbators.t5_mask import T5MaskPerturbator
+    from pan24_llm_baselines.detectors import DetectGPT
+    from pan24_llm_baselines.perturbators import T5MaskPerturbator
 
     perturbator = T5MaskPerturbator(
         model_name=perturb_model,
@@ -171,7 +221,7 @@ def ppmd(input_file, output_directory, outfile_name):
         Part F1305. Association for Computing Machinery. https://doi.org/10.1145/3098954.3104050.
     """
 
-    from pan24_llm_baselines.detectors.ppmd import PPMdDetector
+    from pan24_llm_baselines.detectors import PPMdDetector
     detector = PPMdDetector()
     detect(detector, input_file, output_directory, outfile_name)
 
@@ -211,7 +261,7 @@ def unmasking(input_file, output_directory, outfile_name):
         Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
         Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
-    from pan24_llm_baselines.detectors.unmasking import UnmaskingDetector
+    from pan24_llm_baselines.detectors import UnmaskingDetector
     detector = UnmaskingDetector()
     detect(detector, input_file, output_directory, outfile_name)
 
