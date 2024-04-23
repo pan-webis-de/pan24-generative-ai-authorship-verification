@@ -37,10 +37,10 @@ class PPMdDetector(DetectorBase):
     """
 
     def _get_score_impl(self, text: List[str]) -> List[float]:
-        if isinstance(text, str) or len(text) != 2:
-            raise TypeError('Input must be a list of exactly two strings.')
-
-        cx = len(pyppmd.compress(text[0]))
-        cy = len(pyppmd.compress(text[1]))
-        cxy = len(pyppmd.compress(text[0] + text[1]))
-        return (cx + cy - cxy) / np.sqrt(cx * cy)
+        scores = []
+        for t in text:
+            cx = len(pyppmd.compress(t[:len(t) // 2]))
+            cy = len(pyppmd.compress(t[len(t) // 2:]))
+            cxy = len(pyppmd.compress(t))
+            scores.append((cx + cy - cxy) / np.sqrt(cx * cy))
+        return scores

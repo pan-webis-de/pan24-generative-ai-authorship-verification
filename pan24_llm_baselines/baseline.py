@@ -47,8 +47,7 @@ def inverse_comparative_score(score1, score2, epsilon=1e-3):
     return comparative_score(score2, score1, epsilon)
 
 
-def detect(detector, input_file, output_directory, outfile_name, within_texts=False,
-           comp_fn=comparative_score):
+def detect(detector, input_file, output_directory, outfile_name, comp_fn=comparative_score):
     """
     Run a detector on an input file and write results to output directory.
 
@@ -56,21 +55,16 @@ def detect(detector, input_file, output_directory, outfile_name, within_texts=Fa
     :param input_file: input file object
     :param output_directory: output directory path
     :param outfile_name: output filename
-    :param within_texts: measure the scores within instead of between texts
     :param comp_fn: function to compare scores
     """
     with open(os.path.join(output_directory, outfile_name), 'w') as out:
-        for l in tqdm(input_file, desc='Predicting pairs', unit=' pair'):
+        for l in tqdm(input_file, desc='Predicting pairs', unit=' pairs'):
             j = json.loads(l)
             t1 = j['text1']
             t2 = j['text2']
 
-            if within_texts:
-                score1 = detector.get_score([t1[:len(t1) // 2], t1[len(t1) // 2:]])
-                score2 = detector.get_score([t2[:len(t2) // 2], t2[len(t2) // 2:]])
-            else:
-                score1 = detector.get_score(t1)
-                score2 = detector.get_score(t2)
+            score1 = detector.get_score(t1)
+            score2 = detector.get_score(t2)
 
             json.dump({'id': j['id'], 'is_human': float(comp_fn(score1, score2))}, out)
             out.write('\n')
@@ -179,7 +173,7 @@ def ppmd(input_file, output_directory, outfile_name):
 
     from pan24_llm_baselines.detectors.ppmd import PPMdDetector
     detector = PPMdDetector()
-    detect(detector, input_file, output_directory, outfile_name, within_texts=True)
+    detect(detector, input_file, output_directory, outfile_name)
 
 
 @main.command()
@@ -219,7 +213,7 @@ def unmasking(input_file, output_directory, outfile_name):
     """
     from pan24_llm_baselines.detectors.unmasking import UnmaskingDetector
     detector = UnmaskingDetector()
-    detect(detector, input_file, output_directory, outfile_name, within_texts=True)
+    detect(detector, input_file, output_directory, outfile_name)
 
 
 if __name__ == '__main__':

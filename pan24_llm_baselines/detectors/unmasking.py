@@ -46,8 +46,8 @@ def bootstrap_tokens(tokens, n_tokens):
     return [tokens[randint(0, len(tokens) - 1)] for _ in range(n_tokens)]
 
 
-def create_chunks(cls, tokens, chunk_size, n_chunks):
-    return [cls.bootstrap_tokens(tokens, chunk_size) for _ in range(n_chunks)]
+def create_chunks(tokens, chunk_size, n_chunks):
+    return [bootstrap_tokens(tokens, chunk_size) for _ in range(n_chunks)]
 
 
 def chunks_to_matrix(chunks, top_token_list):
@@ -110,19 +110,19 @@ class UnmaskingDetector(DetectorBase):
         self.n_chunks = n_chunks
 
     def _get_score_impl(self, text: List[str]) -> List[float]:
-        if isinstance(text, str) or len(text) != 2:
-            raise TypeError('Input must be a list of exactly two strings.')
+        scores = []
+        for t in text:
+            tokens_left = tokenize(t[:len(t) // 2])
+            tokens_right = tokenize(t[len(t) // 2:])
 
-        tokens_left = tokenize(text[0])
-        tokens_right = tokenize(text[1])
+            chunks_left = create_chunks(tokens_left, self.chunk_size, self.n_chunks)
+            chunks_right = create_chunks(tokens_right, self.chunk_size, self.n_chunks)
 
-        chunks_left = create_chunks(tokens_left, self.chunk_size, self.n_chunks)
-        chunks_right = create_chunks(tokens_right, self.chunk_size, self.n_chunks)
+            token_freqs = get_token_freqs(*chunks_left, *chunks_right)
+            most_frequent = sorted(token_freqs.keys(), key=lambda x: token_freqs[x], reverse=True)[:self.top_n]
+            x_left = chunks_to_matrix(chunks_left, most_frequent)
+            x_right = chunks_to_matrix(chunks_right, most_frequent)
 
-        token_freqs = get_token_freqs(*chunks_left, *chunks_right)
-        most_frequent = sorted(token_freqs.keys(), key=lambda x: token_freqs[x], reverse=True)[:self.top_n]
-        x_left = chunks_to_matrix(chunks_left, most_frequent)
-        x_right = chunks_to_matrix(chunks_right, most_frequent)
-
-        scores = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
-        return 1.0 - (np.sum(scores) / len(scores))
+            degen_acc = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
+            scores.append(1.0 - (np.sum(degen_acc) / len(degen_acc)))
+        return scores
