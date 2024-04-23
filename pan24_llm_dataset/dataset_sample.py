@@ -290,7 +290,6 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                 raise click.UsageError(f'Test ID "{t}" found in training set.')
     else:
         logger.info('No train / test split specified, using all inputs as test.')
-        print(os.path.join(human_txt, '*', '*.txt'))
         test_ids = sorted({os.path.splitext(p)[0][len(human_txt) + 1:]
                            for p in glob.glob(os.path.join(human_txt, '**', '*.txt'), recursive=True)},
                           key=lambda _: random.random())
