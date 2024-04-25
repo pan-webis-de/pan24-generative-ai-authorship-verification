@@ -1,4 +1,4 @@
-#FROM huggingface/optimum-nvidia
+# docker build -t registry.webis.de/code-research/authorship/pan24-generative-authorship-detection .
 FROM nvcr.io/nvidia/cuda:12.3.1-devel-ubuntu22.04
 
 RUN set -x \
