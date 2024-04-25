@@ -53,7 +53,7 @@ class FastDetectGPT(DetectGPT):
         super().__init__(base_model, device, None, n_samples, batch_size, verbose, **base_model_args)
 
     def _normalize_scores(self, scores):
-        return torch.sigmoid(1 / 25 * (scores.to(torch.float64) - 100))
+        return torch.sigmoid(1 / 25 * (scores.to(torch.float64) - 60))
 
     def _get_ll(self, logits, labels, mask):
         logits = logits[:, :-1].contiguous()
@@ -84,11 +84,12 @@ class FastDetectGPT(DetectGPT):
             if lp.is_cuda and lp.dtype == torch.bfloat16:
                 # Cuda multinomial not yet supported for bfloat16
                 lp = lp.to(torch.float16)
-            dist = torch.distributions.Categorical(logits=(lp.where(ma.bool().unsqueeze(-1), -10000)).unsqueeze(0))
+            seq_len = ma.sum()
+            dist = torch.distributions.Categorical(logits=lp[:seq_len].unsqueeze(0))
             s = dist.sample(torch.Size([self.n_samples]))
-            lls_sampled.append(self._get_ll(lo.unsqueeze(0),
+            lls_sampled.append(self._get_ll(lo[:seq_len].unsqueeze(0),
                                             s.permute([1, 2, 0]),
-                                            ma.view(1, len(ma), 1)).cpu())
+                                            ma[:seq_len].view(1, seq_len, 1)).cpu())
 
         return torch.cat(lls_orig), torch.cat(lls_sampled)
 
