@@ -25,7 +25,7 @@ __all__ = ['FastDetectGPT']
 
 class FastDetectGPT(DetectGPT):
     """
-    FastDetectGPT LLM detector.
+    Fast-DetectGPT LLM detector.
 
     This is a reimplementation of the original: https://github.com/baoguangsheng/fast-detect-gpt/
 
@@ -53,6 +53,7 @@ class FastDetectGPT(DetectGPT):
         super().__init__(base_model, device, None, n_samples, batch_size, verbose, **base_model_args)
 
     def _normalize_scores(self, scores):
+        return scores
         return torch.sigmoid(1 / 25 * (scores.to(torch.float64) - 60))
 
     def _get_ll(self, logits, labels, mask):
