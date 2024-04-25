@@ -15,6 +15,7 @@
 from .binoculars import *
 from .detectllm import *
 from .detectgpt import *
+from .fastdetectgpt import *
 from .degeneratellm import *
 from .ppmd import *
 from .unmasking import *

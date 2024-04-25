@@ -58,7 +58,7 @@ class DetectGPT(DetectorBase):
         self.n_samples = n_samples
         self.batch_size = batch_size
         self.verbose = verbose
-        self.perturbator = perturbator if perturbator else T5MaskPerturbator(device=device)
+        self.perturbator = perturbator
         self.base_model = load_model(base_model, device_map=device, **base_model_args)
         self.base_tokenizer = load_tokenizer(base_model)
 
@@ -67,6 +67,9 @@ class DetectGPT(DetectorBase):
 
     @torch.inference_mode()
     def _get_score_impl(self, text: List[str]) -> List[float]:
+        if not self.perturbator:
+            raise ValueError('No perturbator given.')
+
         perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
 
         encoding = tokenize_sequences(text + perturbed, self.base_tokenizer, self.base_model.device, 512)
