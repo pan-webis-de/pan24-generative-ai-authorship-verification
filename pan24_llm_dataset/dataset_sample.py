@@ -268,7 +268,9 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
 @click.option('-n', '--no-source', is_flag=True, help='Do not include source IDs')
 @click.option('-m', '--min-length', type=int, default=100, show_default=True,
               help='Minimum text length for test cases in words')
-def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source, min_length):
+@click.option('-c', '--combined-test', is_flag=True, help='Output combined test files')
+def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source,
+                     min_length, combined_test):
     random.seed(seed)
 
     if (train_ids and not test_ids) or (test_ids and not train_ids):
@@ -313,6 +315,14 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                          _read_texts(os.path.dirname(in_dir), name, train_ids, skip_empty=False, normalize=True), name)
 
     # Pairwise output with randomised (human, machine) or (machine, human) pairs
+    combined_test_out = None
+    combined_test_out_truth = None
+    if combined_test:
+        combined_out_name = os.path.join(output_dir, 'test-combined')
+        os.makedirs(combined_out_name, exist_ok=True)
+        combined_test_out = open(os.path.join(combined_out_name, 'dataset.jsonl'), 'w')
+        combined_test_out_truth = open(os.path.join(combined_out_name, 'truth.jsonl'), 'w')
+
     for machine in tqdm(machine_txt, desc='Assembling pairwise test split', unit=' inputs'):
         machine_name = os.path.basename(machine)
         h_it = _read_texts(os.path.dirname(human_txt), human_name, test_ids, normalize=True)
@@ -349,19 +359,23 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                     t1, t2 = t2, t1
                     l1, l2 = l2, l1
 
-                json.dump({
+                test_case_json = json.dumps({
                     'id': random_case_id,
                     'text1': t1,
                     'text2': t2,
-                }, out, ensure_ascii=False)
-                out.write('\n')
+                }, ensure_ascii=False) + '\n'
+                out.write(test_case_json)
+                if combined_test:
+                    combined_test_out.write(test_case_json)
 
-                json.dump({
+                truth_json = json.dumps({
                     'id': random_case_id,
                     **({'source_id': case_id} if not no_source else {}),
                     'is_human': [l1, l2]
-                }, out_truth, ensure_ascii=False)
-                out_truth.write('\n')
+                }, ensure_ascii=False) + '\n'
+                out_truth.write(truth_json)
+                if combined_test:
+                    combined_test_out_truth.write(truth_json)
 
 
 @main.command(help='Shuffle multiple files in the same reproducible way')
