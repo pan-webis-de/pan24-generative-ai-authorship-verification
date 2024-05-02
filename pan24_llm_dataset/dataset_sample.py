@@ -364,5 +364,25 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                 out_truth.write('\n')
 
 
+@main.command(help='Shuffle multiple files in the same reproducible way')
+@click.argument('files', type=click.Path(dir_okay=False, exists=True), nargs=-1)
+@click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
+def shuffle_files(files, seed):
+    random.seed(seed)
+
+    if not files:
+        return
+    if len(files) != len(set(files)):
+        raise click.UsageError('Cannot specify the same file twice.')
+
+    lines = [open(f).readlines() for f in files]
+    out_files = [open(f, 'w') for f in files]
+    for lines_zip in sorted(zip(*lines), key=lambda _: random.random()):
+        for l, o in zip(lines_zip, out_files):
+            o.write(l)
+
+    [f.close() for f in out_files]
+
+
 if __name__ == '__main__':
     main()
