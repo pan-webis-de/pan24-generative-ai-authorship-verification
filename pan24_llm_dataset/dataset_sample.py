@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from base64 import urlsafe_b64encode
+from collections import defaultdict
 import glob
 import json
 from logging import getLogger
@@ -366,8 +367,9 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
 
 @main.command(help='Shuffle multiple files in the same reproducible way')
 @click.argument('files', type=click.Path(dir_okay=False, exists=True), nargs=-1)
+@click.option('-t', '--truncate', type=int, help='Truncate dataset to this many lines')
 @click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
-def shuffle_files(files, seed):
+def shuffle_files(files, truncate, seed):
     random.seed(seed)
 
     if not files:
@@ -377,11 +379,59 @@ def shuffle_files(files, seed):
 
     lines = [open(f).readlines() for f in files]
     out_files = [open(f, 'w') for f in files]
-    for lines_zip in sorted(zip(*lines), key=lambda _: random.random()):
+    for i, lines_zip in enumerate(sorted(zip(*lines), key=lambda _: random.random())):
+        if truncate and i >= truncate:
+            break
         for l, o in zip(lines_zip, out_files):
             o.write(l)
 
     [f.close() for f in out_files]
+
+
+@main.command(help='Obfuscate input texts using Unicode lookalikes')
+@click.argument('input_dir', type=click.Path(exists=True), nargs=-1)
+@click.option('-o', '--output-dir', help='Output directory',
+              default=os.path.join('data', 'text-obfuscated-unicode'), show_default=True)
+@click.option('-p', '--pct', type=click.FloatRange(0, 1), default=0.15, show_default=True,
+              help='Percent chance to replace characters')
+@click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
+def obfuscate_unicode(input_dir, output_dir, pct, seed):
+    random.seed(seed)
+    if not input_dir:
+        return
+
+    def _decode(codepoint_str):
+        codepoint_str = codepoint_str.strip().split(b' ')
+        codepoint_str = [rb'\U' + b'0' * (8 - len(c)) + c for c in codepoint_str]
+        return b''.join(codepoint_str).decode('unicode_escape')
+
+    lookalikes = open(os.path.join(os.path.dirname(__file__), 'resources', 'unicode-confusables.txt'), 'rb').readlines()
+    lookalikes_dict = defaultdict(list)
+    for l in lookalikes:
+        if l.count(b';') != 2 or l.startswith(b'#'):
+            continue
+        k, v, _ = l.split(b';', 2)
+        k, v = _decode(k), _decode(v)
+        if unicodedata.category(k) not in ['Cc', 'Cf', 'Cn', 'Co', 'Cs', 'Zl', 'Zp', 'Zs']:
+            lookalikes_dict[k].append(v)
+            lookalikes_dict[v].append(k)
+
+    def _lookalike_replace(c, p):
+        if random.random() >= p:
+            return c
+        candidates = lookalikes_dict.get(c)
+        return random.choice(candidates) if candidates else c
+
+    for input_dir in tqdm(input_dir, desc='Obfuscating input directories', unit=' dir'):
+        if not os.path.isdir(input_dir):
+            continue
+
+        for topic in os.listdir(input_dir):
+            outdir = os.path.join(output_dir, os.path.basename(input_dir), topic)
+            os.makedirs(outdir, exist_ok=True)
+            for art_id, text in _read_texts(input_dir, topic, normalize=True):
+                text = ''.join(_lookalike_replace(c, pct) for c in text)
+                open(os.path.join(outdir, art_id + '.txt'), 'w').write(text)
 
 
 if __name__ == '__main__':
