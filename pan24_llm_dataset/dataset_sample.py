@@ -265,7 +265,9 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
               default=os.path.join('data', 'dataset-final'), show_default=True)
 @click.option('-s', '--seed', type=int, default=42, help='Seed for randomizing test IDs')
 @click.option('-n', '--no-source', is_flag=True, help='Do not include source IDs')
-def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source):
+@click.option('-m', '--min-length', type=int, default=120, show_default=True,
+              help='Minimum text length for test cases in words')
+def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source, min_length):
     random.seed(seed)
 
     if (train_ids and not test_ids) or (test_ids and not train_ids):
@@ -327,17 +329,24 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                 random_case_id = urlsafe_b64encode(
                     uuid.UUID(int=random.getrandbits(128), version=4).bytes).decode().rstrip('=')
 
-                if not t1 or not t2:
-                    logger.warning('Skipped test case %s due to empty text.', case_id)
+                min_len_case = min(len(t1), len(t2))
+                if min_len_case < min_length:
+                    logger.warning('Skipped test case %s due to short/empty text (%d words).',
+                                   case_id, min_len_case)
                     continue
 
                 # Cut texts to same length in white-space-separated words + random margin
                 t1, t2 = t1.split(' '), t2.split(' ')
-                min_len = min(len(t1), len(t2))
                 t_tmp = t1 if len(t1) > len(t2) else t2
                 margin = random.randint(30, 50)
-                while len(t_tmp) > min_len + margin or not t_tmp[-1].strip() or t_tmp[-1][-1] not in string.punctuation:
+                while t_tmp and (len(t_tmp) > min_len_case + margin or
+                                 not t_tmp[-1].strip() or t_tmp[-1][-1] not in string.punctuation):
                     t_tmp.pop()
+                if len(t_tmp) < min_length:
+                    logger.warning('Skipped test case %s due to short/empty text after truncation (%d words).',
+                                   case_id, len(t_tmp))
+                    continue
+
                 t1, t2 = ' '.join(t1), ' '.join(t2)
 
                 json.dump({
