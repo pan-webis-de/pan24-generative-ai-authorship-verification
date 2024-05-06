@@ -269,8 +269,9 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
 @click.option('-m', '--min-length', type=int, default=100, show_default=True,
               help='Minimum text length for test cases in words')
 @click.option('-c', '--combined-test', is_flag=True, help='Output combined test files')
+@click.option('--shuffle-machines', is_flag=True, help='Shuffle machine texts in test pairs')
 def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source,
-                     min_length, combined_test):
+                     min_length, combined_test, shuffle_machines):
     random.seed(seed)
 
     if (train_ids and not test_ids) or (test_ids and not train_ids):
@@ -327,13 +328,17 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
         machine_name = os.path.basename(machine)
         h_it = _read_texts(os.path.dirname(human_txt), human_name, test_ids, normalize=True)
         m_it = _read_texts(os.path.dirname(machine), machine_name, test_ids, normalize=True)
+        if shuffle_machines:
+            m_it = sorted(m_it, key=lambda _: random.random())
         out_name = os.path.join(output_dir, 'machines', machine_name + '-test.jsonl')
         out_name_truth = os.path.join(output_dir, 'machines', machine_name + '-test-truth.jsonl')
 
         with open(out_name, 'w') as out, open(out_name_truth, 'w') as out_truth:
-            for (i, t1), (_, t2) in zip(h_it, m_it):
+            for (i, t1), (j, t2) in zip(h_it, m_it):
                 l1, l2 = True, False
                 case_id = '/'.join((machine_name, i))
+                if shuffle_machines:
+                    case_id = '+'.join((case_id, j))
                 random_case_id = urlsafe_b64encode(
                     uuid.UUID(int=random.getrandbits(128), version=4).bytes).decode().rstrip('=')
 
