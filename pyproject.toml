@@ -49,6 +49,7 @@ news-source = 'pan24_llm_dataset.news_source:main'
 llm-generate = 'pan24_llm_dataset.llm_generate:main'
 dataset-sample = 'pan24_llm_dataset.dataset_sample:main'
 baseline = 'pan24_llm_baselines.baseline:main'
+perturb-cache = 'pan24_llm_baselines.perturb_cache:main'
 evaluator = 'pan24_llm_evaluator.evaluator:main'
 llm-stats = 'llm_detection_tools.llm_stats:main'
 
