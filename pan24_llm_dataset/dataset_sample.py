@@ -14,6 +14,7 @@
 
 from base64 import urlsafe_b64encode
 from collections import defaultdict
+import csv
 import glob
 import json
 from logging import getLogger
@@ -138,6 +139,56 @@ def jsonl2text(article_jsonl_dir, output_dir):
             for l in open(infile, 'r'):
                 j = json.loads(l)
                 open(os.path.join(out_dir, j['id'] + '.txt'), 'w').write(j['text'])
+
+
+@main.command(help='Convert CSV files with pair columns to individual text files')
+@click.argument('input_file', type=click.File('r'))
+@click.option('-i', '--id-col', help='Name of ID column (auto-generated if not given)')
+@click.option('-a', '--human-col', help='Human text column (defaults to first column)')
+@click.option('-b', '--machine-col', help='Machine text column (defaults to second column)')
+@click.option('-d', '--delimiter', help='CSV delimiter', default=',', show_default=True)
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'text', 'articles-converted'), show_default=True)
+def pcsv2text(input_file, id_col, human_col, machine_col,  delimiter, output_dir):
+    output_dir: str | bytes = os.path.join(output_dir, os.path.splitext(os.path.basename(input_file.name.lower()))[0])
+
+    reader = csv.DictReader(input_file, delimiter=delimiter)
+    human_col = human_col or reader.fieldnames[1]
+    machine_col = machine_col or reader.fieldnames[2]
+    os.makedirs(os.path.join(output_dir, 'human'), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, 'machine'), exist_ok=True)
+
+    for i, row in tqdm(enumerate(reader), desc='Reading CVS rows', unit=' rows'):
+        art_id = row[id_col] if id_col else f'art{i:08d}'
+        with open(os.path.join(output_dir, 'human', art_id + '.txt'), 'w') as f:
+            f.write(row[human_col])
+        with open(os.path.join(output_dir, 'machine', art_id + '.txt'), 'w') as f:
+            f.write(row[machine_col])
+
+
+@main.command(help='Convert CSV files with class column to individual text files')
+@click.argument('input_file', type=click.File('r'))
+@click.option('-i', '--id-col', help='Name of ID column (auto-generated if not given)')
+@click.option('-a', '--text-col', help='Text column (defaults to first column)')
+@click.option('-b', '--class-col', help='Text class column (defaults to second column)')
+@click.option('-d', '--delimiter', help='CSV delimiter', default=',', show_default=True)
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Output directory',
+              default=os.path.join('data', 'text', 'articles-converted'), show_default=True)
+def csv2text(input_file, id_col, text_col, class_col,  delimiter, output_dir):
+    output_dir: str | bytes = os.path.join(output_dir, os.path.splitext(os.path.basename(input_file.name.lower()))[0])
+
+    reader = csv.DictReader(input_file, delimiter=delimiter)
+    text_col = text_col or reader.fieldnames[0]
+    class_col = class_col or reader.fieldnames[1]
+
+    counters = defaultdict(int)
+    for row in tqdm(reader, desc='Reading CVS rows', unit=' rows'):
+        cls = 'machine' if row[class_col].lower() in ['1', 'true', 'yes'] else 'human'
+        os.makedirs(os.path.join(output_dir, cls), exist_ok=True)
+        art_id = row[id_col] if id_col else f'art{counters[cls]:08d}'
+        counters[cls] += 1
+        with open(os.path.join(output_dir, cls, art_id + '.txt'), 'w') as f:
+            f.write(row[text_col])
 
 
 @main.command(help='Truncate text character lengths according to a specific log-normal distribution')
