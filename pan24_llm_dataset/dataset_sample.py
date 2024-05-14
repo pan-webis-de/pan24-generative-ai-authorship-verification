@@ -159,7 +159,7 @@ def pcsv2text(input_file, id_col, human_col, machine_col,  delimiter, output_dir
     os.makedirs(os.path.join(output_dir, 'machine'), exist_ok=True)
 
     for i, row in tqdm(enumerate(reader), desc='Reading CVS rows', unit=' rows'):
-        art_id = row[id_col] if id_col else f'art{i:08d}'
+        art_id = row[id_col] if id_col else f'art-{i:08d}'
         with open(os.path.join(output_dir, 'human', art_id + '.txt'), 'w') as f:
             f.write(row[human_col])
         with open(os.path.join(output_dir, 'machine', art_id + '.txt'), 'w') as f:
@@ -185,7 +185,7 @@ def csv2text(input_file, id_col, text_col, class_col,  delimiter, output_dir):
     for row in tqdm(reader, desc='Reading CVS rows', unit=' rows'):
         cls = 'machine' if row[class_col].lower() in ['1', 'true', 'yes'] else 'human'
         os.makedirs(os.path.join(output_dir, cls), exist_ok=True)
-        art_id = row[id_col] if id_col else f'art{counters[cls]:08d}'
+        art_id = row[id_col] if id_col else f'art-{counters[cls]:08d}'
         counters[cls] += 1
         with open(os.path.join(output_dir, cls, art_id + '.txt'), 'w') as f:
             f.write(row[text_col])
