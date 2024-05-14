@@ -394,6 +394,8 @@ def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, prompt
               show_default=True, help='Top-k sampling (0 to disable)')
 @click.option('-p', '--top-p', type=click.FloatRange(0, 1), default=0.9,
               show_default=True, help='Top-p sampling')
+@click.option('-a', '--penalty-alpha', type=click.FloatRange(0, 1), default=0.0,
+              show_default=True, help='Contrastive search penalty')
 @click.option('-t', '--temperature', type=click.FloatRange(0), default=2,
               show_default=True, help='Model temperature')
 @click.option('-f', '--flash-attn', is_flag=True,
@@ -404,8 +406,8 @@ def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, prompt
 @click.option('--trust-remote-code', is_flag=True, help='Trust remote code')
 @click.option('--prompt-template', default='news_article_chat.jinja2', show_default=True,
               help='Prompt template')
-def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, quantization, top_k,
-                     decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
+def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, quantization, top_k, top_p,
+                     penalty_alpha, decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
                      trust_remote_code, prompt_template, **kwargs):
 
     model_name_out = model_name
@@ -443,6 +445,8 @@ def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, qua
         model=model,
         tokenizer=tokenizer,
         top_k=top_k if top_k > 0 else None,
+        top_p=top_p if penalty_alpha > 0 and top_k > 1 else None,
+        penalty_alpha=penalty_alpha,
         exponential_decay_length_penalty=(decay_start, decay_factor)
     ))
 
