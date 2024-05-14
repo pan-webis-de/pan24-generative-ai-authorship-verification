@@ -314,7 +314,9 @@ def main():
               help='File containing OpenAI API key (if not given, OPENAI_API_KEY env var must be set)')
 @click.option('-m', '--model-name', default='gpt-4-turbo-preview', show_default=True)
 @click.option('-p', '--parallelism', default=5, show_default=True)
-def openai(input_dir, output_dir, outdir_name, api_key, model_name, parallelism):
+@click.option('--prompt-template', default='news_article_chat.jinja2', show_default=True,
+              help='Prompt template')
+def openai(input_dir, output_dir, outdir_name, api_key, model_name, parallelism, prompt_template):
     if not api_key and not os.environ.get('OPENAI_API_KEY'):
         raise click.UsageError('Need one of --api-key or OPENAI_API_KEY!')
 
@@ -326,7 +328,7 @@ def openai(input_dir, output_dir, outdir_name, api_key, model_name, parallelism)
     fn = partial(
         _map_records_to_files,
         fn=_openai_gen_article,
-        prompt_template='news_article_chat.jinja2',
+        prompt_template=prompt_template,
         out_dir=output_dir,
         client=client,
         model_name=model_name)
@@ -348,14 +350,16 @@ def openai(input_dir, output_dir, outdir_name, api_key, model_name, parallelism)
               help='Top-k sampling')
 @click.option('--top-p', type=click.FloatRange(0, 1), default=0.95, show_default=True,
               help='Top-p sampling')
-def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, **kwargs):
+@click.option('--prompt-template', default='news_article_chat.jinja2', show_default=True,
+              help='Prompt template')
+def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, prompt_template, **kwargs):
     output_dir = os.path.join(output_dir, outdir_name if outdir_name else model_name.replace('@', '-').lower())
     os.makedirs(output_dir, exist_ok=True)
 
     fn = partial(
         _map_records_to_files,
         fn=_vertexai_gen_article,
-        prompt_template='news_article_chat.jinja2',
+        prompt_template=prompt_template,
         out_dir=output_dir,
         model_name=model_name,
         **kwargs)
@@ -395,11 +399,12 @@ def vertexai(input_dir, output_dir, model_name, outdir_name, parallelism, **kwar
 @click.option('-b', '--better-transformer', is_flag=True, help='Use BetterTransformer')
 @click.option('-q', '--quantization', type=click.Choice(['4', '8']))
 @click.option('-h', '--headlines-only', is_flag=True, help='Run on previous output and generate missing headlines')
-@click.option('--short-prompt', is_flag=True, help='Shorten the input prompt')
 @click.option('--trust-remote-code', is_flag=True, help='Trust remote code')
+@click.option('--prompt-template', default='news_article_chat.jinja2', show_default=True,
+              help='Prompt template')
 def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, quantization, top_k,
                      decay_start, decay_factor, better_transformer, flash_attn, headlines_only,
-                     trust_remote_code, short_prompt, **kwargs):
+                     trust_remote_code, prompt_template, **kwargs):
 
     model_name_out = model_name
     model_args = {
@@ -438,8 +443,6 @@ def huggingface_chat(input_dir, model_name, output_dir, outdir_name, device, qua
         top_k=top_k if top_k > 0 else None,
         exponential_decay_length_penalty=(decay_start, decay_factor)
     ))
-
-    prompt_template = 'news_article_chat.jinja2' if not short_prompt else 'news_article_short_chat.jinja2'
 
     if headlines_only:
         del kwargs['min_length']
