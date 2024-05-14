@@ -213,10 +213,12 @@ def _vertexai_gen_article(article_data, model_name: str, prompt_template: str, *
     max_tries = 4
     for _ in range(max_tries):
         if isinstance(model, GenerativeModel):
+            # HarmBlockThreshold.BLOCK_NONE no longer possible after recent update without
+            # being an invoiced billing customer
             response = model.generate_content(
                 prompt,
                 generation_config=model_args,
-                safety_settings={h: HarmBlockThreshold.BLOCK_NONE for h in HarmCategory})
+                safety_settings={h: HarmBlockThreshold.BLOCK_ONLY_HIGH for h in HarmCategory})
             candidates = response.candidates
 
         elif isinstance(model, ChatModel):
