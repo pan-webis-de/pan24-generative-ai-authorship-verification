@@ -319,14 +319,18 @@ def gen_splits(jsonl_in, output_dir, train_size, seed):
 @click.option('-n', '--no-source', is_flag=True, help='Do not include source IDs')
 @click.option('-m', '--min-length', type=int, default=100, show_default=True,
               help='Minimum text length for test cases in words')
+@click.option('--max-length', type=int, help='Maximum text length for test cases in words')
 @click.option('-c', '--combined-test', is_flag=True, help='Output combined test files')
 @click.option('--shuffle-machines', is_flag=True, help='Shuffle machine texts in test pairs')
 def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, seed, no_source,
-                     min_length, combined_test, shuffle_machines):
+                     min_length, max_length, combined_test, shuffle_machines):
     random.seed(seed)
 
     if (train_ids and not test_ids) or (test_ids and not train_ids):
         raise click.UsageError('Need to specify either train and test IDs or neither.')
+
+    if max_length and min_length > max_length:
+        raise click.UsageError('--min-length must be less than or equal to --max-length')
 
     human_txt = human_txt.rstrip(os.path.sep)
     human_name = os.path.basename(human_txt)
@@ -396,18 +400,29 @@ def assemble_dataset(human_txt, machine_txt, train_ids, test_ids, output_dir, se
                 # Cut texts to same length in white-space-separated words within a random margin
                 t1, t2 = t1.split(' '), t2.split(' ')
                 min_len_case = min(len(t1), len(t2))
+                if max_length:
+                    min_len_case = min(max_length, min_len_case)
                 if min_len_case < min_length:
                     logger.warning('Skipped test case %s due to short/empty text (%d words).',
                                    case_id, min_len_case)
                     continue
-                t_tmp = t1 if len(t1) > len(t2) else t2
-                margin = 65
-                search_idx = max(min_length, min_len_case + random.randint(-margin, margin))
-                while t_tmp and search_idx < min_len_case + margin <= len(t_tmp):
-                    if t_tmp[search_idx] and t_tmp[search_idx][-1] in string.punctuation:
-                        break
-                    search_idx += 1
-                del t_tmp[search_idx:]
+                if max_length:
+                    t_trunc = [t1, t2]
+                else:
+                    t_trunc = [t1 if len(t1) > len(t2) else t2]
+                for t_tmp in t_trunc:
+                    margin = min(65, min_length // 2) if not max_length else max_length - min_length
+                    if margin == 0:
+                        # Trim to exact length if no margin allowed
+                        del t_tmp[min_length:]
+                        continue
+
+                    search_idx = max(min_length, min_len_case + random.randint(-margin, margin))
+                    while t_tmp and search_idx < min_len_case + margin <= len(t_tmp):
+                        if t_tmp[search_idx] and t_tmp[search_idx][-1] in string.punctuation:
+                            break
+                        search_idx += 1
+                    del t_tmp[search_idx:]
                 t1, t2 = ' '.join(t1), ' '.join(t2)
 
                 # Swap texts randomly
