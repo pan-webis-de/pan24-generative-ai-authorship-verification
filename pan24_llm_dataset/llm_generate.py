@@ -274,7 +274,7 @@ def _huggingface_chat_gen_article(article_data, model, tokenizer, prompt_templat
     for _ in range(3):
         generated_ids = model.generate(
             model_inputs,
-            do_sample=True,
+            do_sample='penalty_alpha' not in kwargs,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
             **kwargs)
