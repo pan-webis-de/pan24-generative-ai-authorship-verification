@@ -20,7 +20,7 @@ DATASETS = [
     'pan24-generative-authorship-news-test-d-20240506-test',
     'pan24-generative-authorship-news-test-e-20240506-test',
     'pan24-generative-authorship-news-test-f-20240514-test',
-    'pan24-generative-authorship-news-test-g-20240516-test',
+    'pan24-generative-authorship-news-test-g-20240529-test',
     'pan24-generative-authorship-news-test-h-20240521-test',
     'pan24-generative-authorship-eloquent-20240523-test'
 ]
