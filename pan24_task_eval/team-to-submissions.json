@@ -13,7 +13,8 @@
     "concrete-layer",
     "hot-dynamic",
     "aged-bosun",
-    "sunny-midi"
+    "sunny-midi",
+    "adjacent-rate",
   ],
   "turtlewu": [
     "no_change_test",
