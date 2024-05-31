@@ -5,6 +5,11 @@
   "marsan": [
     "staff-trunk"
   ],
+  "baselineavengers": [
+    "naive-bayes",
+    "logistic-regression",
+    "svm"
+  ],
   "foshan-university-of-guangdong": [
     "independent-net",
     "complete-admin",
