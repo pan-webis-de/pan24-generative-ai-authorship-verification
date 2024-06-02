@@ -47,7 +47,7 @@ def report_table(team):
     return """\\begin{table}[t]
 \\centering
 \\caption{Overview of the accuracy in detecting if a text is written by an human in task~4 on PAN~2024 (Voight-Kampff Generative AI Authorship Verification). We report ROC-AUC, Brier, C@1, F$_{1}$, F$_{0.5u}$ and their mean.}
-\\label{table-obfuscation-results}
+\\label{table-evaluation-results}
 \\renewcommand{\\tabcolsep}{4.5pt}
 \\begin{tabular}{@{}lcccccc@{}}
 \\toprule
@@ -56,10 +56,19 @@ def report_table(team):
   """ + lines + """\\\\
 \\midrule
   """ + table_line('baseline', 'baseline-binoculars', 'Baseline Binoculars') + """\\\\
+  """ + table_line('baseline', 'baseline-detectgpt-mistral', 'Baseline DetectGPT (Mistral)') + """\\\\
+  """ + table_line('baseline', 'baseline-detectgpt-falcon', 'Baseline DetectGPT (Falcon)') + """\\\\
+  """ + table_line('baseline', 'baseline-detectllm-npr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
+  """ + table_line('baseline', 'baseline-detectllm-npr-falcon', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
+  """ + table_line('baseline', 'baseline-detectllm-lrr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
+  """ + table_line('baseline', 'baseline-detectllm-lrr', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
   """ + table_line('baseline', 'baseline-fastdetectgpt-mistral', 'Baseline Fast-DetectGPT (Mistral)') + """\\\\
+  """ + table_line('baseline', 'baseline-fastdetectgpt', 'Baseline Fast-DetectGPT (Falcon)') + """\\\\
   """ + table_line('baseline', 'baseline-ppmd', 'Baseline PPMd') + """\\\\
   """ + table_line('baseline', 'baseline-unmasking', 'Baseline Unmasking') + """\\\\
-  """ + table_line('baseline', 'baseline-fastdetectgpt', 'Baseline Fast-DetectGPT') + """\\\\
+  
+  
+  
 \\midrule
   """ + table_line_aggregated('95-th quantile', lambda i: quantile(i, 0.95)) + """\\\\
   """ + table_line_aggregated('75-th quantile', lambda i: quantile(i, 0.75)) + """\\\\
@@ -100,7 +109,7 @@ def report_obfuscation_table(team):
     return """\\begin{table}[t]
 \\centering
 \\caption{Overview of the mean accuracy over 9~variants of the test set. We report the minumum, median, the maximum, the 25-th, and the 75-th quantile, of the mean per the 9~datasets.}
-\\label{table-evaluation-results}
+\\label{table-obfuscation-results}
 \\renewcommand{\\tabcolsep}{4.5pt}
 \\begin{tabular}{@{}lccccc@{}}
 \\toprule
@@ -109,15 +118,9 @@ def report_obfuscation_table(team):
   """ + lines + """\\\\
 \\midrule
   """ + table_obfuscation_line('baseline', 'baseline-binoculars', 'Baseline Binoculars') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectgpt-mistral', 'Baseline DetectGPT (Mistral)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectgpt-falcon', 'Baseline DetectGPT (Falcon)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectllm-npr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectllm-npr-falcon', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectllm-lrr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-detectllm-lrr', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-ppmd', 'Baseline PPMd') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-fastdetectgpt-mistral', 'Baseline Fast-DetectGPT (Mistral)') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-fastdetectgpt', 'Baseline Fast-DetectGPT (Falcon)') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-ppmd', 'Baseline PPMd') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-unmasking', 'Baseline Unmasking') + """\\\\
 
 \\midrule
