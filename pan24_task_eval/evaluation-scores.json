@@ -65156,6 +65156,534 @@
         }
       }
     },
+    "baseline-detectgpt-falcon": {
+      "pan24-generative-authorship-test-20240502-test": {
+        "roc-auc": 0.554,
+        "brier": 0.711,
+        "c@1": 0.546,
+        "f1": 0.545,
+        "f05u": 0.545,
+        "mean": 0.58,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 0.424,
+            "brier": 0.589,
+            "c@1": 0.453,
+            "f1": 0.458,
+            "f05u": 0.473,
+            "mean": 0.48
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 0.189,
+            "brier": 0.454,
+            "c@1": 0.275,
+            "f1": 0.269,
+            "f05u": 0.26,
+            "mean": 0.289
+          },
+          "gemini-pro": {
+            "roc-auc": 0.666,
+            "brier": 0.765,
+            "c@1": 0.62,
+            "f1": 0.602,
+            "f05u": 0.589,
+            "mean": 0.648
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 0.589,
+            "brier": 0.732,
+            "c@1": 0.531,
+            "f1": 0.573,
+            "f05u": 0.571,
+            "mean": 0.599
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 0.66,
+            "brier": 0.761,
+            "c@1": 0.617,
+            "f1": 0.607,
+            "f05u": 0.602,
+            "mean": 0.649
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 0.563,
+            "brier": 0.719,
+            "c@1": 0.55,
+            "f1": 0.525,
+            "f05u": 0.528,
+            "mean": 0.577
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.533,
+            "brier": 0.705,
+            "c@1": 0.478,
+            "f1": 0.445,
+            "f05u": 0.448,
+            "mean": 0.522
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 0.698,
+            "brier": 0.776,
+            "c@1": 0.648,
+            "f1": 0.616,
+            "f05u": 0.621,
+            "mean": 0.672
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 0.59,
+            "brier": 0.739,
+            "c@1": 0.57,
+            "f1": 0.581,
+            "f05u": 0.582,
+            "mean": 0.612
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 0.627,
+            "brier": 0.746,
+            "c@1": 0.585,
+            "f1": 0.596,
+            "f05u": 0.591,
+            "mean": 0.629
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 0.641,
+            "brier": 0.752,
+            "c@1": 0.591,
+            "f1": 0.578,
+            "f05u": 0.589,
+            "mean": 0.63
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 0.681,
+            "brier": 0.772,
+            "c@1": 0.638,
+            "f1": 0.65,
+            "f05u": 0.648,
+            "mean": 0.678
+          },
+          "text-bison-002": {
+            "roc-auc": 0.71,
+            "brier": 0.779,
+            "c@1": 0.66,
+            "f1": 0.669,
+            "f05u": 0.69,
+            "mean": 0.702
+          },
+          "text-bison-002-german": {
+            "roc-auc": 0.606,
+            "brier": 0.74,
+            "c@1": 0.561,
+            "f1": 0.585,
+            "f05u": 0.574,
+            "mean": 0.613
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 0.327,
+            "brier": 0.597,
+            "c@1": 0.374,
+            "f1": 0.375,
+            "f05u": 0.375,
+            "mean": 0.41
+          }
+        }
+      }
+    },
+    "baseline-detectgpt-mistral": {
+      "pan24-generative-authorship-test-20240502-test": {
+        "roc-auc": 0.627,
+        "brier": 0.738,
+        "c@1": 0.612,
+        "f1": 0.613,
+        "f05u": 0.612,
+        "mean": 0.64,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 0.493,
+            "brier": 0.625,
+            "c@1": 0.486,
+            "f1": 0.517,
+            "f05u": 0.519,
+            "mean": 0.528
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 0.132,
+            "brier": 0.391,
+            "c@1": 0.233,
+            "f1": 0.213,
+            "f05u": 0.209,
+            "mean": 0.236
+          },
+          "gemini-pro": {
+            "roc-auc": 0.784,
+            "brier": 0.812,
+            "c@1": 0.712,
+            "f1": 0.672,
+            "f05u": 0.688,
+            "mean": 0.734
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 0.727,
+            "brier": 0.784,
+            "c@1": 0.627,
+            "f1": 0.662,
+            "f05u": 0.657,
+            "mean": 0.691
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 0.76,
+            "brier": 0.801,
+            "c@1": 0.693,
+            "f1": 0.689,
+            "f05u": 0.679,
+            "mean": 0.724
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 0.661,
+            "brier": 0.751,
+            "c@1": 0.614,
+            "f1": 0.588,
+            "f05u": 0.598,
+            "mean": 0.643
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.663,
+            "brier": 0.756,
+            "c@1": 0.598,
+            "f1": 0.592,
+            "f05u": 0.582,
+            "mean": 0.638
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 0.803,
+            "brier": 0.82,
+            "c@1": 0.737,
+            "f1": 0.705,
+            "f05u": 0.721,
+            "mean": 0.757
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 0.736,
+            "brier": 0.792,
+            "c@1": 0.684,
+            "f1": 0.699,
+            "f05u": 0.691,
+            "mean": 0.72
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 0.81,
+            "brier": 0.82,
+            "c@1": 0.736,
+            "f1": 0.734,
+            "f05u": 0.734,
+            "mean": 0.767
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 0.712,
+            "brier": 0.779,
+            "c@1": 0.659,
+            "f1": 0.671,
+            "f05u": 0.659,
+            "mean": 0.696
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 0.805,
+            "brier": 0.817,
+            "c@1": 0.72,
+            "f1": 0.736,
+            "f05u": 0.725,
+            "mean": 0.761
+          },
+          "text-bison-002": {
+            "roc-auc": 0.811,
+            "brier": 0.82,
+            "c@1": 0.727,
+            "f1": 0.735,
+            "f05u": 0.755,
+            "mean": 0.77
+          },
+          "text-bison-002-german": {
+            "roc-auc": 0.689,
+            "brier": 0.771,
+            "c@1": 0.619,
+            "f1": 0.626,
+            "f05u": 0.626,
+            "mean": 0.666
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 0.237,
+            "brier": 0.497,
+            "c@1": 0.3,
+            "f1": 0.318,
+            "f05u": 0.313,
+            "mean": 0.333
+          }
+        }
+      }
+    },
+    "baseline-detectllm-npr-falcon": {
+      "pan24-generative-authorship-test-20240502-test": {
+        "roc-auc": 0.664,
+        "brier": 0.741,
+        "c@1": 0.645,
+        "f1": 0.644,
+        "f05u": 0.644,
+        "mean": 0.668,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 0.578,
+            "brier": 0.695,
+            "c@1": 0.575,
+            "f1": 0.604,
+            "f05u": 0.604,
+            "mean": 0.611
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 0.273,
+            "brier": 0.528,
+            "c@1": 0.375,
+            "f1": 0.352,
+            "f05u": 0.347,
+            "mean": 0.375
+          },
+          "gemini-pro": {
+            "roc-auc": 0.929,
+            "brier": 0.887,
+            "c@1": 0.859,
+            "f1": 0.834,
+            "f05u": 0.84,
+            "mean": 0.87
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 0.779,
+            "brier": 0.795,
+            "c@1": 0.72,
+            "f1": 0.748,
+            "f05u": 0.737,
+            "mean": 0.756
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 0.683,
+            "brier": 0.738,
+            "c@1": 0.632,
+            "f1": 0.63,
+            "f05u": 0.621,
+            "mean": 0.661
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 0.578,
+            "brier": 0.661,
+            "c@1": 0.517,
+            "f1": 0.466,
+            "f05u": 0.481,
+            "mean": 0.54
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.42,
+            "brier": 0.542,
+            "c@1": 0.357,
+            "f1": 0.319,
+            "f05u": 0.321,
+            "mean": 0.392
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 0.884,
+            "brier": 0.854,
+            "c@1": 0.804,
+            "f1": 0.789,
+            "f05u": 0.785,
+            "mean": 0.823
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 0.867,
+            "brier": 0.843,
+            "c@1": 0.782,
+            "f1": 0.784,
+            "f05u": 0.788,
+            "mean": 0.813
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 0.839,
+            "brier": 0.83,
+            "c@1": 0.772,
+            "f1": 0.774,
+            "f05u": 0.781,
+            "mean": 0.799
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 0.731,
+            "brier": 0.775,
+            "c@1": 0.69,
+            "f1": 0.698,
+            "f05u": 0.689,
+            "mean": 0.717
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 0.822,
+            "brier": 0.82,
+            "c@1": 0.755,
+            "f1": 0.76,
+            "f05u": 0.764,
+            "mean": 0.784
+          },
+          "text-bison-002": {
+            "roc-auc": 0.874,
+            "brier": 0.855,
+            "c@1": 0.813,
+            "f1": 0.823,
+            "f05u": 0.832,
+            "mean": 0.839
+          },
+          "text-bison-002-german": {
+            "roc-auc": 0.672,
+            "brier": 0.721,
+            "c@1": 0.609,
+            "f1": 0.637,
+            "f05u": 0.619,
+            "mean": 0.652
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 0.363,
+            "brier": 0.558,
+            "c@1": 0.392,
+            "f1": 0.38,
+            "f05u": 0.385,
+            "mean": 0.416
+          }
+        }
+      }
+    },
+    "baseline-detectllm-npr-mistral": {
+      "pan24-generative-authorship-test-20240502-test": {
+        "roc-auc": 0.728,
+        "brier": 0.78,
+        "c@1": 0.704,
+        "f1": 0.702,
+        "f05u": 0.703,
+        "mean": 0.723,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 0.6,
+            "brier": 0.699,
+            "c@1": 0.581,
+            "f1": 0.602,
+            "f05u": 0.612,
+            "mean": 0.619
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 0.16,
+            "brier": 0.421,
+            "c@1": 0.233,
+            "f1": 0.207,
+            "f05u": 0.204,
+            "mean": 0.245
+          },
+          "gemini-pro": {
+            "roc-auc": 0.962,
+            "brier": 0.914,
+            "c@1": 0.897,
+            "f1": 0.889,
+            "f05u": 0.885,
+            "mean": 0.909
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 0.879,
+            "brier": 0.842,
+            "c@1": 0.789,
+            "f1": 0.812,
+            "f05u": 0.795,
+            "mean": 0.824
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 0.824,
+            "brier": 0.798,
+            "c@1": 0.714,
+            "f1": 0.695,
+            "f05u": 0.702,
+            "mean": 0.747
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 0.745,
+            "brier": 0.748,
+            "c@1": 0.644,
+            "f1": 0.614,
+            "f05u": 0.626,
+            "mean": 0.675
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.782,
+            "brier": 0.775,
+            "c@1": 0.684,
+            "f1": 0.669,
+            "f05u": 0.669,
+            "mean": 0.716
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 0.94,
+            "brier": 0.891,
+            "c@1": 0.863,
+            "f1": 0.851,
+            "f05u": 0.86,
+            "mean": 0.881
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 0.918,
+            "brier": 0.87,
+            "c@1": 0.826,
+            "f1": 0.824,
+            "f05u": 0.837,
+            "mean": 0.855
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 0.953,
+            "brier": 0.9,
+            "c@1": 0.879,
+            "f1": 0.879,
+            "f05u": 0.889,
+            "mean": 0.9
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 0.803,
+            "brier": 0.802,
+            "c@1": 0.73,
+            "f1": 0.725,
+            "f05u": 0.735,
+            "mean": 0.759
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 0.906,
+            "brier": 0.866,
+            "c@1": 0.822,
+            "f1": 0.822,
+            "f05u": 0.833,
+            "mean": 0.85
+          },
+          "text-bison-002": {
+            "roc-auc": 0.928,
+            "brier": 0.877,
+            "c@1": 0.836,
+            "f1": 0.842,
+            "f05u": 0.86,
+            "mean": 0.869
+          },
+          "text-bison-002-german": {
+            "roc-auc": 0.821,
+            "brier": 0.822,
+            "c@1": 0.756,
+            "f1": 0.774,
+            "f05u": 0.752,
+            "mean": 0.785
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 0.208,
+            "brier": 0.442,
+            "c@1": 0.255,
+            "f1": 0.291,
+            "f05u": 0.283,
+            "mean": 0.296
+          }
+        }
+      }
+    },
     "baseline-fastdetectgpt-mistral": {
       "pan24-generative-authorship-test-20240502-test": {
         "roc-auc": 0.876,
