@@ -109,10 +109,17 @@ def report_obfuscation_table(team):
   """ + lines + """\\\\
 \\midrule
   """ + table_obfuscation_line('baseline', 'baseline-binoculars', 'Baseline Binoculars') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectgpt-mistral', 'Baseline DetectGPT (Mistral)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectgpt-falcon', 'Baseline DetectGPT (Falcon)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectllm-npr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectllm-npr-falcon', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectllm-lrr-mistral', 'Baseline DetectLLM NPR (Mistral)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-detectllm-lrr', 'Baseline DetectLLM NPR (Falcon)') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-fastdetectgpt-mistral', 'Baseline Fast-DetectGPT (Mistral)') + """\\\\
+  """ + table_obfuscation_line('baseline', 'baseline-fastdetectgpt', 'Baseline Fast-DetectGPT (Falcon)') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-ppmd', 'Baseline PPMd') + """\\\\
   """ + table_obfuscation_line('baseline', 'baseline-unmasking', 'Baseline Unmasking') + """\\\\
-  """ + table_obfuscation_line('baseline', 'baseline-fastdetectgpt', 'Baseline Fast-DetectGPT') + """\\\\
+
 \\midrule
   """ + table_obfuscation_line_aggregated('95-th quantile', lambda i: quantile(i, 0.95)) + """\\\\
   """ + table_obfuscation_line_aggregated('75-th quantile', lambda i: quantile(i, 0.75)) + """\\\\

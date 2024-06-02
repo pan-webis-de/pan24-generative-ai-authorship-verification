@@ -166,6 +166,8 @@
     "baseline-detectgpt-mistral",
     "baseline-detectllm-npr-falcon",
     "baseline-detectllm-npr-mistral",
+    "baseline-detectllm-lrr-mistral",
+    "baseline-detectllm-lrr",
     "baseline-fastdetectgpt-mistral",
     "bayes-fsu-tfidf-vectorizer",
     "bayes-fsu-count-vectorizer",
