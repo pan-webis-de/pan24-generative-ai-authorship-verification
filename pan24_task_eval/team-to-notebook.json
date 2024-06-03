@@ -1,0 +1,176 @@
+{
+  "cnlp-nits-pp": {
+    "direct-velocity": 223
+  },
+  "marsan": {
+    "staff-trunk": 210
+  },
+  "baselineavengers": {
+    "naive-bayes": 284,
+    "logistic-regression": 284,
+    "svm": 284
+  },
+  "foshan-university-of-guangdong": {
+    "independent-net": null,
+    "complete-admin": null,
+    "pizzicato-radian": null,
+    "impulsive-ski": null,
+    "concrete-layer": null,
+    "hot-dynamic": null,
+    "aged-bosun": null,
+    "sunny-midi": null,
+    "adjacent-rate": 161
+  },
+  "turtlewu": {
+    "no_change_test": null,
+    "change_test": null,
+    "bert_space_0.785": null,
+    "bert_lstm_0.824": null,
+    "bert_gru_0.65": null,
+    "lstm": null,
+    "transform_fanle": null,
+    "cnn_fanle": null,
+    "0.853_smoke_cnn_new": null,
+    "0.962_smoke_transformer_new": null,
+    "0.964_smoke_space": null,
+    "0.981_smoke_transofrmer": 106
+  },
+  "no-999": {
+    "method1": 86,
+    "method2": 86
+  },
+  "iimasnlp": {
+    "SGD-CLF": null,
+    "shabby-velour": null,
+    "excited-squircle": null,
+    "burning-trigger": null,
+    "final-run8-gnnllm_stylofeat-fullpartitionB": 304,
+    "final-run2-gnnw2v_llmft_stylofeat-partitionA": null,
+    "final-run3-gnnw2v_llmft_stylofeat-partitionB": null,
+    "final-run4-gnnllm_llmft_stylofeat-partitionB": 304,
+    "final-run5-gnnllm_stylofeat-fullpartitionA": null,
+    "final-run6-gnnllm_llmft_stylofeat-fullpartitionA": 304,
+    "final-run7-gnnllm_llmft_stylofeat-fullpartitionA": 304,
+    "final-run9-gnnllm_llmft_stylofeat-fullpartitionB": 304,
+    "final-run10-gnnllm_llmft_stylofeat-fullpartitionB": 304,
+    "final-run1-gnnllm_llmft_stylofeat-partitionA": null
+  },
+  "lam": {
+    "blistering-moss": 191,
+    "approximate-salamander": null,
+    "steel-snare": null,
+    "several-fleet": null,
+    "acute-wireframe": 191
+  },
+  "huangbaijian": {
+    "bitter-metaphor": 165,
+    "late-bit": 165,
+    "nutty-combat": 165
+  },
+  "qinnnruiii": {
+    "tender-couple": 187,
+    "resonnt-crowd": null,
+    "acoustic-basket": null,
+    "vibrant-mass": null
+  },
+  "j1j": {
+    "forward-oil": null,
+    "tangy-frequency": 168,
+    "product-dust": 168,
+    "soft-electrolysis": null,
+    "tiny-whippet": 168
+  },
+  "you-shun-you-de": {
+    "swarm-apartment_v1": null,
+    "plain-fortress": null,
+    "charitable-mole_v3": 115
+  },
+  "team-chenteam-chen123hhh": {
+    "beige-limit": 211
+  },
+  "g-fosunlpteam": {
+    "rapid-pole": 208,
+    "savory-plate": 208,
+    "lazy-iteration": 208,
+    "gritty-producer": 208
+  },
+  "karami-kheiri": {
+    "bare-broker": 85
+  },
+  "aida": {
+    "vicious-artifact":  83,
+    "corporate-burn": 83
+  },
+  "verification-team": {
+    "insulated-frame": null,
+    "coped-pot": null,
+    "serious-acre": null,
+    "merciless-lease": 116,
+    "rainy-action": null
+  },
+  "fosu-stu": {
+    "merciless-broth": 247
+  },
+  "petropoulossiblings": {
+    "extended-parakeet": 82
+  },
+  "ap-team": {
+    "ferocious-coot": 287,
+    "marinated-pantone": 287
+  },
+  "drocks": {
+    "muffled-stock": 196,
+    "cloudy-ordnance": null,
+    "breezy-style": null
+  },
+  "younanyousha": {
+    "brownian-architect": 110
+  },
+  "jaha": {
+    "greasy-chest": 136
+  },
+  "e-comm-tech": {
+    "great-plan": null
+  },
+  "heartsteel": {
+    "canary-paint": 207,
+    "chartreuse-class": 207
+  },
+  "you-na-you-de": {
+    "lzj_v2": 109
+  },
+  "ai-team": {
+    "ash-ricotta": 119
+  },
+  "yomiya": {
+    "coherent-latitude": null,
+    "black-stream": null,
+    "freezing-index": null,
+    "great-function": null,
+    "current-boutique": 188
+  },
+  "gra": {
+    "ash-causeway": null
+  },
+  "lm-detector": {
+    "detector": null
+  },
+  "baseline": {
+    "baseline-fastdetectgpt": null,
+    "baseline-binoculars-mistral": null,
+    "baseline-binoculars": null,
+    "baseline-unmasking": null,
+    "baseline-length": null,
+    "baseline-ppmd": null,
+    "baseline-detectgpt-falcon": null,
+    "baseline-detectgpt-mistral": null,
+    "baseline-detectllm-npr-falcon": null,
+    "baseline-detectllm-npr-mistral": null,
+    "baseline-detectllm-lrr-mistral": null,
+    "baseline-detectllm-lrr": null,
+    "baseline-fastdetectgpt-mistral": null,
+    "bayes-fsu-tfidf-vectorizer": null,
+    "bayes-fsu-count-vectorizer": null,
+    "logistic-fsu": null
+  }
+}
