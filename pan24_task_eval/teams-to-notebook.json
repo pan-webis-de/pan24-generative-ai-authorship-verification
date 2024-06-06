@@ -172,5 +172,8 @@
     "bayes-fsu-tfidf-vectorizer": null,
     "bayes-fsu-count-vectorizer": null,
     "logistic-fsu": null
+  },
+  "ds-gtpan": {
+    "nervous-blur": null
   }
 }

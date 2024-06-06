@@ -1,0 +1,184 @@
+{
+  "baseline": [
+    "baseline-binoculars",
+    "baseline-binoculars-mistral",
+    "baseline-detectgpt-falcon",
+    "baseline-detectgpt-mistral",
+    "baseline-detectllm-lrr",
+    "baseline-detectllm-lrr-mistral",
+    "baseline-detectllm-npr-falcon",
+    "baseline-detectllm-npr-mistral",
+    "baseline-fastdetectgpt",
+    "baseline-fastdetectgpt-mistral",
+    "baseline-length",
+    "baseline-ppmd",
+    "baseline-unmasking",
+    "bayes-fsu-count-vectorizer",
+    "bayes-fsu-tfidf-vectorizer",
+    "logistic-fsu"
+  ],
+  "cnlp-nits-pp": [
+    "direct-velocity"
+  ],
+  "drocks": [
+    "breezy-style",
+    "cloudy-ordnance",
+    "muffled-stock"
+  ],
+  "verification-team": [
+    "coped-pot",
+    "insulated-frame",
+    "merciless-lease",
+    "rainy-action",
+    "serious-acre"
+  ],
+  "aida": [
+    "corporate-burn",
+    "vicious-artifact"
+  ],
+  "foshan-university-of-guangdong": [
+    "adjacent-rate",
+    "aged-bosun",
+    "complete-admin",
+    "concrete-layer",
+    "hot-dynamic",
+    "impulsive-ski",
+    "independent-net",
+    "intense-mint",
+    "pizzicato-radian",
+    "sunny-midi"
+  ],
+  "turtlewu": [
+    "0.853_smoke_cnn_new",
+    "0.962_smoke_transformer_new",
+    "0.964_smoke_space",
+    "0.981_smoke_transofrmer",
+    "bert_gru_0.65",
+    "bert_lstm_0.824",
+    "bert_space_0.785",
+    "change_test",
+    "cnn_fanle",
+    "lstm",
+    "no_change_test",
+    "transform_fanle"
+  ],
+  "no-999": [
+    "method1",
+    "method2"
+  ],
+  "iimasnlp": [
+    "SGD-CLF",
+    "burning-trigger",
+    "excited-squircle",
+    "final-run1-gnnllm_llmft_stylofeat-partitionA",
+    "final-run10-gnnllm_llmft_stylofeat-fullpartitionB",
+    "final-run2-gnnw2v_llmft_stylofeat-partitionA",
+    "final-run3-gnnw2v_llmft_stylofeat-partitionB",
+    "final-run4-gnnllm_llmft_stylofeat-partitionB",
+    "final-run5-gnnllm_stylofeat-fullpartitionA",
+    "final-run6-gnnllm_llmft_stylofeat-fullpartitionA",
+    "final-run7-gnnllm_llmft_stylofeat-fullpartitionA",
+    "final-run8-gnnllm_stylofeat-fullpartitionB",
+    "final-run9-gnnllm_llmft_stylofeat-fullpartitionB",
+    "shabby-velour"
+  ],
+  "lam": [
+    "acute-wireframe",
+    "approximate-salamander",
+    "blistering-moss",
+    "several-fleet",
+    "steel-snare"
+  ],
+  "huangbaijian": [
+    "bitter-metaphor",
+    "late-bit",
+    "nutty-combat"
+  ],
+  "qinnnruiii": [
+    "acoustic-basket",
+    "resonnt-crowd",
+    "tender-couple",
+    "vibrant-mass"
+  ],
+  "j1j": [
+    "burgundy-block",
+    "forward-oil",
+    "marked-jail",
+    "product-dust",
+    "soft-electrolysis",
+    "tangy-frequency",
+    "tiny-whippet"
+  ],
+  "you-shun-you-de": [
+    "charitable-mole_v3",
+    "plain-fortress",
+    "swarm-apartment_v1"
+  ],
+  "g-fosunlpteam": [
+    "gritty-producer",
+    "lazy-iteration",
+    "rapid-pole",
+    "savory-plate"
+  ],
+  "karami-kheiri": [
+    "afraid-magnification (slow, no GPU)",
+    "bare-broker"
+  ],
+  "fosu-stu": [
+    "merciless-broth",
+    "proud-stick"
+  ],
+  "petropoulossiblings": [
+    "extended-parakeet"
+  ],
+  "heartsteel": [
+    "canary-paint",
+    "chartreuse-class"
+  ],
+  "ai-team": [
+    "ash-ricotta"
+  ],
+  "yomiya": [
+    "black-stream",
+    "coherent-latitude",
+    "current-boutique",
+    "freezing-index",
+    "great-function"
+  ],
+  "lm-detector": [
+    "detector"
+  ],
+  "marsan": [
+    "staff-trunk"
+  ],
+  "ap-team": [
+    "ferocious-coot",
+    "marinated-pantone"
+  ],
+  "younanyousha": [
+    "brownian-architect"
+  ],
+  "jaha": [
+    "greasy-chest"
+  ],
+  "team-chenteam-chen123hhh": [
+    "beige-limit"
+  ],
+  "e-comm-tech": [
+    "great-plan"
+  ],
+  "you-na-you-de": [
+    "lzj_v2"
+  ],
+  "gra": [
+    "ash-causeway"
+  ],
+  "baselineavengers": [
+    "logistic-regression",
+    "naive-bayes",
+    "svm"
+  ],
+  "ds-gtpan": [
+    "nervous-blur"
+  ]
+}
