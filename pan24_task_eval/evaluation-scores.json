@@ -801,6 +801,136 @@
           }
         }
       },
+      "pan24-generative-authorship-test-b-20240506-test": {
+        "roc-auc": 1.0,
+        "brier": 0.994,
+        "c@1": 0.997,
+        "f1": 0.997,
+        "f05u": 0.999,
+        "mean": 0.997,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 1.0,
+            "brier": 0.992,
+            "c@1": 0.995,
+            "f1": 0.995,
+            "f05u": 0.998,
+            "mean": 0.996
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 1.0,
+            "brier": 0.989,
+            "c@1": 0.993,
+            "f1": 0.993,
+            "f05u": 0.997,
+            "mean": 0.994
+          },
+          "gemini-pro": {
+            "roc-auc": 1.0,
+            "brier": 0.999,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 1.0,
+            "brier": 0.996,
+            "c@1": 0.993,
+            "f1": 0.992,
+            "f05u": 0.997,
+            "mean": 0.996
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 1.0,
+            "brier": 0.996,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 0.999
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 1.0,
+            "brier": 0.994,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 0.999
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.996,
+            "brier": 0.965,
+            "c@1": 0.985,
+            "f1": 0.985,
+            "f05u": 0.994,
+            "mean": 0.985
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 1.0,
+            "brier": 0.999,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 1.0,
+            "brier": 1.0,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 1.0,
+            "brier": 0.998,
+            "c@1": 0.996,
+            "f1": 0.997,
+            "f05u": 0.999,
+            "mean": 0.998
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 1.0,
+            "brier": 0.997,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 0.999
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 1.0,
+            "brier": 1.0,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          },
+          "text-bison-002": {
+            "roc-auc": 1.0,
+            "brier": 0.999,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          },
+          "text-bison-002-german": {
+            "roc-auc": 1.0,
+            "brier": 0.989,
+            "c@1": 0.996,
+            "f1": 0.997,
+            "f05u": 0.999,
+            "mean": 0.996
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 1.0,
+            "brier": 0.998,
+            "c@1": 1.0,
+            "f1": 1.0,
+            "f05u": 1.0,
+            "mean": 1.0
+          }
+        }
+      },
       "pan24-generative-authorship-news-test-c-20240506-test": {
         "roc-auc": 0.998,
         "brier": 0.971,
