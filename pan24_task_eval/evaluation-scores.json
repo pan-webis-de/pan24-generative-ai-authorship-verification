@@ -1,4 +1,220 @@
 {
+  "ds-gtpan": {
+    "nervous-blur": {
+      "pan24-generative-authorship-news-test-h-20240521-test": {
+        "roc-auc": 0.494,
+        "brier": 0.482,
+        "c@1": 0.482,
+        "f1": 0.596,
+        "f05u": 0.518,
+        "mean": 0.514,
+        "_sources": {
+          "alpaca-7b": {
+            "roc-auc": 0.454,
+            "brier": 0.333,
+            "c@1": 0.333,
+            "f1": 0.4,
+            "f05u": 0.312,
+            "mean": 0.367
+          },
+          "bigscience-bloomz-7b1": {
+            "roc-auc": 0.539,
+            "brier": 0.524,
+            "c@1": 0.524,
+            "f1": 0.63,
+            "f05u": 0.545,
+            "mean": 0.552
+          },
+          "gemini-pro": {
+            "roc-auc": 0.5,
+            "brier": 0.457,
+            "c@1": 0.457,
+            "f1": 0.558,
+            "f05u": 0.472,
+            "mean": 0.489
+          },
+          "gemini-pro-high-temperature": {
+            "roc-auc": 0.433,
+            "brier": 0.4,
+            "c@1": 0.4,
+            "f1": 0.488,
+            "f05u": 0.42,
+            "mean": 0.428
+          },
+          "gemini-pro-paraphrase": {
+            "roc-auc": 0.467,
+            "brier": 0.467,
+            "c@1": 0.467,
+            "f1": 0.556,
+            "f05u": 0.505,
+            "mean": 0.492
+          },
+          "gpt-3.5-turbo-0125": {
+            "roc-auc": 0.517,
+            "brier": 0.485,
+            "c@1": 0.485,
+            "f1": 0.605,
+            "f05u": 0.512,
+            "mean": 0.521
+          },
+          "gpt-4-turbo-preview": {
+            "roc-auc": 0.597,
+            "brier": 0.56,
+            "c@1": 0.56,
+            "f1": 0.645,
+            "f05u": 0.549,
+            "mean": 0.582
+          },
+          "gpt-4-turbo-preview-german": {
+            "roc-auc": 0.403,
+            "brier": 0.412,
+            "c@1": 0.412,
+            "f1": 0.5,
+            "f05u": 0.472,
+            "mean": 0.44
+          },
+          "gpt-4-turbo-preview-paraphrase": {
+            "roc-auc": 0.424,
+            "brier": 0.452,
+            "c@1": 0.452,
+            "f1": 0.585,
+            "f05u": 0.531,
+            "mean": 0.489
+          },
+          "meta-llama-llama-2-13b-chat-hf-contrastive-0.1": {
+            "roc-auc": 0.571,
+            "brier": 0.586,
+            "c@1": 0.586,
+            "f1": 0.714,
+            "f05u": 0.61,
+            "mean": 0.614
+          },
+          "meta-llama-llama-2-13b-chat-hf-contrastive-0.6": {
+            "roc-auc": 0.538,
+            "brier": 0.61,
+            "c@1": 0.61,
+            "f1": 0.742,
+            "f05u": 0.653,
+            "mean": 0.631
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "roc-auc": 0.635,
+            "brier": 0.645,
+            "c@1": 0.645,
+            "f1": 0.732,
+            "f05u": 0.647,
+            "mean": 0.661
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "roc-auc": 0.556,
+            "brier": 0.6,
+            "c@1": 0.6,
+            "f1": 0.733,
+            "f05u": 0.632,
+            "mean": 0.624
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "roc-auc": 0.512,
+            "brier": 0.606,
+            "c@1": 0.606,
+            "f1": 0.735,
+            "f05u": 0.677,
+            "mean": 0.627
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "roc-auc": 0.522,
+            "brier": 0.5,
+            "c@1": 0.5,
+            "f1": 0.619,
+            "f05u": 0.528,
+            "mean": 0.534
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "roc-auc": 0.428,
+            "brier": 0.394,
+            "c@1": 0.394,
+            "f1": 0.545,
+            "f05u": 0.458,
+            "mean": 0.444
+          },
+          "text-bison-002": {
+            "roc-auc": 0.596,
+            "brier": 0.545,
+            "c@1": 0.545,
+            "f1": 0.634,
+            "f05u": 0.533,
+            "mean": 0.571
+          },
+          "text-bison-002-german": {
+            "roc-auc": 0.227,
+            "brier": 0.226,
+            "c@1": 0.226,
+            "f1": 0.25,
+            "f05u": 0.241,
+            "mean": 0.234
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "roc-auc": 0.401,
+            "brier": 0.32,
+            "c@1": 0.32,
+            "f1": 0.37,
+            "f05u": 0.298,
+            "mean": 0.342
+          }
+        }
+      },
+      "pan24-generative-authorship-eloquent-20240523-test": {
+        "roc-auc": 0.727,
+        "brier": 0.725,
+        "c@1": 0.725,
+        "f1": 0.748,
+        "f05u": 0.706,
+        "mean": 0.726,
+        "_sources": {
+          "chatgpt35": {
+            "roc-auc": 0.643,
+            "brier": 0.667,
+            "c@1": 0.667,
+            "f1": 0.556,
+            "f05u": 0.595,
+            "mean": 0.625
+          },
+          "gptsw3": {
+            "roc-auc": 0.679,
+            "brier": 0.708,
+            "c@1": 0.708,
+            "f1": 0.774,
+            "f05u": 0.732,
+            "mean": 0.72
+          },
+          "reindeer-mistral": {
+            "roc-auc": 0.818,
+            "brier": 0.833,
+            "c@1": 0.833,
+            "f1": 0.867,
+            "f05u": 0.802,
+            "mean": 0.831
+          },
+          "reindeer-poro": {
+            "roc-auc": 0.792,
+            "brier": 0.792,
+            "c@1": 0.792,
+            "f1": 0.8,
+            "f05u": 0.781,
+            "mean": 0.791
+          },
+          "verbanex-ai": {
+            "roc-auc": 0.664,
+            "brier": 0.625,
+            "c@1": 0.625,
+            "f1": 0.667,
+            "f05u": 0.577,
+            "mean": 0.632
+          }
+        }
+      }
+    }
+  },
   "cnlp-nits-pp": {
     "direct-velocity": {
       "pan24-generative-authorship-test-20240502-test": {
