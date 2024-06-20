@@ -37292,6 +37292,136 @@
         "f1": 0.992,
         "mean": 0.992,
         "roc-auc": 0.992
+      },
+      "pan24-generative-authorship-test-b-20240506-test": {
+        "_sources": {
+          "alpaca-7b": {
+            "brier": 0.965,
+            "c@1": 0.98,
+            "f05u": 0.949,
+            "f1": 0.939,
+            "mean": 0.964,
+            "roc-auc": 0.987
+          },
+          "bigscience-bloomz-7b1": {
+            "brier": 0.967,
+            "c@1": 0.983,
+            "f05u": 0.948,
+            "f1": 0.951,
+            "mean": 0.968,
+            "roc-auc": 0.99
+          },
+          "gemini-pro": {
+            "brier": 0.965,
+            "c@1": 0.979,
+            "f05u": 0.943,
+            "f1": 0.937,
+            "mean": 0.961,
+            "roc-auc": 0.983
+          },
+          "gemini-pro-high-temperature": {
+            "brier": 0.963,
+            "c@1": 0.978,
+            "f05u": 0.934,
+            "f1": 0.927,
+            "mean": 0.958,
+            "roc-auc": 0.989
+          },
+          "gpt-3.5-turbo-0125": {
+            "brier": 0.97,
+            "c@1": 0.985,
+            "f05u": 0.946,
+            "f1": 0.942,
+            "mean": 0.967,
+            "roc-auc": 0.991
+          },
+          "gpt-4-turbo-preview": {
+            "brier": 0.971,
+            "c@1": 0.988,
+            "f05u": 0.948,
+            "f1": 0.936,
+            "mean": 0.967,
+            "roc-auc": 0.994
+          },
+          "gpt-4-turbo-preview-german": {
+            "brier": 0.928,
+            "c@1": 0.939,
+            "f05u": 0.892,
+            "f1": 0.892,
+            "mean": 0.92,
+            "roc-auc": 0.95
+          },
+          "meta-llama-llama-2-70b-chat-hf": {
+            "brier": 0.971,
+            "c@1": 0.987,
+            "f05u": 0.951,
+            "f1": 0.942,
+            "mean": 0.969,
+            "roc-auc": 0.994
+          },
+          "meta-llama-llama-2-7b-chat-hf": {
+            "brier": 0.968,
+            "c@1": 0.984,
+            "f05u": 0.946,
+            "f1": 0.945,
+            "mean": 0.967,
+            "roc-auc": 0.992
+          },
+          "mistralai-mistral-7b-instruct-v0.2": {
+            "brier": 0.969,
+            "c@1": 0.984,
+            "f05u": 0.953,
+            "f1": 0.946,
+            "mean": 0.969,
+            "roc-auc": 0.992
+          },
+          "mistralai-mixtral-8x7b-instruct-v0.1": {
+            "brier": 0.959,
+            "c@1": 0.975,
+            "f05u": 0.935,
+            "f1": 0.939,
+            "mean": 0.959,
+            "roc-auc": 0.988
+          },
+          "qwen-qwen1.5-72b-chat-8bit": {
+            "brier": 0.968,
+            "c@1": 0.984,
+            "f05u": 0.948,
+            "f1": 0.943,
+            "mean": 0.967,
+            "roc-auc": 0.992
+          },
+          "text-bison-002": {
+            "brier": 0.961,
+            "c@1": 0.977,
+            "f05u": 0.928,
+            "f1": 0.929,
+            "mean": 0.957,
+            "roc-auc": 0.989
+          },
+          "text-bison-002-german": {
+            "brier": 0.915,
+            "c@1": 0.923,
+            "f05u": 0.902,
+            "f1": 0.891,
+            "mean": 0.913,
+            "roc-auc": 0.933
+          },
+          "vicgalle-gpt2-open-instruct-v1": {
+            "brier": 0.958,
+            "c@1": 0.974,
+            "f05u": 0.935,
+            "f1": 0.918,
+            "mean": 0.954,
+            "roc-auc": 0.985
+          }
+        },
+        "brier": 0.96,
+        "c@1": 0.975,
+        "f05u": 0.937,
+        "f1": 0.932,
+        "mean": 0.957,
+        "roc-auc": 0.983
       }
     },
     "final-run5-gnnllm_stylofeat-fullpartitionA": {
