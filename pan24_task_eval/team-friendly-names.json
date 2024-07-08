@@ -28,17 +28,17 @@
   "karami-kheiri": "Sheykhlan",
   "lm-detector": "G. Wu",
   
-  "baseline-binoculars": "Baseline Binoculars (Falcon-7B)",
-  "baseline-binoculars-mistral": "Baseline Binoculars (Mistral-7B)",
-  "baseline-detectllm-lrr-mistral": "Baseline DetectLLM-LRR (Mistral-7B)",
-  "baseline-fastdetectgpt-mistral": "Baseline Fast-DetectGPT (Mistral-7B)",
+  "baseline-binoculars": "Baseline Binoculars (Falcon 7B)",
+  "baseline-binoculars-mistral": "Baseline Binoculars (Mistral 7B)",
+  "baseline-detectllm-lrr-mistral": "Baseline DetectLLM-LRR (Mistral 7B)",
+  "baseline-fastdetectgpt-mistral": "Baseline Fast-DetectGPT (Mistral 7B)",
   "baseline-length": "Baseline Text Length",
   "baseline-ppmd": "Baseline PPMd CBC",
-  "baseline-detectllm-npr-mistral": "Baseline DetectLLM-NPR (Mistral-7B)",
-  "baseline-fastdetectgpt": "Baseline Fast-DetectGPT (Falcon-7B)",
-  "baseline-detectgpt-mistral": "Baseline DetectGPT (Mistral-7B)",
-  "baseline-detectllm-npr-falcon": "Baseline DetectLLM-NPR (Falcon-7B)",
+  "baseline-detectllm-npr-mistral": "Baseline DetectLLM-NPR (Mistral 7B)",
+  "baseline-fastdetectgpt": "Baseline Fast-DetectGPT (Falcon 7B)",
+  "baseline-detectgpt-mistral": "Baseline DetectGPT (Mistral 7B)",
+  "baseline-detectllm-npr-falcon": "Baseline DetectLLM-NPR (Falcon 7B)",
   "baseline-unmasking": "Baseline Authorship Unmasking",
-  "baseline-detectllm-lrr": "Baseline DetectLLM-LRR (Falcon-7B)",
-  "baseline-detectgpt-falcon": "Baseline DetectGPT (Falcon-7B)"
+  "baseline-detectllm-lrr": "Baseline DetectLLM-LRR (Falcon 7B)",
+  "baseline-detectgpt-falcon": "Baseline DetectGPT (Falcon 7B)"
 }
