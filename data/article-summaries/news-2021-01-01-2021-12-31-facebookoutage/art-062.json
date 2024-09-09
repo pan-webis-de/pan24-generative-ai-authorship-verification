@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Facebook and its sister properties experienced a six-hour outage on October 4, 2021.",
+        "The outage was caused by a configuration change on the backbone routers by Facebook's network engineering team.",
+        "The change was meant to assess the availability of global backbone capacity but unintentionally disrupted all connections.",
+        "Facebook's fail-safe processes could not prevent the outage due to a bug in the audit tool.",
+        "The outage resulted from a machine-based insider event, not a malicious actor.",
+        "A DNS error caused their BGP messages to go blank, making Facebook and its services unreachable.",
+        "The company's internal infrastructure, including IoT devices and services, was significantly affected.",
+        "Work at Facebook had to be managed locally due to the unavailability of remote operation capabilities.",
+        "Facebook released two engineering blog posts detailing the cause and impact of the outage.",
+        "The incident highlights the potential havoc machines can cause even without malicious intent."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

@@ -1,0 +1,27 @@
+{
+    "key_points": [
+        "Colonial Pipeline had not undergone a voluntary, in-depth cybersecurity review with the Transportation Security Administration (TSA) before a ransomware attack impacted its operations.",
+        "The ransomware attack forced Colonial Pipeline to shut down its pipeline, causing fuel shortages across the East Coast.",
+        "Officials are concerned that the lack of a cybersecurity review left critical infrastructure vulnerable to attacks.",
+        "The Department of Homeland Security is moving towards implementing mandatory rules for pipeline cybersecurity after decades of voluntary guidelines.",
+        "The TSA has historically partnered with the energy industry to set voluntary cybersecurity guidelines, without penalties for non-compliance.",
+        "Only 23 comprehensive cybersecurity assessments (VADR) were conducted by the TSA on pipeline companies as of late 2018.",
+        "Homeland Security Secretary Alejandro Mayorkas emphasized the importance of adapting to new and emerging threats in cybersecurity.",
+        "Colonial Pipeline has reportedly increased its IT spending by about 50% since 2017, hiring independent firms for cybersecurity risk assessments.",
+        "The shift to mandatory cybersecurity measures comes amid growing ransomware attacks on critical infrastructure.",
+        "Despite the authority to enforce mandatory rules, the TSA has relied on voluntary compliance, influenced by industry resistance to regulation."
+    ],
+    "spokespersons": [
+        "Kevin Feeney (Colonial Spokesman)",
+        "Rep. Jim Langevin (D-R.I., Co-founder of the Congressional Cybersecurity Caucus)",
+        "Alejandro Mayorkas (Homeland Security Secretary)",
+        "Michael Chertoff (Former Secretary of Homeland Security)",
+        "Jack Fox (Head of TSA's pipeline security program)",
+        "Gary Forman (Director of Corporate Security, NiSource Inc.)",
+        "Tim Conway (Industrial Control Systems Cybersecurity Instructor, SANS Institute)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

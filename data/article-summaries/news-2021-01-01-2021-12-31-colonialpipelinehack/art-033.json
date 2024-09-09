@@ -1,0 +1,23 @@
+{
+    "key_points": [
+        "A new password leak dubbed \"RockYou2021\" contains over 8.4 billion credentials, likely including the one used in the Colonial Pipeline hack.",
+        "\"RockYou2021\" is a compilation of passwords from past breaches, doubling the number of internet users worldwide.",
+        "The leak's 100GB text file was found on a dark web forum, containing passwords 6-20 characters long.",
+        "This leak may facilitate brute force attacks, fraud attempts, and phishing campaigns due to the vast amount of data compiled.",
+        "Users are advised to change old passwords and utilize password leak checkers for security.",
+        "The Colonial Pipeline breach, significantly impacting the East Coast's fuel supply, was executed using an obsolete VPN account from a similar password leak.",
+        "There's no evidence linking the attacks directly to Russian state-backed groups, but discussions are underway to address 'safe haven' countries.",
+        "Experts emphasize that businesses need to reassess their security measures, particularly those behind passwords, to prevent credential stuffing attacks.",
+        "Passwordless authentication methods are recommended as a more secure alternative to traditional password-based logins.",
+        "Public and businesses urged to adopt multi-factor authentication and passwordless methods for enhanced cybersecurity."
+    ],
+    "spokespersons": [
+        "Saumitra Das (CTO and Cofounder, Blue Hexagon)",
+        "David Stewart (CEO, Approov)",
+        "Rajiv Pimplaskar (CRO, Veridium)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

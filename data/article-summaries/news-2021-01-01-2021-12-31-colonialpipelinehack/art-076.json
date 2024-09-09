@@ -1,0 +1,21 @@
+{
+    "key_points": [
+        "2021 was marked by highly aggressive ransomware attacks targeting critical infrastructure, healthcare, and education.",
+        "The Colonial Pipeline attack in May shut down a major fuel pipeline on the East Coast, leading to widespread fuel shortages.",
+        "Colonial Pipelines paid a ransom of 75 bitcoins (over $4 million) to the Russia-linked DarkSide gang, but law enforcement later recovered part of the funds.",
+        "The compromise of Kaseya's VSA tool by REvil ransomware gang affected around 1,500 organizations worldwide.",
+        "Twitch experienced a major breach in October, with 128 GB of data, including source codes and streamer revenue information, being leaked.",
+        "The Hafnium group exploited Microsoft Exchange Server vulnerabilities, affecting tens of thousands of entities globally.",
+        "NSO Group faced lawsuits from WhatsApp and Apple for creating spyware used by autocratic governments for targeted surveillance.",
+        "JBS SA, the world's largest meat processing company, was hit by a ransomware attack affecting its North American and Australian IT systems.",
+        "Accellion's patching of vulnerabilities was too slow, leading to data breaches and extortion attempts impacting multiple organizations.",
+        "The events of 2021 highlighted the continued and increasing threats of cyberattacks, prompting calls for more comprehensive action by governments."
+    ],
+    "spokespersons": [
+        "John Scott-Railton (Senior Researcher, University of Toronto's Citizen Lab)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

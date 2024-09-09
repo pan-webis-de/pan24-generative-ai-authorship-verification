@@ -1,0 +1,23 @@
+{
+    "key_points": [
+        "DarkSide ransomware group used a \"ransomware-as-a-service\" model, partnering with affiliates to launch attacks.",
+        "The group, since its emergence last August, employed \"double extortion\" tactics, stealing sensitive data before encrypting files.",
+        "DarkSide targeted organizations based on careful financial analysis or information from corporate emails.",
+        "They used advanced techniques like \"zero-day exploits\" to infiltrate and swiftly move within target networks.",
+        "They also investigated victims' cyber insurance policies to tailor ransom demands.",
+        "Christopher Ballod from Kroll noted DarkSide's quick attack window and demands on the high end, typically $5 million+.",
+        "DarkSide threatened to share stolen information with short-sellers if publicly traded companies refused to pay ransom.",
+        "DarkSide listed its victims on the dark web, showcasing the confidential data stolen.",
+        "Post shutdown, affiliates complained on a forum that DarkSide had not paid them their share of ransoms.",
+        "Seven of Tantleff's clients paid ransoms ranging from $1.25 million to $6 million after negotiations from higher initial demands."
+    ],
+    "spokespersons": [
+        "Christopher Ballod (Associate Managing Director for Cyber Risk, Kroll)",
+        "Phil Wittmann (Attorney, Stone Pigman Walther Wittmann)",
+        "Michael Walshe Jr. (Chair of the Management Committee, Stone Pigman Walther Wittmann)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

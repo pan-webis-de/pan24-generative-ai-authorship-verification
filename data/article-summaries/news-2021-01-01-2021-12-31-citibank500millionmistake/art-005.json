@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Citigroup, acting for Revlon, mistakenly sent $893 million instead of $7.8 million to Revlon's lenders due to a UI error.",
+        "The error happened during an attempt to make an interest payment; Citigroup accidentally paid the entire loan balance.",
+        "The loan was not due until 2023, and Citigroup attempted to reclaim the funds, but lost roughly $500 million.",
+        "U.S. District Judge Jesse Furman ruled against Citigroup in a trial regarding the mishap.",
+        "The payment error was attributed to poorly designed UI of the financial software called Flexcube.",
+        "Flexcube required entering the transaction as if paying off the entire loan, but directing the principal to a 'wash account'.",
+        "The mistake occurred when a subcontractor failed to correctly set multiple fields to redirect the principal to the wash account.",
+        "Three Citibank officials signed off on the transaction, believing the principal would stay within Citibank.",
+        "The UI design was criticized for not having safeguards or warning features to prevent such errors.",
+        "The incident highlights a potential market demand for better-designed financial software."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

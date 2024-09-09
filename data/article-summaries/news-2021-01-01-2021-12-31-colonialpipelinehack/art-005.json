@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Colonial Pipeline faced a ransomware attack by a group known as DarkSide, who stole over 100GB of data.",
+        "DarkSide is known for its double-extortion tactic but might avoid it due to potential \"social\" problems.",
+        "As of May 11, Colonial Pipeline's data has not appeared on DarkSide's leak site.",
+        "Colonial paid close to $5 million in ransom for a decryption key, as reported by Bloomberg on May 13.",
+        "This incident is among the largest cyberattacks on critical US infrastructure, highlighting systemic vulnerabilities.",
+        "Previous cyberattacks have targeted a city's drinking water in Florida and caused a power outage in Ukraine.",
+        "The attack underscores the urgent need for a review and improvement of cybersecurity practices in the US.",
+        "Bitdefender notes the increasing appeal of critical infrastructure to ransomware operators, citing remote maintenance vulnerabilities.",
+        "A new order emphasizes cybersecurity measures like multi-factor authentication, data encryption, and a zero-trust security model.",
+        "A Cybersecurity Safety Review Board will be established to enforce and monitor these new security protocols."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

@@ -1,0 +1,27 @@
+{
+    "key_points": [
+        "Colonial Pipeline CEO Joseph Blount admitted authorizing a $4.4 million ransom payment after a cyberattack on the company.",
+        "This announcement is the first public admission by the company that a ransom was paid, calling it a \"highly controversial decision\".",
+        "The ransomware attack prompted the shutdown of pipeline operations, causing significant gasoline disruptions in the southeastern US.",
+        "Colonial Pipeline had no direct contact with the ransomware threat actors, and it is unclear who negotiated the payment.",
+        "The company faced criticism from Congress for refusing to share details about the ransom during a briefing.",
+        "The FBI confirmed that DarkSide ransomware was responsible for the attack, with speculation that the affiliate responsible was likely Russian.",
+        "President Biden suggested there is strong reason to believe that the cybercriminals are in Russia.",
+        "After discovering the breach, Colonial Pipeline disconnected certain systems and hired FireEye Mandiant for incident response.",
+        "Federal officials are discussing potential legislation for mandatory reporting of cyberattacks by private entities to the government.",
+        "Energy Secretary Jennifer Granholm indicated support for legislation requiring minimum standards for critical energy infrastructure companies."
+    ],
+    "spokespersons": [
+        "Joseph Blount (CEO, Colonial Pipeline)",
+        "Democratic Reps. Carolyn Maloney of New York (Chairwoman, House Oversight and Reform Committee)",
+        "Bennie Thompson of Mississippi (Chairman, Homeland Security Committee)",
+        "Marie Mouchet (CIO, Colonial Pipeline)",
+        "Adam Hickey (Deputy Assistant Attorney General)",
+        "Tonya Ugoretz (FBI Deputy Assistant Director)",
+        "Jennifer Granholm (Energy Secretary)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "Washington CNN",
+    "audience": "general public",
+    "stance": "neutral"
+}

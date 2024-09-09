@@ -1,0 +1,24 @@
+{
+    "key_points": [
+        "There has been a sharp rise in cyberattacks targeting critical infrastructure and physical business operations.",
+        "Ransomware attacks have increased by 102% in the first half of 2021 compared to the start of last year, according to Check Point Software.",
+        "The US Department of Justice created a ransomware task force in April, following a surge in extortion-related cyberattacks.",
+        "Experts warn that without cooperation and investment from the private sector, ransomware attacks are likely to persist.",
+        "Cybercriminal groups like REvil and DarkSide, based in Russia, have been responsible for some of these attacks, operating 'ransomware-as-a-service' businesses.",
+        "The US government and private sector are being urged to improve cybersecurity practices to protect against ransomware attacks.",
+        "The pandemic has exacerbated the situation, with the shift to remote work revealing significant vulnerabilities in cyber defenses.",
+        "Critical infrastructure is increasingly connected to the internet, making it more susceptible to cyberattacks.",
+        "Healthcare facilities and other vital services have been targeted by hackers during the pandemic, highlighting the urgent need for enhanced cybersecurity.",
+        "President Joe Biden signed an executive order to improve cybersecurity practices among companies working for the government."
+    ],
+    "spokespersons": [
+        "Katell Thielemann (Vice President Analyst, Gartner for security and risk management)",
+        "Mark Ostrowski (Head of Engineering, Check Point)",
+        "Eric Cole (Former cybersecurity commissioner to the Obama administration, Author)",
+        "Jen Psaki (White House Press Secretary)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "CNN Business",
+    "audience": "general public",
+    "stance": "neutral"
+}

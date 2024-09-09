@@ -1,0 +1,23 @@
+{
+    "key_points": [
+        "Facebook banned the Israeli cyber intelligence firm Cognyte and related accounts for targeting journalists and politicians via surveillance-for-hire operations.",
+        "Cognyte's CEO, Elad Sharon, had celebrated the company's first trading day on Nasdaq, highlighting its sizable annual revenues, global workforce, and diverse client base including the U.S. Department of Justice.",
+        "Facebook's six-month investigation identified six firms and one unnamed Chinese entity involved in the global surveillance-for-hire industry, mostly based in Israel.",
+        "The targeted entities utilized social media to gather intelligence, often by establishing fake accounts and manipulating targets to compromise their devices.",
+        "Approximately 1,500 accounts linked to these operations were taken down, and around 50,000 people in 100 countries were notified of being targeted.",
+        "Facebook's investigation also named Cobwebs Technologies, Black Cube, and Bluehawk CI (all Israeli firms), BellTroX (India), and Cytrox (North Macedonia) as part of the industry.",
+        "An unspecified Chinese entity was involved in surveilling minority groups in China's Xingjian region, employing advanced techniques like facial-recognition software.",
+        "The report underlines the misuse of surveillance tools by repressive regimes to target dissenters and vulnerable individuals under the guise of combating crime or terrorism.",
+        "Black Cube stated it does not engage in hacking or phishing, emphasizing its compliance with local laws in its operations.",
+        "Facebook's actions were complemented by the Citizen Lab's report on Cytrox's Predator spyware, highlighting the pervasive risks of mercenary spyware in political repression."
+    ],
+    "spokespersons": [
+        "Elad Sharon (CEO, Cognyte)",
+        "Nathaniel Gleicher (Head of Security Policy, Facebook)",
+        "Bill Marczak (Security Researcher, Citizen Lab)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Facebook experienced a full-day outage affecting its social platform and AR/VR gadgets.",
+        "The Oculus Quest headset was partially operational: it started up and displayed installed apps, but many Facebook services, including the app store and avatars, were unavailable.",
+        "Players could still launch and play downloaded games, and even connect with others online in certain cases.",
+        "The outage underscored the inherent vulnerabilities in app- and cloud-connected devices that rely heavily on online services.",
+        "Facebook's Ray-Ban smart glasses could still take photos and videos but were unable to share them due to the inability to connect to the Facebook-connected app.",
+        "The event highlighted the broader issue of reliance on cloud-based services and the potential for service disruptions.",
+        "It raises questions about the future of VR and AR, emphasizing the need for devices that can operate independently of cloud services.",
+        "The importance of having multiple companies provide apps and social networks to prevent a single point of failure is noted.",
+        "The article reflects on the need for local file storage and reduced reliance on a single company for communication and work needs.",
+        "The outage serves as a reminder of the vulnerability of heavily cloud-dependent devices and the need for more resilient and independent AR and VR technologies."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "On Monday, Facebook experienced a massive outage, affecting other services like Instagram and WhatsApp.",
+        "The outage was initially attributed to issues with BGP (Border Gateway Protocol), a crucial system that directs internet traffic.",
+        "BGP is likened to a map, guiding data packets across various autonomous systems to reach their destination efficiently.",
+        "The internet is divided into autonomous systems (like ISPs, companies, or governments), and BGP helps navigate data through these systems.",
+        "Errors in BGP can misroute traffic, similar to outdated or wrong directions on a map leading drivers astray.",
+        "The cause of Facebook's outage was linked to a 'configuration change on the backbone routers,' leading to a cascading communication failure between data centers.",
+        "Facebook has its own BGP system for fast updates within its data centers, but the outage was more about internal communication than external routing.",
+        "DNS works alongside BGP; DNS identifies the IP address, and BGP finds the best route to that address.",
+        "Past BGP mishaps include ISPs accidentally hijacking traffic or causing global access issues to sites like YouTube.",
+        "The Facebook incident was ultimately caused by a maintenance error that took down connections to its data centers, not primarily BGP."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

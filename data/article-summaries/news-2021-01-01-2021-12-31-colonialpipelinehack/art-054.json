@@ -1,0 +1,22 @@
+{
+    "key_points": [
+        "REvil, a ransomware group known for hacking the U.S. Colonial Pipeline, was itself hacked and deactivated by a multinational cyber operation.",
+        "The operation involved the FBI and investigative arms from multiple countries, alongside the U.S. Cyber Command.",
+        "REvil was reportedly hacked using a similar technique they employed to compromise targets, exploiting a loophole in the ransomware's backup system.",
+        "A leader of REvil, known as 0_neday, acknowledged the server compromise in an internet forum post.",
+        "REvil's main spokesperson, known as Unknown, disappeared from the internet in July.",
+        "The shutdown maneuver involved law enforcement agencies accessing and disabling REvil's servers from the inside.",
+        "Oleg Skulkin, from the Russian security company Group-IB, commented on the irony of REvil's tactics being used against them.",
+        "The Colonial Pipeline hack by REvil and DarkSide caused significant fuel shortages and led to a state of emergency being declared across 17 states.",
+        "Following the pipeline hack, REvil attacked software management company Kaseya, demanding a large ransom.",
+        "The U.S. government has ramped up efforts to treat ransomware attacks on critical infrastructure as national security threats."
+    ],
+    "spokespersons": [
+        "0_neday (Leader of REvil)",
+        "Oleg Skulkin (Official, Russian security company Group-IB)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

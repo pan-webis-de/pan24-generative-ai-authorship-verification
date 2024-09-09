@@ -1,0 +1,22 @@
+{
+    "key_points": [
+        "Twitter admits its algorithm amplifies more tweets from right-wing politicians and news outlets than from left-wing sources.",
+        "The study examined tweets from elected officials in seven countries and political content from U.S. news organizations like Fox News, the New York Times, and BuzzFeed.",
+        "Research showed that in six out of seven countries, right-leaning tweets were more amplified, with Canada and the UK showing significant discrepancies.",
+        "The study found that Twitter's algorithmic \"Home\" timeline led to more amplification of political tweets than the chronological timeline.",
+        "Twitter stated it is unclear why its algorithm produced these results and suggested the algorithm might need changes.",
+        "Rumman Chowdhury and Luca Belli emphasized the need for further analysis to understand and possibly adjust the algorithm.",
+        "Twitter plans to make its research available to external researchers and is preparing to allow broader access to its data.",
+        "The move is seen as putting pressure on Facebook to also share research, especially in light of recent controversies.",
+        "Twitter aims to balance privacy and accountability in its approach to algorithmic transparency.",
+        "The company’s machine-learning ethics, transparency, and accountability team is finalizing plans for regular data sharing with external sources."
+    ],
+    "spokespersons": [
+        "Rumman Chowdhury (Director of Software Engineering, Twitter)",
+        "Luca Belli (Researcher, Twitter)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

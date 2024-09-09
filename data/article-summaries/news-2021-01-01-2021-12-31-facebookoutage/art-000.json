@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Facebook and its platforms, including Instagram, WhatsApp, and Messenger, experienced a global outage lasting close to six hours.",
+        "The outage was caused by a configuration change to the backbone routers that coordinate network traffic between Facebook's data centres.",
+        "Cloudflare provided a detailed explanation, mentioning the outage involved DNS and BGP which are crucial for internet connectivity.",
+        "All Facebook services were affected, including internal systems, leading to staff being locked out of offices and unable to use the internal communications platform.",
+        "The outage took a long time to fix due to the internal systems being down, making it hard for employees to diagnose and resolve the problem.",
+        "Facebook indicated the fix was slow due to the need to bring systems back to full capacity carefully.",
+        "A technical team had to manually reset servers in California where the problem originated.",
+        "Such outages, while uncommon, highlight the issues with a single point of failure for online services.",
+        "The outage happened during a tough time for Facebook, following paused plans for an Instagram for kids and whistleblower allegations.",
+        "The outage caused Facebook's share price to drop 4.9%, reducing CEO Mark Zuckerberg's personal wealth by $6bn."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

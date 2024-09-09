@@ -1,0 +1,22 @@
+{
+    "key_points": [
+        "NYC Law Department's computer system has been down for approximately three days due to a hacking incident.",
+        "The FBI and NYC's Cyber Command office are analyzing the hack, with motives still being investigated.",
+        "Hackers have not yet demanded a ransom, but officials, including John Miller (NYPD's deputy commissioner), do not rule out the possibility.",
+        "Investigators have identified the malware used in the hack, noting it as familiar and are tracing it back to the hackers.",
+        "The Law Department has been using outdated software, including Windows 7 and Microsoft Office 2010, which are no longer supported by Microsoft.",
+        "Warnings about vulnerabilities in the Law Department's computer systems were previously issued but not adequately addressed.",
+        "Since the hack, Law Department employees cannot access the system remotely or use work emails.",
+        "Efforts to contain the hack prevented it from spreading to other systems, but the Law Department's operations have been severely impacted.",
+        "An audit of the Law Department's computer systems was completed last month, with findings not publicly disclosed due to security concerns.",
+        "This incident is part of a wider trend of hack attacks on American infrastructure, with President Biden expected to address such issues with Russian President Putin."
+    ],
+    "spokespersons": [
+        "John Miller (NYPD's deputy commissioner of intelligence and counterterrorism)",
+        "Laura Feyer (de Blasio spokeswoman)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

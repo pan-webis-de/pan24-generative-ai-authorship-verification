@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Citibank mistakenly transferred approximately $900 million to Revlon's lenders instead of $7.8 million in interest due to an error in executing a transaction.",
+        "The funds were intended for an internal \"wash account\" but ended up being sent directly to the creditors due to unmarked checkboxes in Citibank's software system.",
+        "Some lenders refused to return the mistakenly transferred funds, citing New York's \"discharge-for-value\" exception.",
+        "Citibank's lawsuit to recover the unreturned funds focused on whether the lenders knew the payments were a mistake at the time they were made.",
+        "Chat messages between lenders were used as evidence in court to determine their initial perception of the transfer.",
+        "The timing of chat messages was crucial; jokes and shocked reactions came after Citibank's attempt to recall the funds, indicating lenders did not initially recognize the mistake.",
+        "The case emphasizes the importance of complete metadata in interpreting communication accurately.",
+        "Critique on poorly designed software and user interfaces suggests that clearer instructions and user-friendly terminology could have prevented the mistake.",
+        "The case demonstrates the importance of integrating messages from collaboration tools into corporate ediscovery and information governance workflows.",
+        "It underscores the need for organizations to be prepared for ediscovery, especially regarding instant messaging and collaboration platforms."
+    ],
+    "spokespersons": [],
+    "article_type": "opinion piece",
+    "dateline": "",
+    "audience": "professionals",
+    "stance": "neutral"
+}

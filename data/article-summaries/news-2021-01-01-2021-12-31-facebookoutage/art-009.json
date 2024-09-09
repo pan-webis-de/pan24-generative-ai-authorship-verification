@@ -1,0 +1,23 @@
+{
+    "key_points": [
+        "A claim suggesting the military raided Facebook and caused its outage by seizing servers circulated online after a six-hour outage affected Facebook, Instagram, and WhatsApp.",
+        "The outage occurred on Oct. 4, affecting users globally, with some services resuming around 5:40 p.m. ET the same day.",
+        "Facebook CEO Mark Zuckerberg described the outage as the worst the company had seen in years.",
+        "The company debunked the raid theory, attributing the outage to human error during routine maintenance.",
+        "An engineer issued a command that unintentionally disrupted Facebook's global data center connections.",
+        "An audit tool that was supposed to prevent such an error failed to stop the erroneous command.",
+        "Restoration was delayed because the outage also removed Facebook from the Domain Name System servers, hindering internal investigation and resolution tools.",
+        "Engineers had to manually restart systems at data centers, a process lengthened by security measures.",
+        "Tom Parnell, a communications manager at Facebook, directly refuted the military raid claim, pointing to an explanation by Santosh Janardhan, Facebook's vice president of infrastructure.",
+        "The Department of Defense was reached for comment, but the claim has been rated as false based on facts."
+    ],
+    "spokespersons": [
+        "Stephon Rudd (Facebook user)",
+        "Santosh Janardhan (Vice President of Infrastructure, Facebook)",
+        "Tom Parnell (Communications Manager, Facebook)"
+    ],
+    "article_type": "fact check",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

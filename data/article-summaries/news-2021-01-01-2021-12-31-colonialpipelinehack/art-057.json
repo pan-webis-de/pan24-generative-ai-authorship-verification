@@ -1,0 +1,23 @@
+{
+    "key_points": [
+        "Norsk Hydro, a Norwegian renewable energy and aluminum manufacturing company, faced a ransomware attack in 2019.",
+        "Despite the attack crippling its network, Norsk Hydro refused to pay the ransom demanded by hackers.",
+        "The attack occurred on the same day Hilde Merete Aasheim was appointed as CEO of Norsk Hydro.",
+        "The attack locked out users from over 3,000 servers and thousands of PCs, encrypting key areas of the IT network.",
+        "Norsk Hydro opted to work with cybersecurity experts and manually handle operations to avoid paying the ransom.",
+        "The company experienced significant operational disruptions, leading to an estimated loss of $70 million.",
+        "Production was maintained through manual processes, including pen and paper, for about three weeks.",
+        "Hilde Merete Aasheim and CIO Jo De Vliegher led the recovery efforts, with help from Microsoft and the Norwegian National Cyber Security Centre.",
+        "The incident led to a major reevaluation of Norsk Hydro's cybersecurity measures and priorities.",
+        "The U.S. Cybersecurity & Infrastructure Security Agency (CISA) advises against paying ransoms, noting it fuels the criminal economy."
+    ],
+    "spokespersons": [
+        "Hilde Merete Aasheim (CEO, Norsk Hydro)",
+        "Jo De Vliegher (CIO, Norsk Hydro)",
+        "Eric Goldstein (Official, U.S. Cybersecurity & Infrastructure Security Agency)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

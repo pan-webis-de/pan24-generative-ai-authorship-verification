@@ -1,0 +1,22 @@
+{
+    "key_points": [
+        "The Darkside ransomware gang accessed Colonial Pipeline using a compromised password for an inactive VPN account without multifactor authentication.",
+        "The attack on April 29 led Colonial to shut down its 5,500-mile natural gas pipeline for five days, affecting over 10,000 gas stations.",
+        "The compromised VPN password was found on the dark web, suggesting a Colonial employee reused a password that had been hacked elsewhere.",
+        "There's no evidence of phishing or other attacker activity before April 29 related to the compromised credentials.",
+        "Colonial discovered a ransom note on May 7, prompting the closure of the pipeline, which supplies 45% of the East Coast's fuel.",
+        "Colonial Pipeline CEO Joseph Blount decided to pay a $4.4 million ransom in Bitcoin to receive a decryption tool.",
+        "Mandiant was brought in to investigate the breach and has found no evidence of subsequent attempts to access Colonial's network.",
+        "Investigators tracked the hackers' movements but found no indication they breached critical operational technology systems.",
+        "Colonial has hired cybersecurity experts John Strand and Rob Lee to consult on cyber defense post-attack.",
+        "Charles Carmakal (SVP and CTO of FireEye's Mandiant division) and Joseph Blount (CEO of Colonial Pipeline) were primary sources, confirmed by FireEye and Colonial spokespeople."
+    ],
+    "spokespersons": [
+        "Charles Carmakal (SVP and CTO, FireEye's Mandiant division)",
+        "Joseph Blount (CEO, Colonial Pipeline)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

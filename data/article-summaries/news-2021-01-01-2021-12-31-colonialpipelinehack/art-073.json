@@ -1,0 +1,26 @@
+{
+    "key_points": [
+        "The Colonial Pipeline Co. system's shutdown due to a cyberattack prompts questions about future industry resilience to such events.",
+        "Cybersecurity professionals warn that the increase in connected legacy assets and ransomware heightens the risk of physical infrastructure shutdowns.",
+        "The Colonial cyberattack significantly disrupted fuel supply on the East Coast, causing government action and uncertainty in fuel prices and supplies.",
+        "U.S. Deputy National Security Advisor Anne Neuberger mentioned efforts to prevent ransomware from moving from IT to operational technology (OT) systems.",
+        "Industry experts advocate for better visibility and defense-in-depth strategies to respond more precisely to cyberattacks.",
+        "Questions arise about Colonial's visibility into its systems and whether it could have taken a more targeted approach to the shutdown.",
+        "Best practices in cybersecurity involve multiple protection layers and network segmentation but are not foolproof.",
+        "The incident sparked discussion on the need for more flexible policies and additional pipeline infrastructure for redundancy.",
+        "Experts suggest that securing OT systems poses challenges due to their initial design and maintenance requirements.",
+        "A comprehensive approach to OT security, including detailed asset inventories and business impact analysis, is essential for resilience."
+    ],
+    "spokespersons": [
+        "Nicholas Friedman (National Managing Partner and Governance, Risk and Compliance Strategist, Templar Shield Inc.)",
+        "Anne Neuberger (Deputy National Security Advisor for Cyber and Emerging Technologies, U.S. Government)",
+        "Alex Bagwell (Vice President for Industrial Sales, Tripwire Inc.)",
+        "Leo Simonovich (Vice President and Global Head of Industrial Cyber and Digital Security, Siemens Energy AG)",
+        "Barbara Rembiesa (President and CEO, International Association of IT Asset Managers)",
+        "Johan Vermij (Research Analyst specializing in the internet of things, 451 Research)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

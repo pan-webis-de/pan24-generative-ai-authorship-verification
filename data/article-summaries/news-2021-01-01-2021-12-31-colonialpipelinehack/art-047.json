@@ -1,0 +1,26 @@
+{
+    "key_points": [
+        "Ransomware attacks have significantly increased, with victims in the US paying out nearly $350m in 2020, a 311% increase from 2019.",
+        "The FBI Director, Christopher Wray, stated the volume of ransom paid in ransomware has tripled over the last year.",
+        "Experts link the surge in attacks to the shift to remote working during the pandemic.",
+        "Ransomware involves hackers seizing data or systems from companies or governments and demanding payment for their return.",
+        "Remote working poses more risks as employees are outside the safety of office networks.",
+        "The breach of a virtual private network (VPN) was attributed to one of the most consequential recent ransomware hacks on the Colonial Pipeline.",
+        "Corporate and government security measures are less effective when devices are used outside of controlled networks.",
+        "The rise of cryptocurrency facilitates ransomware attacks by making payments easier and less traceable.",
+        "The Biden administration issued a letter to corporate executives emphasizing the need for improved cybersecurity measures.",
+        "The House homeland security committee has advanced multiple bills aimed at enhancing cybersecurity."
+    ],
+    "spokespersons": [
+        "Christopher Wray (Director, FBI)",
+        "John Hammond (Cybersecurity Researcher, Huntress)",
+        "Israel Barak (Chief Information Security Officer, Cybereason)",
+        "Joseph Carson (Chief Security Scientist, Thycotic)",
+        "Rahul Telang (Professor of Information Systems, Carnegie Mellon)",
+        "Anne Neuberger (Cybersecurity Adviser, National Security Council)"
+    ],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

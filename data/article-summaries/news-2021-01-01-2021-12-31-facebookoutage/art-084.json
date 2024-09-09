@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "On October 4, a misconfiguration during routine maintenance caused a global outage of Facebook, WhatsApp, Instagram, and Messenger for over 6 hours, affecting nearly 2.9 billion users.",
+        "The outage was the result of a faulty configuration change on Facebook's backbone routers which manage traffic between its data centers.",
+        "An incorrect command aimed to check capacity inadvertently disabled Facebook's border gateway protocol (BGP) routers, cutting off the data centers from the internet.",
+        "A bug in an audit tool failed to catch the mistake, which allowed it to be deployed across Facebook's entire network environment.",
+        "With the BGP routers offline, Facebook's DNS servers couldn't translate domain names into IP addresses, causing users to be unable to access its sites.",
+        "Gartner predicts that through 2023, 99% of firewall breaches will be due to misconfigurations, not the firewalls themselves.",
+        "Human error, amplified by complex environments, is a leading cause of network and service outages.",
+        "The article highlights the vulnerability of network environments to misconfigurations, potentially leading to major security breaches.",
+        "The 2019 Capital One data breach, impacting over 100 million customers, was caused by a misconfigured firewall.",
+        "FireMon offers tools for managing network security policies and minimizing misconfigurations that could compromise network security."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "The outage was caused by a maintenance error in the system managing global network capacity.",
+        "The Facebook backbone network, connecting all computing facilities globally, was unintentionally taken down.",
+        "This disconnection caused a complete loss of server connectivity between data centers and the internet.",
+        "A bug in the audit tool failed to prevent the mistaken command, leading to the outage.",
+        "DNS servers became unreachable due to BGP advertisements being disabled, as they couldn't connect to the data centers.",
+        "Engineers faced difficulties diagnosing and resolving the issue due to loss of normal and out-of-band network access.",
+        "On-site engineers were needed to restart systems, a process delayed by high security measures at data centers.",
+        "The company conducted \"storm\" drills to prepare for such events, aiding in the quick recovery.",
+        "A review process is underway to improve system resilience and prevent similar outages.",
+        "The incident highlighted a trade-off between hardened security and the speed of recovery from internal errors."
+    ],
+    "spokespersons": [],
+    "article_type": "press release",
+    "dateline": "",
+    "audience": "general public",
+    "stance": "neutral"
+}

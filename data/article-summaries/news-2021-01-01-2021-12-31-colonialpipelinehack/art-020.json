@@ -1,0 +1,19 @@
+{
+    "key_points": [
+        "Colonial Pipeline experienced a temporary network disruption but has resolved it.",
+        "This disruption was not related to malware, according to the company.",
+        "The issue was with the company's shipping nomination system, affecting shippers' ability to enter and update delivery nominations.",
+        "Colonial Pipeline's network functionality has returned to normal.",
+        "The cause of the network issues was not specified.",
+        "The shipping nomination system is operated by Transport4 (T4), a third-party company.",
+        "T4 reported that its application was functioning normally for all customers and carriers.",
+        "This incident follows a recent ransomware attack that significantly disrupted fuel delivery in the southeast U.S.",
+        "About 6,000 gas stations in the southeast were still without fuel as a result of the earlier disruption.",
+        "Gasoline prices have risen to the highest in seven years, partly due to the hack and the onset of the Memorial Day weekend."
+    ],
+    "spokespersons": [],
+    "article_type": "general reporting",
+    "dateline": "May 28 (Reuters)",
+    "audience": "general public",
+    "stance": "neutral"
+}

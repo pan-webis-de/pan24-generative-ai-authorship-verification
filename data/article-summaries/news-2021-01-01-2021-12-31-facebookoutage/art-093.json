@@ -1,0 +1,21 @@
+{
+    "key_points": [
+        "Josh Stella, CEO of Fugue, discusses the significance of recent Facebook and Twitch incidents for business and security leaders.",
+        "Facebook's outage and Twitch's breach resulted from cloud misconfigurations, leading to substantial losses.",
+        "36% of companies had a serious cloud security leak or breach due to misconfiguration in the past year.",
+        "Configuration, rather than the network, is now the main attack surface for cloud environments.",
+        "Misconfigurations in the cloud can lead to significant vulnerabilities and operational disruptions.",
+        "Cloud environments are constantly changing, introducing risk with every modification.",
+        "Hackers utilize automation to find and exploit cloud misconfigurations for unauthorized access and data breaches.",
+        "Business and security leaders are urged to know the current state of their cloud environments and vulnerabilities.",
+        "Preventive cloud security measures, including Policy as Code, are recommended to mitigate misconfiguration risks.",
+        "Cultural and operational shifts toward security-focused practices in cloud management are essential for mitigating risks."
+    ],
+    "spokespersons": [
+        "Josh Stella (CEO, Co-founder of Fugue)"
+    ],
+    "article_type": "press release",
+    "dateline": "FREDERICK, Md.",
+    "audience": "professionals",
+    "stance": "neutral"
+}
